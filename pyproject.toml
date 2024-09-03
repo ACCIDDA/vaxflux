@@ -6,8 +6,13 @@ authors = ["Timothy Willard <9395586+TimothyWillard@users.noreply.github.com>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.12"
+python = ">=3.10,<3.13"
+numpy = ">=1.17.0,<2"
+pymc = "^5.16.2"
 
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.3.2"
 
 [build-system]
 requires = ["poetry-core"]
