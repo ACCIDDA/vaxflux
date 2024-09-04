@@ -4,16 +4,24 @@ Functionality for creating a single curve model.
 This module contains the needed utilities to create and fit a single curve model. 
 Currently exported functionality includes:
 - `modified_logistic_curve`
-- `fit_modified_logistic_curve`
+- `modified_logistic_curve_least_squares`
 """
 
-__all__ = ["modified_logistic_curve", "fit_modified_logistic_curve"]
+__all__ = [
+    "modified_logistic_curve",
+    "modified_logistic_curve_least_squares",
+    "modified_logistic_curve_bayes_model",
+]
 
 
 from typing import Any
 
+import arviz as az
 import numpy as np
 import numpy.typing as npt
+import pymc as pm
+from pytensor.compile.ops import as_op
+import pytensor.tensor as pt
 from scipy.optimize import least_squares, OptimizeResult
 from scipy.special import expit, logit
 
@@ -50,14 +58,14 @@ def modified_logistic_curve(
     return k * expit(r * (t - c0))
 
 
-def fit_modified_logistic_curve(
+def modified_logistic_curve_least_squares(
     t: npt.NDArray[np.float64],
     y: npt.NDArray[np.float64],
     x0: tuple[float | None, float | None, float | None] = (None, None, None),
     **kwargs: dict[str, Any],
 ) -> OptimizeResult:
     """
-    Fit the given data to a modified logistic curve.
+    Fit the given data to a modified logistic curve using least squares.
 
     Args:
         t: The time to evaluate the logistic curve at.
@@ -77,7 +85,7 @@ def fit_modified_logistic_curve(
         >>> t = np.linspace(-2.0, 2.0, 35)
         >>> y_true = modified_logistic_curve(t, 1.25, 2.5, 0.25)
         >>> y_obs = y_true + rng.normal(scale=0.05)
-        >>> opt_result = fit_modified_logistic_curve(t, y_obs)
+        >>> opt_result = modified_logistic_curve_least_squares(t, y_obs)
         >>> opt_result
             message: `gtol` termination condition is satisfied.
             success: True
@@ -114,3 +122,54 @@ def fit_modified_logistic_curve(
     # Now fit and return
     opt_result = least_squares(_residuals, x0, **kwargs)
     return opt_result
+
+
+def modified_logistic_curve_bayes_model(
+    t: npt.NDArray[np.float64],
+    y: npt.NDArray[np.float64],
+    sigma: tuple[float, float, float, float] = (3.0, 3.0, 30.0, 1.0),
+    **kwargs: dict[str, Any],
+) -> tuple[pm.Model, pm.backends.base.MultiTrace | az.InferenceData]:
+    """
+    Fit the given data to a modified logistic curve using MCMC.
+
+    Args:
+        t: The time to evaluate the logistic curve at.
+        y: The observed value to fit the logistic curve to.
+        sigma: A vector of sigma parameters used in the priors for the model which
+            correspond to `r`, `k`, `c0`, and `sigma`.
+        **kwargs: Further arguments passed to `pymc.sample`.
+
+    Returns:
+        A tuple containing the model itself and the trace from sampling.
+    """
+    # Least squares fit for initial guesses
+    opt_result = modified_logistic_curve_least_squares(t, y)
+
+    # Local helpers
+    sigma_r, sigma_k, sigma_c0, sigma_sigma = sigma
+    t_local = np.copy(t)
+    y_local = np.copy(y)
+
+    @as_op(itypes=[pt.dvector], otypes=[pt.dvector])
+    def _modified_logistic_curve(theta):
+        return modified_logistic_curve(t_local, *theta)
+
+    # Construct model
+    with pm.Model() as model:
+        # Priors
+        r = pm.Normal("r", mu=0.0, sigma=sigma_r, initval=opt_result.x[0])
+        k = pm.HalfNormal("k", sigma=sigma_k, initval=opt_result.x[1])
+        c0 = pm.Normal("c0", mu=0.0, sigma=sigma_c0, initval=opt_result.x[2])
+        sigma = pm.HalfNormal("sigma", sigma=sigma_sigma)
+
+        # Likelihood
+        theta = pm.math.stack([r, k, c0])
+        pm.Normal(
+            "y_obs", mu=_modified_logistic_curve(theta), sigma=sigma, observed=y_local
+        )
+
+        # Sample
+        trace = pm.sample(**kwargs)
+
+    return model, trace
