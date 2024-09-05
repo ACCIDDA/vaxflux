@@ -17,6 +17,7 @@ pandas = "^2.2.2"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.3.2"
+black = {extras = ["jupyter"], version = "^24.8.0"}
 
 
 [tool.poetry.group.demo.dependencies]
