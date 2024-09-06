@@ -178,7 +178,7 @@ def create_multilevel_model(config: UptakeModelConfig) -> pm.Model:
 
     Args:
         config: An uptake model config object describing the model to construct.
-    
+
     Returns:
         A PyMC model generated from the given uptake model configuration.
     """
