@@ -112,6 +112,54 @@ class UptakeModelConfig:
         return self.s_prior[1]
 
     @property
+    def mu_dk_region(self) -> float | None:
+        return self.dk_region_prior[0] if self.dk_region_prior else None
+
+    @property
+    def sigma_dk_region(self) -> float | None:
+        return self.dk_region_prior[1] if self.dk_region_prior else None
+
+    @property
+    def mu_dr_region(self) -> float | None:
+        return self.dr_region_prior[0] if self.dr_region_prior else None
+
+    @property
+    def sigma_dr_region(self) -> float | None:
+        return self.dr_region_prior[1] if self.dr_region_prior else None
+
+    @property
+    def mu_ds_region(self) -> float | None:
+        return self.ds_region_prior[0] if self.ds_region_prior else None
+
+    @property
+    def sigma_ds_region(self) -> float | None:
+        return self.ds_region_prior[1] if self.ds_region_prior else None
+
+    @property
+    def mu_dk_strata(self) -> float | None:
+        return self.dk_strata_prior[0] if self.dk_strata_prior else None
+
+    @property
+    def sigma_dk_strata(self) -> float | None:
+        return self.dk_strata_prior[1] if self.dk_strata_prior else None
+
+    @property
+    def mu_dr_strata(self) -> float | None:
+        return self.dr_strata_prior[0] if self.dr_strata_prior else None
+
+    @property
+    def sigma_dr_strata(self) -> float | None:
+        return self.dr_strata_prior[1] if self.dr_strata_prior else None
+
+    @property
+    def mu_ds_strata(self) -> float | None:
+        return self.ds_strata_prior[0] if self.ds_strata_prior else None
+
+    @property
+    def sigma_ds_strata(self) -> float | None:
+        return self.ds_strata_prior[1] if self.ds_strata_prior else None
+
+    @property
     def coords(self) -> dict[str, list[str]]:
         if (coords := self._coords.get(id(self.data))) is None:
             coords = {
@@ -195,38 +243,68 @@ def create_multilevel_model(config: UptakeModelConfig) -> pm.Model:
         s = pm.Normal("s", mu=config.mu_s, sigma=config.sigma_s, dims="s_season")
         # Regional priors
         if config.dk_region_prior:
-            raise NotImplementedError
+            dk_region = pm.Normal(
+                "dk_region",
+                mu=config.mu_dk_region,
+                sigma=config.sigma_dk_region,
+                dims="region",
+            )
         else:
             dk_region = pm.Data(
                 "dk_region", np.repeat(0.0, config.coord_dims["region"]), dims="region"
             )
         if config.dr_region_prior:
-            raise NotImplementedError
+            dr_region = pm.Normal(
+                "dr_region",
+                mu=config.mu_dr_region,
+                sigma=config.sigma_dr_region,
+                dims="region",
+            )
         else:
             dr_region = pm.Data(
                 "dr_region", np.repeat(0.0, config.coord_dims["region"]), dims="region"
             )
         if config.ds_region_prior:
-            raise NotImplementedError
+            ds_region = pm.Normal(
+                "ds_region",
+                mu=config.mu_ds_region,
+                sigma=config.sigma_ds_region,
+                dims="region",
+            )
         else:
             ds_region = pm.Data(
                 "ds_region", np.repeat(0.0, config.coord_dims["region"]), dims="region"
             )
         # Strata priors
         if config.dk_strata_prior:
-            raise NotImplementedError
+            dk_strata = pm.Normal(
+                "dk_strata",
+                mu=config.mu_dk_strata,
+                sigma=config.sigma_dk_strata,
+                dims="strata",
+            )
         else:
             dk_strata = pm.Data(
                 "dk_strata", np.repeat(0.0, config.coord_dims["strata"]), dims="strata"
             )
         if config.dr_strata_prior:
-            raise NotImplementedError
+            dr_strata = pm.Normal(
+                "dr_strata",
+                mu=config.mu_dr_strata,
+                sigma=config.sigma_dr_strata,
+                dims="strata",
+            )
         else:
             dr_strata = pm.Data(
                 "dr_strata", np.repeat(0.0, config.coord_dims["strata"]), dims="strata"
             )
         if config.ds_strata_prior:
-            raise NotImplementedError
+            ds_strata = pm.Normal(
+                "ds_strata",
+                mu=config.mu_ds_strata,
+                sigma=config.sigma_ds_strata,
+                dims="strata",
+            )
         else:
             ds_strata = pm.Data(
                 "ds_strata", np.repeat(0.0, config.coord_dims["strata"]), dims="strata"
