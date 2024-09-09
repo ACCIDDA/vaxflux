@@ -68,7 +68,7 @@ class UptakeModelConfig:
             raise ValueError(
                 (
                     "The `data` provided is missing required columns: "
-                    f"'{"', '".join(missing_columns)}'."
+                    f"""'{"', '".join(missing_columns)}'."""
                 )
             )
         self.data = self.data[list(required_columns)]
