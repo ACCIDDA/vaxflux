@@ -16,6 +16,7 @@ import numpy.typing as npt
 import pandas as pd
 import pymc as pm
 from scipy.special import expit
+import xarray as xr
 
 
 @dataclass
@@ -348,7 +349,7 @@ def create_multilevel_model(config: UptakeModelConfig) -> pm.Model:
 def generate_model_outputs(
     trace: pm.backends.base.MultiTrace | az.InferenceData,
     t: npt.NDArray[np.number],
-) -> npt.NDArray[np.number]:
+) -> xr.DataArray:
     """
     Generate a distribution of model outputs for a multilevel model.
 
@@ -392,7 +393,20 @@ def generate_model_outputs(
     )
 
     # Loop over non-sample dim, sample dim is usually the biggest.
-    output = np.zeros(output_shape)
+    output = xr.DataArray(
+        dims=["t", "sample", "season", "region", "strata"],
+        coords={
+            "t": t,
+            "sample": stacked.coords["sample"],
+            "season": next(
+                stacked.coords[f"{p}_season"].values
+                for p in ("k", "r", "s")
+                if stacked.sizes[f"{p}_season"] == seasons_shape
+            ),
+            "region": stacked.coords.get("region", ["All Region"]),
+            "strata": stacked.coords.get("strata", ["All Strata"]),
+        },
+    )
     for i in range(output_shape[0]):  # time
         for j in range(output_shape[2]):  # season
             for k in range(output_shape[3]):  # region
