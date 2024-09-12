@@ -7,7 +7,11 @@ data from external data providers. Current exported functionality includes:
 - `get_ncird_weekly_cumulative_vaccination_coverage`
 """
 
-__all__ = ["read_flu_vacc_data", "get_ncird_weekly_cumulative_vaccination_coverage"]
+__all__ = [
+    "read_flu_vacc_data",
+    "get_ncird_weekly_cumulative_vaccination_coverage",
+    "format_incidence_dataframe",
+]
 
 
 from datetime import datetime
@@ -153,3 +157,60 @@ def get_ncird_weekly_cumulative_vaccination_coverage() -> pd.DataFrame:
     df = df.drop(columns=["week_ending", "95_ci"])
     # Return
     return df
+
+
+def format_incidence_dataframe(incidence_df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Format an incidence pandas DataFrame.
+
+    Args:
+        incidence_df: A DataFrame with at least the columns 'time' and 'incidence' and
+            optionally 'season', 'strata', 'region'.
+
+    Returns:
+        A pandas DataFrame with the columns
+
+    Examples:
+        >>> import pandas as pd
+        >>> df = pd.DataFrame(
+        ...     data={
+        ...             "time": [1.0, 1.5, 2.0],
+        ...             "incidence": [0.01, 0.02, 0.015],
+        ...     }
+        ... )
+        >>> df
+        time  incidence
+        0   1.0      0.010
+        1   1.5      0.020
+        2   2.0      0.015
+        >>> format_incidence_dataframe(df)
+                season       strata       region  time  incidence
+        0  All Seasons  All Stratas  All Regions   1.0      0.010
+        1  All Seasons  All Stratas  All Regions   1.5      0.020
+        2  All Seasons  All Stratas  All Regions   2.0      0.015
+    """
+    incidence_df = incidence_df.copy()
+    incidence_columns = set(incidence_df.columns.tolist())
+
+    if missing_columns := {"time", "incidence"} - incidence_columns:
+        raise ValueError(
+            (
+                "The `incidence_df` provided is missing required columns: "
+                f"""'{"', '".join(missing_columns)}'."""
+            )
+        )
+
+    for column in ("time", "incidence"):
+        incidence_df[column] = pd.to_numeric(incidence_df[column]).astype("float64")
+
+    for column in {"season", "strata", "region"}:
+        if column not in incidence_columns:
+            incidence_df[column] = pd.Series(
+                data=len(incidence_df) * [f"All {column.capitalize()}s"], dtype="string"
+            )
+        else:
+            incidence_df[column] = incidence_df[column].astype("string")
+
+    incidence_df = incidence_df[["season", "strata", "region", "time", "incidence"]]
+
+    return incidence_df
