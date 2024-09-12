@@ -11,6 +11,7 @@ __all__ = [
     "read_flu_vacc_data",
     "get_ncird_weekly_cumulative_vaccination_coverage",
     "format_incidence_dataframe",
+    "coordinates_from_incidence",
 ]
 
 
@@ -18,6 +19,7 @@ from datetime import datetime
 from importlib import resources
 import io
 import time
+from typing import Literal
 
 import numpy as np
 import pandas as pd
@@ -159,12 +161,12 @@ def get_ncird_weekly_cumulative_vaccination_coverage() -> pd.DataFrame:
     return df
 
 
-def format_incidence_dataframe(incidence_df: pd.DataFrame) -> pd.DataFrame:
+def format_incidence_dataframe(incidence: pd.DataFrame) -> pd.DataFrame:
     """
     Format an incidence pandas DataFrame.
 
     Args:
-        incidence_df: A DataFrame with at least the columns 'time' and 'incidence' and
+        incidence: A DataFrame with at least the columns 'time' and 'incidence' and
             optionally 'season', 'strata', 'region'.
 
     Returns:
@@ -189,28 +191,47 @@ def format_incidence_dataframe(incidence_df: pd.DataFrame) -> pd.DataFrame:
         1  All Seasons  All Stratas  All Regions   1.5      0.020
         2  All Seasons  All Stratas  All Regions   2.0      0.015
     """
-    incidence_df = incidence_df.copy()
-    incidence_columns = set(incidence_df.columns.tolist())
+    incidence = incidence.copy()
+    incidence_columns = set(incidence.columns.tolist())
 
     if missing_columns := {"time", "incidence"} - incidence_columns:
         raise ValueError(
             (
-                "The `incidence_df` provided is missing required columns: "
+                "The `incidence` provided is missing required columns: "
                 f"""'{"', '".join(missing_columns)}'."""
             )
         )
 
     for column in ("time", "incidence"):
-        incidence_df[column] = pd.to_numeric(incidence_df[column]).astype("float64")
+        incidence[column] = pd.to_numeric(incidence[column]).astype("float64")
 
     for column in {"season", "strata", "region"}:
         if column not in incidence_columns:
-            incidence_df[column] = pd.Series(
-                data=len(incidence_df) * [f"All {column.capitalize()}s"], dtype="string"
+            incidence[column] = pd.Series(
+                data=len(incidence) * [f"All {column.capitalize()}s"], dtype="string"
             )
         else:
-            incidence_df[column] = incidence_df[column].astype("string")
+            incidence[column] = incidence[column].astype("string")
 
-    incidence_df = incidence_df[["season", "strata", "region", "time", "incidence"]]
+    incidence = incidence[["season", "strata", "region", "time", "incidence"]]
 
-    return incidence_df
+    return incidence
+
+
+def coordinates_from_incidence(
+    incidence: pd.DataFrame,
+) -> dict[Literal["season", "region", "strata"], list[str]]:
+    """
+    Extract model coordinates from an incidence pandas DataFrame.
+
+    Args:
+        incidence: A formatted incidence pandas DataFrame.
+
+    Returns:
+        A dictionary of coordinates that can be provided to xarray or PyMC.
+    """
+    subset_df = incidence.drop_duplicates(subset=["season", "region", "strata"])
+    return {
+        v: np.sort(incidence[v].unique()).tolist()
+        for v in ("season", "region", "strata")
+    }
