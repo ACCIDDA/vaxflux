@@ -12,6 +12,7 @@ __all__ = [
     "get_ncird_weekly_cumulative_vaccination_coverage",
     "format_incidence_dataframe",
     "coordinates_from_incidence",
+    "create_logistic_sample_dataset",
 ]
 
 
@@ -22,6 +23,7 @@ import time
 from typing import Literal
 
 import numpy as np
+import numpy.typing as npt
 import pandas as pd
 import requests
 
@@ -235,3 +237,73 @@ def coordinates_from_incidence(
         v: np.sort(incidence[v].unique()).tolist()
         for v in ("season", "region", "strata")
     }
+
+
+def create_logistic_sample_dataset(
+    parameters: pd.DataFrame, time: npt.NDArray[np.array], epsilon: float, seed: int = 0
+) -> pd.DataFrame:
+    """
+    Create a synthetic logistic incidence dataset.
+
+    Args:
+        parameters: A pandas DataFrame with the columns 'season', 'strata', 'region',
+            'm', 'r', and 's'.
+        time: A numpy array of the time steps to generate a dataset for.
+        epsilon: The standard deviation to use in the resulting observations.
+        seed: An integer corresponding to the random seed to use when generating a
+            dataset for consistency across calls.
+
+    Returns:
+        A formatted incidence dataset.
+
+    Examples:
+        >>> import numpy as np
+        >>> import pandas as pd
+        >>> parameters = pd.DataFrame(data={
+        ...     "season": ["2023/24"],
+        ...     "strata": ["All stratas"],
+        ...     "region": ["All regions"],
+        ...     "m": [0.5],
+        ...     "r": [0.3],
+        ...     "s": [20.0],
+        ... })
+        >>> time = np.arange(40, step=3)
+        >>> create_logistic_sample_dataset(parameters, time, 0.001)
+            season       strata       region  time  incidence
+        0   2023/24  All stratas  All regions   0.0   0.000034
+        1   2023/24  All stratas  All regions   3.0   0.000806
+        2   2023/24  All stratas  All regions   6.0   0.004417
+        3   2023/24  All stratas  All regions   9.0   0.004171
+        4   2023/24  All stratas  All regions  12.0   0.011306
+        5   2023/24  All stratas  All regions  15.0   0.022770
+        6   2023/24  All stratas  All regions  18.0   0.035074
+        7   2023/24  All stratas  All regions  21.0   0.036781
+        8   2023/24  All stratas  All regions  24.0   0.027118
+        9   2023/24  All stratas  All regions  27.0   0.014892
+        10  2023/24  All stratas  All regions  30.0   0.008328
+        11  2023/24  All stratas  All regions  33.0   0.002606
+        12  2023/24  All stratas  All regions  36.0   0.000008
+        13  2023/24  All stratas  All regions  39.0   0.000721
+    """
+    # TODO: Input validation for parameters
+    rs = np.random.RandomState(seed)
+    incidence = []
+    for row in parameters.itertuples():
+        tmp = np.exp(-row.r * (time - row.s))
+        mu = row.m * row.r * tmp * np.power(1.0 + tmp, -2.0)
+        incidence.append(
+            pd.DataFrame(
+                data={
+                    "season": len(time) * [row.season],
+                    "strata": len(time) * [row.strata],
+                    "region": len(time) * [row.region],
+                    "time": time,
+                    "incidence": rs.gamma(
+                        shape=np.power(mu / epsilon, 2.0), scale=(epsilon**2.0) / mu
+                    ),
+                }
+            )
+        )
+    incidence = pd.concat(incidence, ignore_index=True)
+    incidence = format_incidence_dataframe(incidence)
+    return incidence
