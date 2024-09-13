@@ -242,7 +242,11 @@ def coordinates_from_incidence(
 
 
 def create_logistic_sample_dataset(
-    parameters: pd.DataFrame, time: npt.NDArray[np.array], epsilon: float, seed: int = 0
+    parameters: pd.DataFrame,
+    time: npt.NDArray[np.array],
+    epsilon: float,
+    error: Literal["gamma", "normal"] = "gamma",
+    seed: int = 0,
 ) -> pd.DataFrame:
     """
     Create a synthetic logistic incidence dataset.
@@ -252,6 +256,7 @@ def create_logistic_sample_dataset(
             'm', 'r', and 's'.
         time: A numpy array of the time steps to generate a dataset for.
         epsilon: The standard deviation to use in the resulting observations.
+        error: The error distribution to use in generating the observed incidences.
         seed: An integer corresponding to the random seed to use when generating a
             dataset for consistency across calls.
 
@@ -293,6 +298,10 @@ def create_logistic_sample_dataset(
     for row in parameters.itertuples():
         tmp = np.exp(-row.r * (time - row.s))
         mu = row.m * row.r * tmp * np.power(1.0 + tmp, -2.0)
+        if error == "gamma":
+            obs = rs.gamma(shape=np.power(mu / epsilon, 2.0), scale=(epsilon**2.0) / mu)
+        else:
+            obs = rs.normal(loc=mu, scale=epsilon)
         incidence.append(
             pd.DataFrame(
                 data={
@@ -300,9 +309,7 @@ def create_logistic_sample_dataset(
                     "strata": len(time) * [row.strata],
                     "region": len(time) * [row.region],
                     "time": time,
-                    "incidence": rs.gamma(
-                        shape=np.power(mu / epsilon, 2.0), scale=(epsilon**2.0) / mu
-                    ),
+                    "incidence": obs,
                 }
             )
         )
