@@ -222,7 +222,7 @@ def format_incidence_dataframe(incidence: pd.DataFrame) -> pd.DataFrame:
 
 def coordinates_from_incidence(
     incidence: pd.DataFrame,
-) -> dict[Literal["season", "region", "strata"], list[str]]:
+) -> dict[Literal["season", "region", "strata", "observation"], list[str]]:
     """
     Extract model coordinates from an incidence pandas DataFrame.
 
@@ -233,10 +233,12 @@ def coordinates_from_incidence(
         A dictionary of coordinates that can be provided to xarray or PyMC.
     """
     subset_df = incidence.drop_duplicates(subset=["season", "region", "strata"])
-    return {
+    coords = {
         v: np.sort(incidence[v].unique()).tolist()
         for v in ("season", "region", "strata")
     }
+    coords["observation"] = np.arange(len(incidence))
+    return coords
 
 
 def create_logistic_sample_dataset(
