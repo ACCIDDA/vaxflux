@@ -14,14 +14,16 @@ class IncidenceCurve(ABC):
     Abstract class for implementations of incidence curves.
     """
 
+    @property
     @abstractmethod
-    def get_parameters(self) -> tuple[str]:
+    def parameters(self) -> tuple[str]:
         """
         Return the set of parameters used by this incidence curve model.
 
         Returns:
             The set of parameter names as strings.
         """
+        raise NotImplementedError
 
     @abstractmethod
     def evaluate(
@@ -39,6 +41,7 @@ class IncidenceCurve(ABC):
         Returns:
             The incidence curve at the time steps provided.
         """
+        raise NotImplementedError
 
 
 class LogisticIncidenceCurve(IncidenceCurve):
@@ -51,8 +54,7 @@ class LogisticIncidenceCurve(IncidenceCurve):
     $$ f(t \vert m, r, s) = \mathrm{expit}(m) r e^{-r(t-s)} \left( 1 + e^{-r(t-s)} \right)^{-2}. $$
     """
 
-    def get_parameters(self) -> tuple[str]:
-        return ("m", "r", "s")
+    parameters = ("m", "r", "s")
 
     def evaluate(
         self,

@@ -33,7 +33,7 @@ def build_model(
     coords.update(
         {
             f"{p}_season": ["All Seasons"]
-            for p in set(incidence_curve.get_parameters())
+            for p in set(incidence_curve.parameters)
             - set(season_stratified_parameters)
         }
     )
@@ -47,7 +47,7 @@ def build_model(
     indexes.update(
         {
             f"{p}_season": np.array([0])
-            for p in set(incidence_curve.get_parameters())
+            for p in set(incidence_curve.parameters)
             - set(season_stratified_parameters)
         }
     )
@@ -62,7 +62,7 @@ def build_model(
 
         # **Prior distributions**
         params = {}
-        for p in incidence_curve.get_parameters():
+        for p in incidence_curve.parameters:
             # Macro
             p_season = f"{p}_macro"
             # params[p_season] = parameter_priors[p].pymc_distribution(
@@ -98,7 +98,7 @@ def build_model(
                 + params[f"{p}_strata"][indexes["strata"]],
                 dims="observation",
             )
-            for p in incidence_curve.get_parameters()
+            for p in incidence_curve.parameters
         }
         y_model = pm.Deterministic(
             "y_model",
