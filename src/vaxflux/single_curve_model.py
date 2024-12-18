@@ -7,11 +7,11 @@ Currently exported functionality includes:
 - `modified_logistic_curve_least_squares`
 """
 
-__all__ = [
+__all__ = (
     "modified_logistic_curve",
     "modified_logistic_curve_least_squares",
     "modified_logistic_curve_bayes_model",
-]
+)
 
 
 from typing import Any

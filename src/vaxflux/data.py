@@ -7,13 +7,13 @@ data from external data providers. Current exported functionality includes:
 - `get_ncird_weekly_cumulative_vaccination_coverage`
 """
 
-__all__ = [
+__all__ = (
     "read_flu_vacc_data",
     "get_ncird_weekly_cumulative_vaccination_coverage",
     "format_incidence_dataframe",
     "coordinates_from_incidence",
     "create_logistic_sample_dataset",
-]
+)
 
 
 from datetime import datetime
@@ -27,7 +27,7 @@ import numpy.typing as npt
 import pandas as pd
 import requests
 
-from . import sample_data
+from vaxflux import sample_data
 
 
 def read_flu_vacc_data():

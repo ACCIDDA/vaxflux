@@ -5,7 +5,7 @@ This module contains the needed utilities to create and fit a multilevel model o
 vaccine uptake.
 """
 
-__all__ = ["UptakeModelConfig", "create_multilevel_model", "generate_model_outputs"]
+__all__ = ("UptakeModelConfig", "create_multilevel_model", "generate_model_outputs")
 
 
 from dataclasses import dataclass

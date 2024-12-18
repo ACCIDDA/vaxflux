@@ -7,8 +7,8 @@ import numpy as np
 import pandas as pd
 import pymc as pm
 
-from .curves import IncidenceCurve
-from .data import coordinates_from_incidence
+from vaxflux.curves import IncidenceCurve
+from vaxflux.data import coordinates_from_incidence
 
 
 def build_model(
