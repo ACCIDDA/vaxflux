@@ -33,8 +33,7 @@ def build_model(
     coords.update(
         {
             f"{p}_season": ["All Seasons"]
-            for p in set(incidence_curve.parameters)
-            - set(season_stratified_parameters)
+            for p in set(incidence_curve.parameters) - set(season_stratified_parameters)
         }
     )
     indexes = {
@@ -47,8 +46,7 @@ def build_model(
     indexes.update(
         {
             f"{p}_season": np.array([0])
-            for p in set(incidence_curve.parameters)
-            - set(season_stratified_parameters)
+            for p in set(incidence_curve.parameters) - set(season_stratified_parameters)
         }
     )
 

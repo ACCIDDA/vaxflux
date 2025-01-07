@@ -1,9 +1,12 @@
+"""
+Model seasonal vaccination uptake curves.
+"""
+
 __all__ = (
     "curves",
     "data",
     "model",
     "multilevel_model",
-    "priors",
     "single_curve_model",
 )
 __version__ = "0.1.0"

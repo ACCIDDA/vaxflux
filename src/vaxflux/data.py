@@ -232,7 +232,6 @@ def coordinates_from_incidence(
     Returns:
         A dictionary of coordinates that can be provided to xarray or PyMC.
     """
-    subset_df = incidence.drop_duplicates(subset=["season", "region", "strata"])
     coords = {
         v: np.sort(incidence[v].unique()).tolist()
         for v in ("season", "region", "strata")
