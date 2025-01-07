@@ -23,7 +23,19 @@ def build_model(
     Build an model for vaccine incidence.
 
     Args:
-        ...
+        incidence: DataFrame with columns "time", "incidence", "season", "region", and
+            "strata".
+        incidence_curve: An `IncidenceCurve` to fit the uptake with.
+        observational_prior: A PyMC distribution for the observational model.
+        epsilon_prior: A tuple with the PyMC distribution for the epsilon parameter and
+            its parameters.
+        parameter_priors: A dictionary with the PyMC distribution for each parameter and
+            its parameters.
+        season_stratified_parameters: A tuple with the parameters that are stratified by
+            season.
+
+    Returns:
+        A PyMC model object.
     """
     # Determining the coordinates and parameters
     coords = coordinates_from_incidence(incidence)
@@ -63,9 +75,6 @@ def build_model(
         for p in incidence_curve.parameters:
             # Macro
             p_season = f"{p}_macro"
-            # params[p_season] = parameter_priors[p].pymc_distribution(
-            #     name=p_season, dims=f"{p}_season"
-            # )
             dist, dist_params = parameter_priors[p]
             params[p_season] = dist(name=p_season, dims=f"{p}_season", **dist_params)
             # Region
@@ -105,7 +114,6 @@ def build_model(
         )
 
         # **Observational model**
-        # epsilon = epsilon_prior.pymc_distribution(name="epsilon")
         epsilon = epsilon_prior[0](name="epsilon", **epsilon_prior[1])
         y_obs = observational_prior(
             name="y_obs", mu=y_model, sigma=epsilon, observed=observed_incidence
