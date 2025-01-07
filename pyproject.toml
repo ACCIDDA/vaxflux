@@ -22,7 +22,10 @@ demo = [
     "graphviz ~=0.20.3",
     "jupyter>=1.1.1",
 ]
-dev = [
-    "pytest ~=8.3.2",
-    "black[jupyter] >=24.8.0"
+
+[tool.uv]
+dev-dependencies = [
+    "black[jupyter]>=24.8.0",
+    "pylint>=3.3.2",
+    "pytest>=8.3.2",
 ]
