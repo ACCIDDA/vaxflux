@@ -65,3 +65,30 @@ class LogisticIncidenceCurve(IncidenceCurve):
     ) -> pt.tensor.variable.TensorVariable:
         tmp = pm.math.exp(-r * (t - s))
         return (pm.math.invlogit(m) * r * tmp) * ((1.0 + tmp) ** (-2.0))
+
+
+class TanhIncidenceCurve(IncidenceCurve):
+    """
+    Tanh incidence curve.
+
+    This class implements a tanh incidence curve with parameters $m$, $r$, and $s$ which
+    is given by:
+
+    $$ f(t \vert m, r, s) = \frac{r \mathrm{expit}(m)}{4}\mathrm{sech}^2\left( \frac{r}{2}(t - s) \right) $$
+    """
+
+    parameters = ("m", "r", "s")
+
+    def evaluate(
+        self,
+        t: npt.NDArray[np.number] | pt.tensor.variable.TensorVariable,
+        m: npt.NDArray[np.number] | pt.tensor.variable.TensorVariable,
+        r: npt.NDArray[np.number] | pt.tensor.variable.TensorVariable,
+        s: npt.NDArray[np.number] | pt.tensor.variable.TensorVariable,
+    ):
+        return (
+            0.25 * pm.math.invlogit(m) * r * (pm.math.cosh(0.5 * r * (t - s)) ** -2.0)
+        )
+
+
+# TODO: Implement a generalized logistic curve class, see https://en.wikipedia.org/wiki/Generalised_logistic_function.
