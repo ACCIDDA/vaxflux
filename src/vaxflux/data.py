@@ -26,6 +26,7 @@ import numpy as np
 import numpy.typing as npt
 import pandas as pd
 import requests
+from scipy.special import expit
 
 from vaxflux import sample_data
 
@@ -244,7 +245,7 @@ def create_logistic_sample_dataset(
     parameters: pd.DataFrame,
     time: npt.NDArray[np.array],
     epsilon: float,
-    error: Literal["gamma", "normal"] = "gamma",
+    error: Literal["gamma", "normal"] | None = "gamma",
     seed: int = 0,
 ) -> pd.DataFrame:
     """
@@ -255,7 +256,8 @@ def create_logistic_sample_dataset(
             'm', 'r', and 's'.
         time: A numpy array of the time steps to generate a dataset for.
         epsilon: The standard deviation to use in the resulting observations.
-        error: The error distribution to use in generating the observed incidences.
+        error: The error distribution to use in generating the observed incidences or
+            `None` for no noise added to the dataset.
         seed: An integer corresponding to the random seed to use when generating a
             dataset for consistency across calls.
 
@@ -296,11 +298,13 @@ def create_logistic_sample_dataset(
     incidence = []
     for row in parameters.itertuples():
         tmp = np.exp(-row.r * (time - row.s))
-        mu = row.m * row.r * tmp * np.power(1.0 + tmp, -2.0)
+        mu = expit(row.m) * row.r * tmp * np.power(1.0 + tmp, -2.0)
         if error == "gamma":
             obs = rs.gamma(shape=np.power(mu / epsilon, 2.0), scale=(epsilon**2.0) / mu)
+        elif error == "normal":
+            obs = np.maximum(rs.normal(loc=mu, scale=epsilon), 0.0)
         else:
-            obs = rs.normal(loc=mu, scale=epsilon)
+            obs = mu
         incidence.append(
             pd.DataFrame(
                 data={
