@@ -50,11 +50,11 @@ def build_model(
     # Determining the coordinates and parameters
     coords = coordinates_from_incidence(data)
     coords.update(
-        {f"{p}_season": coords["season"] for p in season_stratified_parameters}
+        {f"{p}Season": coords["season"] for p in season_stratified_parameters}
     )
     coords.update(
         {
-            f"{p}_season": ["All Seasons"]
+            f"{p}Season": ["All Seasons"]
             for p in set(incidence_curve.parameters) - set(season_stratified_parameters)
         }
     )
@@ -63,11 +63,11 @@ def build_model(
         for column in ("season", "region", "strata")
     }
     indexes.update(
-        {f"{p}_season": indexes["season"] for p in season_stratified_parameters}
+        {f"{p}Season": indexes["season"] for p in season_stratified_parameters}
     )
     indexes.update(
         {
-            f"{p}_season": np.array([0])
+            f"{p}Season": np.array([0])
             for p in set(incidence_curve.parameters) - set(season_stratified_parameters)
         }
     )
@@ -76,17 +76,17 @@ def build_model(
     with pm.Model(coords=coords) as model:
         # **Data**
         time = pm.Data("time", data["time"].values)
-        observed_incidence = pm.Data("observed_incidence", data["incidence"].values)
+        observed_incidence = pm.Data("observedIncidence", data["incidence"].values)
 
         # **Prior distributions**
         params = {}
         for p in incidence_curve.parameters:
             # Macro
-            p_season = f"{p}_macro"
+            p_season = f"{p}Macro"
             dist, dist_params = parameter_priors[p]
-            params[p_season] = dist(name=p_season, dims=f"{p}_season", **dist_params)
+            params[p_season] = dist(name=p_season, dims=f"{p}Season", **dist_params)
             # Region
-            if (p_region := f"{p}_region") in parameter_priors:
+            if (p_region := f"{p}Region") in parameter_priors:
                 dist, dist_params = parameter_priors[p_region]
                 params[p_region] = dist(name=p_region, dims="region", **dist_params)
             else:
@@ -94,7 +94,7 @@ def build_model(
                     p_region, np.repeat(0.0, len(coords["region"])), dims="region"
                 )
             # Strata
-            if (p_strata := f"{p}_strata") in parameter_priors:
+            if (p_strata := f"{p}Strata") in parameter_priors:
                 dist, dist_params = parameter_priors[p_strata]
                 params[p_strata] = dist(name=p_strata, dims="strata", **dist_params)
             else:
@@ -106,15 +106,15 @@ def build_model(
         evaluate_params = {
             p: pm.Deterministic(
                 p,
-                params[f"{p}_macro"][indexes[f"{p}_season"]]
-                + params[f"{p}_region"][indexes["region"]]
-                + params[f"{p}_strata"][indexes["strata"]],
+                params[f"{p}Macro"][indexes[f"{p}Season"]]
+                + params[f"{p}Region"][indexes["region"]]
+                + params[f"{p}Strata"][indexes["strata"]],
                 dims="observation",
             )
             for p in incidence_curve.parameters
         }
         y_model = pm.Deterministic(
-            "y_model",
+            "yModel",
             incidence_curve.evaluate(time, **evaluate_params),
             dims="observation",
         )
@@ -122,7 +122,7 @@ def build_model(
         # **Observational model**
         epsilon = epsilon_prior[0](name="epsilon", **epsilon_prior[1])
         y_obs = observational_prior(
-            name="y_obs", mu=y_model, sigma=epsilon, observed=observed_incidence
+            name="yObserved", mu=y_model, sigma=epsilon, observed=observed_incidence
         )
 
     return model

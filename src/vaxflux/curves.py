@@ -22,6 +22,14 @@ class IncidenceCurve(ABC):
 
         Returns:
             The set of parameter names as strings.
+
+        Notes:
+            1) The order of the parameters should be the same as the order of the
+               parameters in the `evaluate` method.
+            2) By convention the parameters should be named in lower case and preferably
+               a single letter.
+            3) When implementing a new incidence curve model, the `parameters` property
+               can be specified as a tuple of strings.
         """
         raise NotImplementedError
 
