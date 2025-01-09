@@ -1,7 +1,7 @@
 __all__ = ("build_model",)
 
 
-from typing import Any
+from typing import Any, Literal
 
 import numpy as np
 import pandas as pd
@@ -12,7 +12,9 @@ from vaxflux.data import coordinates_from_incidence
 
 
 def build_model(
-    incidence: pd.DataFrame,
+    data: pd.DataFrame,
+    observation_type: Literal["incidence", "prevalence"],
+    value_type: Literal["rate", "count"],
     incidence_curve: IncidenceCurve,
     observational_prior: pm.Distribution,
     epsilon_prior: tuple[pm.Distribution, dict[str, Any]],
@@ -23,8 +25,9 @@ def build_model(
     Build an model for vaccine incidence.
 
     Args:
-        incidence: DataFrame with columns "time", "incidence", "season", "region", and
-            "strata".
+        data: DataFrame with columns "time", "season", "region", "strata", and "value".
+        observation_type: The type of observation, either "incidence" or "prevalence".
+        value_type: The type of value, either "rate" or "count".
         incidence_curve: An `IncidenceCurve` to fit the uptake with.
         observational_prior: A PyMC distribution for the observational model.
         epsilon_prior: A tuple with the PyMC distribution for the epsilon parameter and
@@ -37,8 +40,15 @@ def build_model(
     Returns:
         A PyMC model object.
     """
+    if observation_type != "incidence":
+        raise NotImplementedError(
+            "Only incidence observations is supported at the moment."
+        )
+    if value_type != "rate":
+        raise NotImplementedError("Only rate values are supported at the moment.")
+
     # Determining the coordinates and parameters
-    coords = coordinates_from_incidence(incidence)
+    coords = coordinates_from_incidence(data)
     coords.update(
         {f"{p}_season": coords["season"] for p in season_stratified_parameters}
     )
@@ -49,7 +59,7 @@ def build_model(
         }
     )
     indexes = {
-        column: incidence[column].apply(lambda x: coords[column].index(x)).values
+        column: data[column].apply(lambda x: coords[column].index(x)).values
         for column in ("season", "region", "strata")
     }
     indexes.update(
@@ -65,10 +75,8 @@ def build_model(
     # Build the model
     with pm.Model(coords=coords) as model:
         # **Data**
-        time = pm.Data("time", incidence["time"].values)
-        observed_incidence = pm.Data(
-            "observed_incidence", incidence["incidence"].values
-        )
+        time = pm.Data("time", data["time"].values)
+        observed_incidence = pm.Data("observed_incidence", data["incidence"].values)
 
         # **Prior distributions**
         params = {}
@@ -79,18 +87,16 @@ def build_model(
             params[p_season] = dist(name=p_season, dims=f"{p}_season", **dist_params)
             # Region
             if (p_region := f"{p}_region") in parameter_priors:
-                params[p_region] = parameter_priors[p_region].pymc_distribution(
-                    name=p_region, dims="region"
-                )
+                dist, dist_params = parameter_priors[p_region]
+                params[p_region] = dist(name=p_region, dims="region", **dist_params)
             else:
                 params[p_region] = pm.Data(
                     p_region, np.repeat(0.0, len(coords["region"])), dims="region"
                 )
             # Strata
             if (p_strata := f"{p}_strata") in parameter_priors:
-                params[p_strata] = parameter_priors[p_strata].pymc_distribution(
-                    name=p_strata, dims="strata"
-                )
+                dist, dist_params = parameter_priors[p_strata]
+                params[p_strata] = dist(name=p_strata, dims="strata", **dist_params)
             else:
                 params[p_strata] = pm.Data(
                     p_strata, np.repeat(0.0, len(coords["strata"])), dims="strata"
