@@ -318,4 +318,5 @@ def create_logistic_sample_dataset(
         )
     incidence = pd.concat(incidence, ignore_index=True)
     incidence = format_incidence_dataframe(incidence)
+    incidence = incidence.rename(columns={"incidence": "value"})
     return incidence
