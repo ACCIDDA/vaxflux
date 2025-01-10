@@ -176,13 +176,13 @@ def change_detection(
                 kwargs = {}
                 kwargs[k] = s
                 x = (
-                    trace_before.posterior[f"{p}{k.title()}"]
+                    trace_after.posterior[f"{p}{k.title()}"]
                     .sel(**kwargs)
                     .to_numpy()
                     .flatten()
                 )
                 y = (
-                    trace_after.posterior[f"{p}{k.title()}"]
+                    trace_before.posterior[f"{p}{k.title()}"]
                     .sel(**kwargs)
                     .to_numpy()
                     .flatten()
@@ -204,6 +204,7 @@ def change_detection(
                             "metric_value": metric_value,
                         }
                     )
+
     results = pd.DataFrame.from_records(results)
 
     return results
