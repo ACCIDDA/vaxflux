@@ -20,7 +20,7 @@ def build_model(
     observation_type: Literal["incidence", "prevalence"],
     value_type: Literal["rate", "count"],
     incidence_curve: IncidenceCurve,
-    observational_prior: pm.Distribution,
+    observational_dist: pm.Distribution,
     epsilon_prior: tuple[pm.Distribution, dict[str, Any]],
     parameter_priors: dict[str, tuple[pm.Distribution, dict[str, Any]]],
     season_stratified_parameters: tuple[str] = (),
@@ -34,7 +34,7 @@ def build_model(
         observation_type: The type of observation, either "incidence" or "prevalence".
         value_type: The type of value, either "rate" or "count".
         incidence_curve: An `IncidenceCurve` to fit the uptake with.
-        observational_prior: A PyMC distribution for the observational model.
+        observational_dist: A PyMC distribution for the observational model.
         epsilon_prior: A tuple with the PyMC distribution for the epsilon parameter and
             its parameters.
         parameter_priors: A dictionary with the PyMC distribution for each parameter and
@@ -167,7 +167,7 @@ def build_model(
 
         # **Observational model**
         epsilon = epsilon_prior[0](name="epsilon", **epsilon_prior[1])
-        y_obs = observational_prior(
+        y_obs = observational_dist(
             name="yObserved", mu=y_model, sigma=epsilon, observed=observed_incidence
         )
 
