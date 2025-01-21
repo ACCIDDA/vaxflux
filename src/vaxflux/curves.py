@@ -71,8 +71,8 @@ class LogisticIncidenceCurve(IncidenceCurve):
         r: npt.NDArray[np.number] | pt.tensor.variable.TensorVariable,
         s: npt.NDArray[np.number] | pt.tensor.variable.TensorVariable,
     ) -> pt.tensor.variable.TensorVariable:
-        tmp = pm.math.exp(-r * (t - s))
-        return (pm.math.invlogit(m) * r * tmp) * ((1.0 + tmp) ** (-2.0))
+        tmp = pm.math.exp(-pm.math.exp(r) * (t - s))
+        return (pm.math.invlogit(m) * pm.math.exp(r) * tmp) * ((1.0 + tmp) ** (-2.0))
 
     def prevalence(
         self,
@@ -81,7 +81,7 @@ class LogisticIncidenceCurve(IncidenceCurve):
         r: npt.NDArray[np.number] | pt.tensor.variable.TensorVariable,
         s: npt.NDArray[np.number] | pt.tensor.variable.TensorVariable,
     ) -> pt.tensor.variable.TensorVariable:
-        return pm.math.invlogit(m) * pm.math.invlogit(r * (t - s))
+        return pm.math.invlogit(m) * pm.math.invlogit(pm.math.exp(r) * (t - s))
 
 
 class TanhIncidenceCurve(IncidenceCurve):
