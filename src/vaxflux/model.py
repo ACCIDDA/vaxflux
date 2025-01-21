@@ -48,10 +48,6 @@ def build_model(
     Returns:
         A PyMC model object.
     """
-    if observation_type != "incidence":
-        raise NotImplementedError(
-            "Only incidence observations is supported at the moment."
-        )
     if value_type != "rate":
         raise NotImplementedError("Only rate values are supported at the moment.")
 
@@ -135,16 +131,37 @@ def build_model(
         evaluate_params = {
             p: pm.Deterministic(
                 p,
-                params[f"{p}Macro"][indexes[f"{p}Season"]]
-                + params[f"{p}Region"][indexes["region"]]
-                + params[f"{p}Strata"][indexes["strata"]],
+                (
+                    params[f"{p}Macro"][indexes[f"{p}Season"]]
+                    + params[f"{p}Region"][indexes["region"]]
+                    + (
+                        pt.stack(
+                            [
+                                params[f"{p}Strata"][indexes["strata"][i]][
+                                    indexes["season"][i]
+                                ]
+                                for i in range(len(data))
+                            ],
+                            axis=0,
+                        )
+                        if isinstance(params[f"{p}Strata"], list)
+                        else params[f"{p}Strata"][indexes["strata"]]
+                    )
+                ),
                 dims="observation",
             )
             for p in incidence_curve.parameters
         }
+        # TODO: This is not quite the right way to model prevalence, prevalence should
+        # be the integral of the incidence curve. Here errors in observed prevalence
+        # are independent of time, which is not true.
         y_model = pm.Deterministic(
             "yModel",
-            incidence_curve.evaluate(time, **evaluate_params),
+            (
+                incidence_curve.evaluate(time, **evaluate_params)
+                if observation_type == "incidence"
+                else incidence_curve.prevalence(time, **evaluate_params)
+            ),
             dims="observation",
         )
 
