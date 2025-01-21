@@ -8,7 +8,9 @@ from arviz import InferenceData
 import numpy as np
 import pandas as pd
 import pymc as pm
+import pytensor.tensor as pt
 
+from vaxflux._util import _clean_text
 from vaxflux.curves import IncidenceCurve
 from vaxflux.data import coordinates_from_incidence
 
@@ -22,6 +24,7 @@ def build_model(
     epsilon_prior: tuple[pm.Distribution, dict[str, Any]],
     parameter_priors: dict[str, tuple[pm.Distribution, dict[str, Any]]],
     season_stratified_parameters: tuple[str] = (),
+    season_walk_sigma: float | dict[str, float] = 0.01,
 ) -> pm.Model:
     """
     Build an model for vaccine incidence.
@@ -38,6 +41,9 @@ def build_model(
             its parameters.
         season_stratified_parameters: A tuple with the parameters that are stratified by
             season.
+        season_walk_sigma: The sigma for the Gaussian random walk for strata/region
+            specific parameters in `season_stratified_parameters`. Can be a float for
+            all parameters or a dictionary with the sigma for each parameter.
 
     Returns:
         A PyMC model object.
@@ -98,7 +104,28 @@ def build_model(
             # Strata
             if (p_strata := f"{p}Strata") in parameter_priors:
                 dist, dist_params = parameter_priors[p_strata]
-                params[p_strata] = dist(name=p_strata, dims="strata", **dist_params)
+                if p_strata in season_stratified_parameters:
+                    params[p_strata] = []
+                    for s in coords["strata"]:
+                        params[p_strata].append(
+                            pm.GaussianRandomWalk(
+                                name=f"{p_strata}{_clean_text(s)}",
+                                sigma=(
+                                    season_walk_sigma
+                                    if isinstance(season_walk_sigma, float)
+                                    else season_walk_sigma[p_strata]
+                                ),
+                                init_dist=dist.dist(
+                                    **{
+                                        k: (v[s] if isinstance(v, dict) else v)
+                                        for k, v in dist_params.items()
+                                    }
+                                ),
+                                dims="season",
+                            )
+                        )
+                else:
+                    params[p_strata] = dist(name=p_strata, dims="strata", **dist_params)
             else:
                 params[p_strata] = pm.Data(
                     p_strata, np.repeat(0.0, len(coords["strata"])), dims="strata"
