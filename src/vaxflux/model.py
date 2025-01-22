@@ -23,7 +23,7 @@ def build_model(
     observational_dist: pm.Distribution,
     epsilon_prior: tuple[pm.Distribution, dict[str, Any]],
     parameter_priors: dict[str, tuple[pm.Distribution, dict[str, Any]]],
-    season_stratified_parameters: tuple[str] = (),
+    season_stratified_parameters: tuple[str, ...] = (),
     season_walk_sigma: float | dict[str, float] = 0.01,
 ) -> pm.Model:
     """
@@ -90,42 +90,25 @@ def build_model(
             dist, dist_params = parameter_priors[p]
             params[p_season] = dist(name=p_season, dims=f"{p}Season", **dist_params)
             # Region
-            if (p_region := f"{p}Region") in parameter_priors:
-                dist, dist_params = parameter_priors[p_region]
-                params[p_region] = dist(name=p_region, dims="region", **dist_params)
-            else:
-                params[p_region] = pm.Data(
-                    p_region, np.repeat(0.0, len(coords["region"])), dims="region"
-                )
+            _strata_region_factors(
+                p,
+                "region",
+                params,
+                coords,
+                parameter_priors,
+                season_stratified_parameters,
+                season_walk_sigma,
+            )
             # Strata
-            if (p_strata := f"{p}Strata") in parameter_priors:
-                dist, dist_params = parameter_priors[p_strata]
-                if p_strata in season_stratified_parameters:
-                    params[p_strata] = []
-                    for s in coords["strata"]:
-                        params[p_strata].append(
-                            pm.GaussianRandomWalk(
-                                name=f"{p_strata}{_clean_text(s)}",
-                                sigma=(
-                                    season_walk_sigma
-                                    if isinstance(season_walk_sigma, float)
-                                    else season_walk_sigma[p_strata]
-                                ),
-                                init_dist=dist.dist(
-                                    **{
-                                        k: (v[s] if isinstance(v, dict) else v)
-                                        for k, v in dist_params.items()
-                                    }
-                                ),
-                                dims="season",
-                            )
-                        )
-                else:
-                    params[p_strata] = dist(name=p_strata, dims="strata", **dist_params)
-            else:
-                params[p_strata] = pm.Data(
-                    p_strata, np.repeat(0.0, len(coords["strata"])), dims="strata"
-                )
+            _strata_region_factors(
+                p,
+                "strata",
+                params,
+                coords,
+                parameter_priors,
+                season_stratified_parameters,
+                season_walk_sigma,
+            )
 
         # **Model computations**
         evaluate_params = {
@@ -172,6 +155,59 @@ def build_model(
         )
 
     return model
+
+
+def _strata_region_factors(
+    p: str,
+    kind: Literal["region", "strata"],
+    params: dict[str, Any],
+    coords: dict[Literal["season", "region", "strata", "observation"], list[str]],
+    parameter_priors: dict[str, tuple[pm.Distribution, dict[str, Any]]],
+    season_stratified_parameters: tuple[str, ...],
+    season_walk_sigma: float | dict[str, float],
+) -> None:
+    """
+    Helper to construct the region/strata specific factors for a parameter.
+
+    Args:
+        p: The parameter name.
+        kind: The kind of factor, either "region" or "strata".
+        params: The dictionary to store the PyMC variables.
+        coords: The coordinates.
+        parameter_priors: The parameter priors.
+        season_stratified_parameters: The parameters that are stratified by season.
+        season_walk_sigma: The sigma for the Gaussian random walk for strata/region
+            specific parameters in `season_stratified_parameters
+
+    Returns:
+        None
+    """
+    if (p_kind := f"{p}{kind.title()}") in parameter_priors:
+        dist, dist_params = parameter_priors[p_kind]
+        if p_kind in season_stratified_parameters:
+            params[p_kind] = []
+            for s in coords[kind]:
+                params[p_kind].append(
+                    pm.GaussianRandomWalk(
+                        name=f"{p_kind}{_clean_text(s)}",
+                        sigma=(
+                            season_walk_sigma
+                            if isinstance(season_walk_sigma, float)
+                            else season_walk_sigma[p_kind]
+                        ),
+                        init_dist=dist.dist(
+                            **{
+                                k: (v[s] if isinstance(v, dict) else v)
+                                for k, v in dist_params.items()
+                            }
+                        ),
+                        dims="season",
+                    )
+                )
+        else:
+            params[p_kind] = dist(name=p_kind, dims=kind, **dist_params)
+    else:
+        params[p_kind] = pm.Data(p_kind, np.repeat(0.0, len(coords[kind])), dims=kind)
 
 
 def change_detection(
