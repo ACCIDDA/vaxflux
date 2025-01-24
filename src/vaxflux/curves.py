@@ -1,4 +1,9 @@
-__all__ = ("IncidenceCurve", "LogisticIncidenceCurve")
+__all__ = (
+    "GeneralizedLogisticIncidenceCurve",
+    "IncidenceCurve",
+    "LogisticIncidenceCurve",
+    "TanhIncidenceCurve",
+)
 
 
 from abc import ABC, abstractmethod
@@ -108,4 +113,30 @@ class TanhIncidenceCurve(IncidenceCurve):
         )
 
 
-# TODO: Implement a generalized logistic curve class, see https://en.wikipedia.org/wiki/Generalised_logistic_function.
+class GeneralizedLogisticIncidenceCurve(IncidenceCurve):
+    parameters = ("m", "r", "s", "q", "lam")
+
+    def evaluate(
+        self,
+        t: npt.NDArray[np.number] | pt.tensor.variable.TensorVariable,
+        m: npt.NDArray[np.number] | pt.tensor.variable.TensorVariable,
+        r: npt.NDArray[np.number] | pt.tensor.variable.TensorVariable,
+        s: npt.NDArray[np.number] | pt.tensor.variable.TensorVariable,
+        q: npt.NDArray[np.number] | pt.tensor.variable.TensorVariable,
+        lam: npt.NDArray[np.number] | pt.tensor.variable.TensorVariable,
+    ) -> pt.tensor.variable.TensorVariable:
+        raise NotImplementedError
+
+    def prevalence(
+        self,
+        t: npt.NDArray[np.number] | pt.tensor.variable.TensorVariable,
+        m: npt.NDArray[np.number] | pt.tensor.variable.TensorVariable,
+        r: npt.NDArray[np.number] | pt.tensor.variable.TensorVariable,
+        s: npt.NDArray[np.number] | pt.tensor.variable.TensorVariable,
+        q: npt.NDArray[np.number] | pt.tensor.variable.TensorVariable,
+        lam: npt.NDArray[np.number] | pt.tensor.variable.TensorVariable,
+    ) -> pt.tensor.variable.TensorVariable:
+        return pm.math.invlogit(m) * (
+            (1.0 + (pm.math.exp(q) * pm.math.exp(-pm.math.exp(r) * (t - s))))
+            ** (-pm.math.exp(lam))
+        )
