@@ -1,4 +1,4 @@
-__all__ = ("build_model", "change_detection")
+__all__ = ("build_model", "change_detection", "posterior_forecast")
 
 
 from collections.abc import Iterable
@@ -288,3 +288,78 @@ def change_detection(
     results = pd.DataFrame.from_records(results)
 
     return results
+
+
+def posterior_forecast(
+    times,
+    trace: InferenceData,
+    curve: IncidenceCurve,
+) -> pd.DataFrame:
+    """
+    Produce a posterior forecast.
+
+    Args:
+        times: The times to forecast for.
+        trace: The trace to use for the forecast.
+        observation_type: The type of observation.
+        curve: The incidence curve to use for the forecast.
+
+    Returns:
+        A pandas DataFrame with the columns: 'chain', 'draw', 'season', 'strata',
+        'time', 'value', and 'prevalence'.
+    """
+    chains = trace.posterior.coords["chain"].values.tolist()
+    draws = trace.posterior.coords["draw"].values.tolist()
+    seasons = trace.posterior.coords["season"].values.tolist()
+    strata = trace.posterior.coords["strata"].values.tolist()
+
+    times_array = np.zeros((len(times), len(chains), len(draws)))
+    for i in range(len(chains)):
+        for j in range(len(draws)):
+            times_array[:, i, j] = times
+
+    dfs = []
+    for i, season in enumerate(seasons):
+        for j, stratum in enumerate(strata):
+            # shape: (chains, draws)
+            m = (
+                trace.posterior["mMacro"].sel(mSeason=season).values
+                + trace.posterior[f"mStrata{_clean_text(stratum)}"]
+                .sel(season=season)
+                .values
+            )
+            # shape: (chains, draws)
+            r = (
+                trace.posterior["rMacro"].sel(rSeason=season).values
+                + trace.posterior[f"rStrata"].sel(strata=stratum).values
+            )
+            # shape: (chains, draws)
+            s = (
+                trace.posterior["sMacro"].sel(sSeason=season).values
+                + trace.posterior[f"sStrata"].sel(strata=stratum).values
+            )
+            # shape: (times, chains, draws)
+            y = curve.evaluate(times_array, m, r, s).eval()
+            # z = cumulative_trapezoid(y, x=times_array, initial=0.0, axis=0)
+            z = curve.prevalence(times_array, m, r, s).eval()
+
+            # Append to list of DataFrames
+            # TODO: Inefficient, but it's the easiest way to do this for now
+            for k, chain in enumerate(chains):
+                for l, draw in enumerate(draws):
+                    dfs.append(
+                        pd.DataFrame(
+                            {
+                                "chain": chain,
+                                "draw": draw,
+                                "season": season,
+                                "strata": stratum,
+                                "time": times,
+                                "value": y[:, k, l],
+                                "prevalence": z[:, k, l],
+                            }
+                        )
+                    )
+
+    simulated = pd.concat(dfs)
+    return simulated
