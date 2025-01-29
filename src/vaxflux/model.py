@@ -363,3 +363,19 @@ def posterior_forecast(
 
     simulated = pd.concat(dfs)
     return simulated
+
+
+def model_parameter_summary(
+    trace: InferenceData, curve: IncidenceCurve
+) -> pd.DataFrame:
+    """
+    Produce a summary of the fitted model parameters.
+
+    Args:
+        trace: The posterior trace to summarize.
+        curve: The incidence curve used in the model.
+
+    Returns:
+        A pandas DataFrame.
+    """
+    raise NotImplementedError
