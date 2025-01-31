@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+PYTHON_VERSION=$( cat .python-version | xargs )
+TARGET_VERSION=$( echo "py$PYTHON_VERSION" | tr -d '.' )
+black .
+ruff check --fix --target-version $TARGET_VERSION
