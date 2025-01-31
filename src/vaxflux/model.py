@@ -331,12 +331,12 @@ def posterior_forecast(
             # shape: (chains, draws)
             r = (
                 trace.posterior["rMacro"].sel(rSeason=season).values
-                + trace.posterior[f"rStrata"].sel(strata=stratum).values
+                + trace.posterior["rStrata"].sel(strata=stratum).values
             )
             # shape: (chains, draws)
             s = (
                 trace.posterior["sMacro"].sel(sSeason=season).values
-                + trace.posterior[f"sStrata"].sel(strata=stratum).values
+                + trace.posterior["sStrata"].sel(strata=stratum).values
             )
             # shape: (times, chains, draws)
             y = curve.evaluate(times_array, m, r, s).eval()
