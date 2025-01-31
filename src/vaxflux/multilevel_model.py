@@ -407,49 +407,51 @@ def generate_model_outputs(
             "strata": stacked.coords.get("strata", ["All Strata"]),
         },
     )
-    for i in range(output_shape[0]):  # time
-        for j in range(output_shape[2]):  # season
-            for k in range(output_shape[3]):  # region
-                for l in range(output_shape[4]):  # strata
+    for time_idx in range(output_shape[0]):  # time
+        for season_idx in range(output_shape[2]):  # season
+            for region_idx in range(output_shape[3]):  # region
+                for strata_idx in range(output_shape[4]):  # strata
                     K = expit(
-                        stacked.k.values[k_idx[j], :]
+                        stacked.k.values[k_idx[season_idx], :]
                         + (
-                            stacked.variables["dk_region"].values[k, :]
+                            stacked.variables["dk_region"].values[region_idx, :]
                             if "dk_region" in stacked.variables
                             else 0.0
                         )
                         + (
-                            stacked.variables["dk_strata"].values[l, :]
+                            stacked.variables["dk_strata"].values[strata_idx, :]
                             if "dk_strata" in stacked.variables
                             else 0.0
                         )
                     )
                     R = (
-                        stacked.r.values[r_idx[j], :]
+                        stacked.r.values[r_idx[season_idx], :]
                         + (
-                            stacked.variables["dr_region"].values[k, :]
+                            stacked.variables["dr_region"].values[region_idx, :]
                             if "dr_region" in stacked.variables
                             else 0.0
                         )
                         + (
-                            stacked.variables["dr_strata"].values[l, :]
+                            stacked.variables["dr_strata"].values[strata_idx, :]
                             if "dr_strata" in stacked.variables
                             else 0.0
                         )
                     )
                     S = (
-                        stacked.s.values[s_idx[j], :]
+                        stacked.s.values[s_idx[season_idx], :]
                         + (
-                            stacked.variables["ds_region"].values[k, :]
+                            stacked.variables["ds_region"].values[region_idx, :]
                             if "ds_region" in stacked.variables
                             else 0.0
                         )
                         + (
-                            stacked.variables["ds_strata"].values[l, :]
+                            stacked.variables["ds_strata"].values[strata_idx, :]
                             if "ds_strata" in stacked.variables
                             else 0.0
                         )
                     )
-                    output[i, :, j, k, l] = K * expit(R * (t[i] - S))
+                    output[time_idx, :, season_idx, region_idx, strata_idx] = K * expit(
+                        R * (t[time_idx] - S)
+                    )
 
     return output

@@ -150,7 +150,7 @@ def build_model(
 
         # **Observational model**
         epsilon = epsilon_prior[0](name="epsilon", **epsilon_prior[1])
-        y_obs = observational_dist(
+        observational_dist(
             name="yObserved", mu=y_model, sigma=epsilon, observed=observed_incidence
         )
 
@@ -314,13 +314,13 @@ def posterior_forecast(
     strata = trace.posterior.coords["strata"].values.tolist()
 
     times_array = np.zeros((len(times), len(chains), len(draws)))
-    for i in range(len(chains)):
-        for j in range(len(draws)):
-            times_array[:, i, j] = times
+    for chain_idx in range(len(chains)):
+        for draw_idx in range(len(draws)):
+            times_array[:, chain_idx, draw_idx] = times
 
     dfs = []
-    for i, season in enumerate(seasons):
-        for j, stratum in enumerate(strata):
+    for season in seasons:
+        for stratum in strata:
             # shape: (chains, draws)
             m = (
                 trace.posterior["mMacro"].sel(mSeason=season).values
@@ -345,8 +345,8 @@ def posterior_forecast(
 
             # Append to list of DataFrames
             # TODO: Inefficient, but it's the easiest way to do this for now
-            for k, chain in enumerate(chains):
-                for l, draw in enumerate(draws):
+            for chain_idx, chain in enumerate(chains):
+                for draw_idx, draw in enumerate(draws):
                     dfs.append(
                         pd.DataFrame(
                             {
@@ -355,8 +355,8 @@ def posterior_forecast(
                                 "season": season,
                                 "strata": stratum,
                                 "time": times,
-                                "value": y[:, k, l],
-                                "prevalence": z[:, k, l],
+                                "value": y[:, chain_idx, draw_idx],
+                                "prevalence": z[:, chain_idx, draw_idx],
                             }
                         )
                     )
