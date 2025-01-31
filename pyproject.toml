@@ -26,6 +26,7 @@ demo = [
 [tool.uv]
 dev-dependencies = [
     "black[jupyter]>=24.8.0",
+    "mypy>=1.14.1",
     "pytest>=8.3.2",
     "ruff>=0.9.4",
 ]
