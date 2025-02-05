@@ -10,7 +10,6 @@ which is most commonly used in the context of vaccine uptake.
 """
 
 __all__ = (
-    "GeneralizedLogisticIncidenceCurve",
     "IncidenceCurve",
     "LogisticIncidenceCurve",
     "TanhIncidenceCurve",
@@ -18,11 +17,13 @@ __all__ = (
 
 
 from abc import ABC, abstractmethod
+import warnings
 
 import numpy as np
 import numpy.typing as npt
 import pymc as pm
-import pytensor as pt
+import pytensor.tensor as pt
+import pytensor
 
 
 class IncidenceCurve(ABC):
@@ -48,12 +49,19 @@ class IncidenceCurve(ABC):
         """
         raise NotImplementedError
 
-    @abstractmethod
-    def evaluate(
+    def evaluate(self, *args, **kwargs):
+        """Deprecated in favor of the `incidence` method."""  # noqa: D401
+        warnings.warn(
+            "The `evaluate` method is deprecated, use `incidence` instead.",
+            DeprecationWarning,
+        )
+        return self.incidence(*args, **kwargs)
+
+    def incidence(
         self,
-        t: npt.NDArray[np.number] | pt.tensor.variable.TensorVariable,
-        **kwargs: npt.NDArray[np.number] | pt.tensor.variable.TensorVariable,
-    ) -> pt.tensor.variable.TensorVariable:
+        t: npt.NDArray[np.number] | pt.variable.TensorVariable,
+        **kwargs: npt.NDArray[np.number] | pt.variable.TensorVariable,
+    ) -> pt.variable.TensorVariable:
         """
         Evaluate the incidence curve at given set of time steps.
 
@@ -66,13 +74,17 @@ class IncidenceCurve(ABC):
             The incidence curve at the time steps provided.
 
         """
-        raise NotImplementedError
+        scalar_t = pt.dscalar("t")
+        func = self.prevalence(t, **kwargs)
+        deriv = pytensor.function([scalar_t], pt.grad(func, scalar_t))
+        return deriv(t)
 
+    @abstractmethod
     def prevalence(
         self,
-        t: npt.NDArray[np.number] | pt.tensor.variable.TensorVariable,
-        **kwargs: npt.NDArray[np.number] | pt.tensor.variable.TensorVariable,
-    ) -> pt.tensor.variable.TensorVariable:
+        t: npt.NDArray[np.number] | pt.variable.TensorVariable,
+        **kwargs: npt.NDArray[np.number] | pt.variable.TensorVariable,
+    ) -> pt.variable.TensorVariable:
         """
         Evaluate the prevalence curve at given set of time steps.
 
@@ -104,36 +116,11 @@ class LogisticIncidenceCurve(IncidenceCurve):
 
     parameters = ("m", "r", "s")
 
-    def evaluate(
-        self,
-        t: npt.NDArray[np.number] | pt.tensor.variable.TensorVariable,
-        **kwargs: npt.NDArray[np.number] | pt.tensor.variable.TensorVariable,
-    ) -> pt.tensor.variable.TensorVariable:
-        """
-        Evaluate the incidence curve at given set of time steps.
-
-        Args:
-            t: The time steps to evaluate the incidence curve at.
-            kwargs: Further keyword arguments, must be the parameters for this model as
-                described by the `parameters` attribute.
-
-        Returns:
-            The incidence curve at the time steps provided.
-
-        """
-        tmp = pm.math.exp(-pm.math.exp(kwargs["r"]) * (t - kwargs["s"]))
-        return (
-            pm.math.invlogit(kwargs["m"])
-            * pm.math.exp(kwargs["r"])
-            * tmp
-            * ((1.0 + tmp) ** -2.0)
-        )
-
     def prevalence(
         self,
-        t: npt.NDArray[np.number] | pt.tensor.variable.TensorVariable,
-        **kwargs: npt.NDArray[np.number] | pt.tensor.variable.TensorVariable,
-    ) -> pt.tensor.variable.TensorVariable:
+        t: npt.NDArray[np.number] | pt.variable.TensorVariable,
+        **kwargs: npt.NDArray[np.number] | pt.variable.TensorVariable,
+    ) -> pt.variable.TensorVariable:
         """
         Evaluate the prevalence curve at given set of time steps.
 
@@ -155,10 +142,7 @@ class TanhIncidenceCurve(IncidenceCurve):
     r"""
     Tanh incidence curve.
 
-    This class implements a tanh incidence curve with parameters $m$, $r$, and $s$ which
-    is given by:
-
-    $$ f(t \vert m, r, s) = \frac{r \mathrm{expit}(m)}{4}\mathrm{sech}^2\left( \frac{r}{2}(t - s) \right) $$
+    This class implements a tanh incidence curve with parameters $m$, $r$, and $s$.
 
     Attributes:
         parameters: The names of parameters used by this incidence curve model.
@@ -167,72 +151,11 @@ class TanhIncidenceCurve(IncidenceCurve):
 
     parameters = ("m", "r", "s")
 
-    def evaluate(
-        self,
-        t: npt.NDArray[np.number] | pt.tensor.variable.TensorVariable,
-        **kwargs: npt.NDArray[np.number] | pt.tensor.variable.TensorVariable,
-    ):
-        """
-        Evaluate the incidence curve at given set of time steps.
-
-        Args:
-            t: The time steps to evaluate the incidence curve at.
-            kwargs: Further keyword arguments, must be the parameters for this model as
-                described by the `parameters` attribute.
-
-        Returns:
-            The incidence curve at the time steps provided.
-
-        """
-        return (
-            0.25
-            * pm.math.invlogit(kwargs["m"])
-            * kwargs["r"]
-            * (pm.math.cosh(0.5 * kwargs["r"] * (t - kwargs["s"])) ** -2.0)
-        )
-
-
-class GeneralizedLogisticIncidenceCurve(IncidenceCurve):
-    r"""
-    Generalized logistic incidence curve.
-
-    This class implements a generalized logistic incidence curve with parameters $m$,
-    $r$, $s$, $q$, and $\lambda$ which is given by:
-
-    $$ f(t \vert m, r, s, q, \lambda) = \frac{\mathrm{expit}(m)}{\left(1+e^{q - e^r(t - s)}\right)^{-\lambda}} $$.
-
-    Attributes:
-        parameters: The names of parameters used by this incidence curve model.
-
-    """
-
-    parameters = ("m", "r", "s", "q", "lam")
-
-    def evaluate(
-        self,
-        t: npt.NDArray[np.number] | pt.tensor.variable.TensorVariable,
-        **kwargs: npt.NDArray[np.number] | pt.tensor.variable.TensorVariable,
-    ) -> pt.tensor.variable.TensorVariable:
-        """
-        Evaluate the incidence curve at given set of time steps.
-
-        Args:
-            t: The time steps to evaluate the incidence curve at.
-            kwargs: Further keyword arguments, must be the parameters for this model as
-                described by the `parameters` attribute.
-
-        Raises:
-            NotImplementedError: This method is not implemented for the Generalized
-                Logistic Incidence Curve.
-
-        """
-        raise NotImplementedError
-
     def prevalence(
         self,
-        t: npt.NDArray[np.number] | pt.tensor.variable.TensorVariable,
-        **kwargs: npt.NDArray[np.number] | pt.tensor.variable.TensorVariable,
-    ) -> pt.tensor.variable.TensorVariable:
+        t: npt.NDArray[np.number] | pt.variable.TensorVariable,
+        **kwargs: npt.NDArray[np.number] | pt.variable.TensorVariable,
+    ) -> pt.variable.TensorVariable:
         """
         Evaluate the prevalence curve at given set of time steps.
 
@@ -245,10 +168,6 @@ class GeneralizedLogisticIncidenceCurve(IncidenceCurve):
             The prevalence curve at the time steps provided.
 
         """
-        return pm.math.invlogit(kwargs["m"]) * (
-            1.0
-            + (
-                pm.math.exp(kwargs["q"])
-                * pm.math.exp(-pm.math.exp(kwargs["r"]) * (t - kwargs["s"]))
-            )
-        ) ** (-pm.math.exp(kwargs["lam"]))
+        return pm.math.invlogit(kwargs["m"]) * pm.math.tanh(
+            pm.math.exp(kwargs["r"]) * (t - kwargs["s"])
+        )
