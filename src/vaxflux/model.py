@@ -2,7 +2,7 @@ __all__ = ("build_model", "change_detection", "posterior_forecast")
 
 
 from collections.abc import Iterable
-from typing import Any, Callable, Literal
+from typing import Any, Callable, Literal, cast
 
 from arviz import InferenceData
 import numpy as np
@@ -52,7 +52,7 @@ def build_model(
         raise NotImplementedError("Only rate values are supported at the moment.")
 
     # Determining the coordinates and parameters
-    coords = coordinates_from_incidence(data)
+    coords = cast(dict[str, list[str]], coordinates_from_incidence(data))
     coords.update(
         {f"{p}Season": coords["season"] for p in season_stratified_parameters}
     )
@@ -161,7 +161,7 @@ def _strata_region_factors(
     p: str,
     kind: Literal["region", "strata"],
     params: dict[str, Any],
-    coords: dict[Literal["season", "region", "strata", "observation"], list[str]],
+    coords: dict[str, list[str]],
     parameter_priors: dict[str, tuple[pm.Distribution, dict[str, Any]]],
     season_stratified_parameters: tuple[str, ...],
     season_walk_sigma: float | dict[str, float],
@@ -233,6 +233,7 @@ def change_detection(
         A pandas DataFrame with the columns "kind", "param", "name", "test", "metric",
         "test_statistic", "p_value", and "metric_value".
     """
+    posterior = getattr(trace_before, "posterior")
     test_and_metrics = (
         [test_and_metrics] if isinstance(test_and_metrics, dict) else test_and_metrics
     )
@@ -241,8 +242,7 @@ def change_detection(
 
     for k in kind:
         if not np.all(
-            trace_before.posterior.coords.get(k).to_numpy()
-            == trace_after.posterior.coords.get(k).to_numpy()
+            posterior.coords.get(k).to_numpy() == posterior.coords.get(k).to_numpy()
         ):
             raise ValueError(
                 f"The '{k}' coordinates do not match between the two traces."
@@ -252,21 +252,11 @@ def change_detection(
 
     for k in kind:
         for p in param:
-            for s in trace_before.posterior.coords.get(k).to_numpy().tolist():
+            for s in posterior.coords.get(k).to_numpy().tolist():
                 kwargs = {}
                 kwargs[k] = s
-                x = (
-                    trace_after.posterior[f"{p}{k.title()}"]
-                    .sel(**kwargs)
-                    .to_numpy()
-                    .flatten()
-                )
-                y = (
-                    trace_before.posterior[f"{p}{k.title()}"]
-                    .sel(**kwargs)
-                    .to_numpy()
-                    .flatten()
-                )
+                x = posterior[f"{p}{k.title()}"].sel(**kwargs).to_numpy().flatten()
+                y = posterior[f"{p}{k.title()}"].sel(**kwargs).to_numpy().flatten()
                 for test_and_metric in test_and_metrics:
                     test_name, metric_name = test_and_metric.keys()
                     test_func, metric_func = test_and_metric.values()
@@ -285,9 +275,7 @@ def change_detection(
                         }
                     )
 
-    results = pd.DataFrame.from_records(results)
-
-    return results
+    return pd.DataFrame.from_records(results)
 
 
 def posterior_forecast(
@@ -308,10 +296,11 @@ def posterior_forecast(
         A pandas DataFrame with the columns: 'chain', 'draw', 'season', 'strata',
         'time', 'value', and 'prevalence'.
     """
-    chains = trace.posterior.coords["chain"].values.tolist()
-    draws = trace.posterior.coords["draw"].values.tolist()
-    seasons = trace.posterior.coords["season"].values.tolist()
-    strata = trace.posterior.coords["strata"].values.tolist()
+    posterior = getattr(trace, "posterior")
+    chains = posterior.coords["chain"].values.tolist()
+    draws = posterior.coords["draw"].values.tolist()
+    seasons = posterior.coords["season"].values.tolist()
+    strata = posterior.coords["strata"].values.tolist()
 
     times_array = np.zeros((len(times), len(chains), len(draws)))
     for chain_idx in range(len(chains)):
@@ -323,25 +312,24 @@ def posterior_forecast(
         for stratum in strata:
             # shape: (chains, draws)
             m = (
-                trace.posterior["mMacro"].sel(mSeason=season).values
-                + trace.posterior[f"mStrata{_clean_text(stratum)}"]
-                .sel(season=season)
-                .values
+                posterior["mMacro"].sel(mSeason=season).values
+                + posterior[f"mStrata{_clean_text(stratum)}"].sel(season=season).values
             )
             # shape: (chains, draws)
             r = (
-                trace.posterior["rMacro"].sel(rSeason=season).values
-                + trace.posterior["rStrata"].sel(strata=stratum).values
+                posterior["rMacro"].sel(rSeason=season).values
+                + posterior["rStrata"].sel(strata=stratum).values
             )
             # shape: (chains, draws)
             s = (
-                trace.posterior["sMacro"].sel(sSeason=season).values
-                + trace.posterior["sStrata"].sel(strata=stratum).values
+                posterior["sMacro"].sel(sSeason=season).values
+                + posterior["sStrata"].sel(strata=stratum).values
             )
+            kwargs = {"m": m, "r": r, "s": s}
             # shape: (times, chains, draws)
-            y = curve.evaluate(times_array, m, r, s).eval()
+            y = curve.evaluate(times_array, **kwargs).eval()
             # z = cumulative_trapezoid(y, x=times_array, initial=0.0, axis=0)
-            z = curve.prevalence(times_array, m, r, s).eval()
+            z = curve.prevalence(times_array, **kwargs).eval()
 
             # Append to list of DataFrames
             # TODO: Inefficient, but it's the easiest way to do this for now

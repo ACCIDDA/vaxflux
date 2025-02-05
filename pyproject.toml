@@ -27,6 +27,8 @@ demo = [
 dev-dependencies = [
     "black[jupyter]>=24.8.0",
     "mypy>=1.14.1",
+    "pandas-stubs>=2.2.3.241126",
     "pytest>=8.3.2",
     "ruff>=0.9.4",
+    "scipy-stubs>=1.15.1.0",
 ]

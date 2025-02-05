@@ -243,7 +243,7 @@ def coordinates_from_incidence(
 
 def create_logistic_sample_dataset(
     parameters: pd.DataFrame,
-    time: npt.NDArray[np.array],
+    time: npt.NDArray[np.number],
     epsilon: float,
     error: Literal["gamma", "normal"] | None = "gamma",
     seed: int = 0,
@@ -316,7 +316,7 @@ def create_logistic_sample_dataset(
                 }
             )
         )
-    incidence = pd.concat(incidence, ignore_index=True)
-    incidence = format_incidence_dataframe(incidence)
-    incidence = incidence.rename(columns={"incidence": "value"})
-    return incidence
+    incidence_df = pd.concat(incidence, ignore_index=True)
+    incidence_df = format_incidence_dataframe(incidence_df)
+    incidence_df = incidence_df.rename(columns={"incidence": "value"})
+    return incidence_df

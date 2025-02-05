@@ -21,7 +21,7 @@ class IncidenceCurve(ABC):
 
     @property
     @abstractmethod
-    def parameters(self) -> tuple[str]:
+    def parameters(self) -> tuple[str, ...]:
         """
         Return the set of parameters used by this incidence curve model.
 
@@ -40,11 +40,30 @@ class IncidenceCurve(ABC):
 
     @abstractmethod
     def evaluate(
+        self,
         t: npt.NDArray[np.number] | pt.tensor.variable.TensorVariable,
         **kwargs: npt.NDArray[np.number] | pt.tensor.variable.TensorVariable,
-    ) -> npt.NDArray[np.number] | pt.tensor.variable.TensorVariable:
+    ) -> pt.tensor.variable.TensorVariable:
         """
         Evaluate the incidence curve at given set of time steps.
+
+        Args:
+            t: The time steps to evaluate the incidence curve at.
+            kwargs: Further keyword arguments, must be the parameters for this model as
+                returned by the `get_parameters` method.
+
+        Returns:
+            The incidence curve at the time steps provided.
+        """
+        raise NotImplementedError
+
+    def prevalence(
+        self,
+        t: npt.NDArray[np.number] | pt.tensor.variable.TensorVariable,
+        **kwargs: npt.NDArray[np.number] | pt.tensor.variable.TensorVariable,
+    ) -> pt.tensor.variable.TensorVariable:
+        """
+        Evaluate the prevalence curve at given set of time steps.
 
         Args:
             t: The time steps to evaluate the incidence curve at.
