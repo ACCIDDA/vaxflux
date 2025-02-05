@@ -91,21 +91,24 @@ class LogisticIncidenceCurve(IncidenceCurve):
     def evaluate(
         self,
         t: npt.NDArray[np.number] | pt.tensor.variable.TensorVariable,
-        m: npt.NDArray[np.number] | pt.tensor.variable.TensorVariable,
-        r: npt.NDArray[np.number] | pt.tensor.variable.TensorVariable,
-        s: npt.NDArray[np.number] | pt.tensor.variable.TensorVariable,
+        **kwargs: npt.NDArray[np.number] | pt.tensor.variable.TensorVariable,
     ) -> pt.tensor.variable.TensorVariable:
-        tmp = pm.math.exp(-pm.math.exp(r) * (t - s))
-        return (pm.math.invlogit(m) * pm.math.exp(r) * tmp) * ((1.0 + tmp) ** (-2.0))
+        tmp = pm.math.exp(-pm.math.exp(kwargs["r"]) * (t - kwargs["s"]))
+        return (
+            pm.math.invlogit(kwargs["m"])
+            * pm.math.exp(kwargs["r"])
+            * tmp
+            * ((1.0 + tmp) ** -2.0)
+        )
 
     def prevalence(
         self,
         t: npt.NDArray[np.number] | pt.tensor.variable.TensorVariable,
-        m: npt.NDArray[np.number] | pt.tensor.variable.TensorVariable,
-        r: npt.NDArray[np.number] | pt.tensor.variable.TensorVariable,
-        s: npt.NDArray[np.number] | pt.tensor.variable.TensorVariable,
+        **kwargs: npt.NDArray[np.number] | pt.tensor.variable.TensorVariable,
     ) -> pt.tensor.variable.TensorVariable:
-        return pm.math.invlogit(m) * pm.math.invlogit(pm.math.exp(r) * (t - s))
+        return pm.math.invlogit(kwargs["m"]) * pm.math.invlogit(
+            pm.math.exp(kwargs["r"]) * (t - kwargs["s"])
+        )
 
 
 class TanhIncidenceCurve(IncidenceCurve):
@@ -123,12 +126,13 @@ class TanhIncidenceCurve(IncidenceCurve):
     def evaluate(
         self,
         t: npt.NDArray[np.number] | pt.tensor.variable.TensorVariable,
-        m: npt.NDArray[np.number] | pt.tensor.variable.TensorVariable,
-        r: npt.NDArray[np.number] | pt.tensor.variable.TensorVariable,
-        s: npt.NDArray[np.number] | pt.tensor.variable.TensorVariable,
+        **kwargs: npt.NDArray[np.number] | pt.tensor.variable.TensorVariable,
     ):
         return (
-            0.25 * pm.math.invlogit(m) * r * (pm.math.cosh(0.5 * r * (t - s)) ** -2.0)
+            0.25
+            * pm.math.invlogit(kwargs["m"])
+            * kwargs["r"]
+            * (pm.math.cosh(0.5 * kwargs["r"] * (t - kwargs["s"])) ** -2.0)
         )
 
 
@@ -138,24 +142,19 @@ class GeneralizedLogisticIncidenceCurve(IncidenceCurve):
     def evaluate(
         self,
         t: npt.NDArray[np.number] | pt.tensor.variable.TensorVariable,
-        m: npt.NDArray[np.number] | pt.tensor.variable.TensorVariable,
-        r: npt.NDArray[np.number] | pt.tensor.variable.TensorVariable,
-        s: npt.NDArray[np.number] | pt.tensor.variable.TensorVariable,
-        q: npt.NDArray[np.number] | pt.tensor.variable.TensorVariable,
-        lam: npt.NDArray[np.number] | pt.tensor.variable.TensorVariable,
+        **kwargs: npt.NDArray[np.number] | pt.tensor.variable.TensorVariable,
     ) -> pt.tensor.variable.TensorVariable:
         raise NotImplementedError
 
     def prevalence(
         self,
         t: npt.NDArray[np.number] | pt.tensor.variable.TensorVariable,
-        m: npt.NDArray[np.number] | pt.tensor.variable.TensorVariable,
-        r: npt.NDArray[np.number] | pt.tensor.variable.TensorVariable,
-        s: npt.NDArray[np.number] | pt.tensor.variable.TensorVariable,
-        q: npt.NDArray[np.number] | pt.tensor.variable.TensorVariable,
-        lam: npt.NDArray[np.number] | pt.tensor.variable.TensorVariable,
+        **kwargs: npt.NDArray[np.number] | pt.tensor.variable.TensorVariable,
     ) -> pt.tensor.variable.TensorVariable:
-        return pm.math.invlogit(m) * (
-            (1.0 + (pm.math.exp(q) * pm.math.exp(-pm.math.exp(r) * (t - s))))
-            ** (-pm.math.exp(lam))
-        )
+        return pm.math.invlogit(kwargs["m"]) * (
+            1.0
+            + (
+                pm.math.exp(kwargs["q"])
+                * pm.math.exp(-pm.math.exp(kwargs["r"]) * (t - kwargs["s"]))
+            )
+        ) ** (-pm.math.exp(kwargs["lam"]))
