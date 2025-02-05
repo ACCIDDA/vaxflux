@@ -20,7 +20,7 @@ from datetime import datetime
 from importlib import resources
 import io
 import time
-from typing import Literal
+from typing import Literal, TypedDict, cast
 
 import numpy as np
 import numpy.typing as npt
@@ -233,17 +233,30 @@ def coordinates_from_incidence(
     Returns:
         A dictionary of coordinates that can be provided to xarray or PyMC.
     """
-    coords = {
-        v: np.sort(incidence[v].unique()).tolist()
-        for v in ("season", "region", "strata")
+    keys: tuple[Literal["season", "region", "strata"], ...] = (
+        "season",
+        "region",
+        "strata",
+    )
+    coords: dict[Literal["season", "region", "strata", "observation"], list[str]] = {
+        **{v: np.sort(incidence[v].unique()).tolist() for v in keys},
+        **{"observation": np.arange(len(incidence)).astype(str).tolist()},
     }
-    coords["observation"] = np.arange(len(incidence))
     return coords
+
+
+class ParametersRow(TypedDict):
+    season: str
+    strata: str
+    region: str
+    m: float
+    r: float
+    s: float
 
 
 def create_logistic_sample_dataset(
     parameters: pd.DataFrame,
-    time: npt.NDArray[np.number],
+    time: npt.NDArray[np.float64],
     epsilon: float,
     error: Literal["gamma", "normal"] | None = "gamma",
     seed: int = 0,
@@ -296,9 +309,9 @@ def create_logistic_sample_dataset(
     # TODO: Input validation for parameters
     rs = np.random.RandomState(seed)
     incidence = []
-    for row in parameters.itertuples():
-        tmp = np.exp(-row.r * (time - row.s))
-        mu = expit(row.m) * row.r * tmp * np.power(1.0 + tmp, -2.0)
+    for row in cast(list[ParametersRow], parameters.to_dict(orient="records")):
+        tmp = np.exp(-row["r"] * (time - row["s"]))
+        mu = expit(row["m"]) * row["r"] * tmp * np.power(1.0 + tmp, -2.0)
         if error == "gamma":
             obs = rs.gamma(shape=np.power(mu / epsilon, 2.0), scale=(epsilon**2.0) / mu)
         elif error == "normal":
@@ -308,9 +321,9 @@ def create_logistic_sample_dataset(
         incidence.append(
             pd.DataFrame(
                 data={
-                    "season": len(time) * [row.season],
-                    "strata": len(time) * [row.strata],
-                    "region": len(time) * [row.region],
+                    "season": len(time) * [row["season"]],
+                    "strata": len(time) * [row["strata"]],
+                    "region": len(time) * [row["region"]],
                     "time": time,
                     "incidence": obs,
                 }

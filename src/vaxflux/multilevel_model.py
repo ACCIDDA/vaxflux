@@ -64,7 +64,7 @@ class UptakeModelConfig:
                 'season', 'region', 'strata', and 'rate'.
         """
         # Private instance attributes
-        self._coords = {}
+        self._coords: dict[int, dict[str, list[str]]] = {}
         # First create local copy as to not clobber user variable and then validate
         self.data = self.data.copy()
         required_columns = {"time", "season", "region", "strata", "rate"}
@@ -365,7 +365,7 @@ def generate_model_outputs(
     # Formatting and extraction
     if isinstance(trace, pm.backends.base.MultiTrace):
         raise NotImplementedError
-    stacked = az.extract(trace.posterior)
+    stacked = az.extract(getattr(trace, "posterior"))
 
     # Determine the output shape and helpers
     seasons_shape = max([stacked.sizes[f"{x}_season"] for x in ["k", "r", "s"]])
