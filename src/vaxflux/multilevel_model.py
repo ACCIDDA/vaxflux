@@ -1,7 +1,7 @@
 """
 Functionality for creating a multilevel model of vaccine uptake.
 
-This module contains the needed utilities to create and fit a multilevel model of 
+This module contains the needed utilities to create and fit a multilevel model of
 vaccine uptake.
 """
 
@@ -31,6 +31,7 @@ class UptakeModelConfig:
         name: An optional name to give to this model config. Only used for pretty
             printing.
         TODO: Document the attributes of this config class
+
     """
 
     data: pd.DataFrame
@@ -62,9 +63,10 @@ class UptakeModelConfig:
         Raises:
             ValueError: If `data` does not have all of the required columns: 'time',
                 'season', 'region', 'strata', and 'rate'.
+
         """
         # Private instance attributes
-        self._coords = {}
+        self._coords: dict[int, dict[str, list[str]]] = {}
         # First create local copy as to not clobber user variable and then validate
         self.data = self.data.copy()
         required_columns = {"time", "season", "region", "strata", "rate"}
@@ -87,84 +89,85 @@ class UptakeModelConfig:
         # self.data = self.data.set_index(["season", "region", "strata"])
 
     def __repr__(self) -> str:
+        """Return a representation of this object with optional human readable name."""
         if self.name:
             return f"<vaxflux.multilevel_model.UptakeModelConfig named '{self.name}'>"
         return f"<vaxflux.multilevel_model.UptakeModelConfig with id {id(self)}>"
 
     @property
-    def mu_k(self) -> float:
+    def mu_k(self) -> float:  # noqa: D102
         return self.k_prior[0]
 
     @property
-    def sigma_k(self) -> float:
+    def sigma_k(self) -> float:  # noqa: D102
         return self.k_prior[1]
 
     @property
-    def mu_r(self) -> float:
+    def mu_r(self) -> float:  # noqa: D102
         return self.s_prior[0]
 
     @property
-    def sigma_r(self) -> float:
+    def sigma_r(self) -> float:  # noqa: D102
         return self.s_prior[1]
 
     @property
-    def mu_s(self) -> float:
+    def mu_s(self) -> float:  # noqa: D102
         return self.s_prior[0]
 
     @property
-    def sigma_s(self) -> float:
+    def sigma_s(self) -> float:  # noqa: D102
         return self.s_prior[1]
 
     @property
-    def mu_dk_region(self) -> float | None:
+    def mu_dk_region(self) -> float | None:  # noqa: D102
         return self.dk_region_prior[0] if self.dk_region_prior else None
 
     @property
-    def sigma_dk_region(self) -> float | None:
+    def sigma_dk_region(self) -> float | None:  # noqa: D102
         return self.dk_region_prior[1] if self.dk_region_prior else None
 
     @property
-    def mu_dr_region(self) -> float | None:
+    def mu_dr_region(self) -> float | None:  # noqa: D102
         return self.dr_region_prior[0] if self.dr_region_prior else None
 
     @property
-    def sigma_dr_region(self) -> float | None:
+    def sigma_dr_region(self) -> float | None:  # noqa: D102
         return self.dr_region_prior[1] if self.dr_region_prior else None
 
     @property
-    def mu_ds_region(self) -> float | None:
+    def mu_ds_region(self) -> float | None:  # noqa: D102
         return self.ds_region_prior[0] if self.ds_region_prior else None
 
     @property
-    def sigma_ds_region(self) -> float | None:
+    def sigma_ds_region(self) -> float | None:  # noqa: D102
         return self.ds_region_prior[1] if self.ds_region_prior else None
 
     @property
-    def mu_dk_strata(self) -> float | None:
+    def mu_dk_strata(self) -> float | None:  # noqa: D102
         return self.dk_strata_prior[0] if self.dk_strata_prior else None
 
     @property
-    def sigma_dk_strata(self) -> float | None:
+    def sigma_dk_strata(self) -> float | None:  # noqa: D102
         return self.dk_strata_prior[1] if self.dk_strata_prior else None
 
     @property
-    def mu_dr_strata(self) -> float | None:
+    def mu_dr_strata(self) -> float | None:  # noqa: D102
         return self.dr_strata_prior[0] if self.dr_strata_prior else None
 
     @property
-    def sigma_dr_strata(self) -> float | None:
+    def sigma_dr_strata(self) -> float | None:  # noqa: D102
         return self.dr_strata_prior[1] if self.dr_strata_prior else None
 
     @property
-    def mu_ds_strata(self) -> float | None:
+    def mu_ds_strata(self) -> float | None:  # noqa: D102
         return self.ds_strata_prior[0] if self.ds_strata_prior else None
 
     @property
-    def sigma_ds_strata(self) -> float | None:
+    def sigma_ds_strata(self) -> float | None:  # noqa: D102
         return self.ds_strata_prior[1] if self.ds_strata_prior else None
 
     @property
-    def coords(self) -> dict[str, list[str]]:
+    def coords(self) -> dict[str, list[str]]:  # noqa: D102
         if (coords := self._coords.get(id(self.data))) is None:
             coords = {
                 v: self.data[v].unique().tolist()
@@ -185,37 +188,37 @@ class UptakeModelConfig:
         return coords.copy()
 
     @property
-    def coord_dims(self) -> dict[str, int]:
+    def coord_dims(self) -> dict[str, int]:  # noqa: D102
         return {k: len(v) for k, v in self.coords.items()}
 
     @property
-    def season_index(self):
+    def season_index(self):  # noqa: D102
         return (
             self.data["season"].apply(lambda x: self.coords["season"].index(x)).values
         )
 
     @property
-    def region_index(self):
+    def region_index(self):  # noqa: D102
         return (
             self.data["region"].apply(lambda x: self.coords["region"].index(x)).values
         )
 
     @property
-    def strata_index(self):
+    def strata_index(self):  # noqa: D102
         return (
             self.data["strata"].apply(lambda x: self.coords["strata"].index(x)).values
         )
 
     @property
-    def k_season_index(self):
+    def k_season_index(self):  # noqa: D102
         return self.season_index if self.k_season_stratified else np.array([0])
 
     @property
-    def r_season_index(self):
+    def r_season_index(self):  # noqa: D102
         return self.season_index if self.r_season_stratified else np.array([0])
 
     @property
-    def s_season_index(self):
+    def s_season_index(self):  # noqa: D102
         return self.season_index if self.s_season_stratified else np.array([0])
 
 
@@ -233,6 +236,7 @@ def create_multilevel_model(config: UptakeModelConfig) -> pm.Model:
 
     Returns:
         A PyMC model generated from the given uptake model configuration.
+
     """
     # Local inputs
     t = config.data["time"].values.copy()
@@ -361,11 +365,12 @@ def generate_model_outputs(
     Returns:
         A numpy array with the dimensions of 'time', 'sample', 'season', 'region', and
         'strata'.
+
     """
     # Formatting and extraction
     if isinstance(trace, pm.backends.base.MultiTrace):
         raise NotImplementedError
-    stacked = az.extract(trace.posterior)
+    stacked = az.extract(getattr(trace, "posterior"))
 
     # Determine the output shape and helpers
     seasons_shape = max([stacked.sizes[f"{x}_season"] for x in ["k", "r", "s"]])
@@ -407,49 +412,51 @@ def generate_model_outputs(
             "strata": stacked.coords.get("strata", ["All Strata"]),
         },
     )
-    for i in range(output_shape[0]):  # time
-        for j in range(output_shape[2]):  # season
-            for k in range(output_shape[3]):  # region
-                for l in range(output_shape[4]):  # strata
+    for time_idx in range(output_shape[0]):  # time
+        for season_idx in range(output_shape[2]):  # season
+            for region_idx in range(output_shape[3]):  # region
+                for strata_idx in range(output_shape[4]):  # strata
                     K = expit(
-                        stacked.k.values[k_idx[j], :]
+                        stacked.k.values[k_idx[season_idx], :]
                         + (
-                            stacked.variables["dk_region"].values[k, :]
+                            stacked.variables["dk_region"].values[region_idx, :]
                             if "dk_region" in stacked.variables
                             else 0.0
                         )
                         + (
-                            stacked.variables["dk_strata"].values[l, :]
+                            stacked.variables["dk_strata"].values[strata_idx, :]
                             if "dk_strata" in stacked.variables
                             else 0.0
                         )
                     )
                     R = (
-                        stacked.r.values[r_idx[j], :]
+                        stacked.r.values[r_idx[season_idx], :]
                         + (
-                            stacked.variables["dr_region"].values[k, :]
+                            stacked.variables["dr_region"].values[region_idx, :]
                             if "dr_region" in stacked.variables
                             else 0.0
                         )
                         + (
-                            stacked.variables["dr_strata"].values[l, :]
+                            stacked.variables["dr_strata"].values[strata_idx, :]
                             if "dr_strata" in stacked.variables
                             else 0.0
                         )
                     )
                     S = (
-                        stacked.s.values[s_idx[j], :]
+                        stacked.s.values[s_idx[season_idx], :]
                         + (
-                            stacked.variables["ds_region"].values[k, :]
+                            stacked.variables["ds_region"].values[region_idx, :]
                             if "ds_region" in stacked.variables
                             else 0.0
                         )
                         + (
-                            stacked.variables["ds_strata"].values[l, :]
+                            stacked.variables["ds_strata"].values[strata_idx, :]
                             if "ds_strata" in stacked.variables
                             else 0.0
                         )
                     )
-                    output[i, :, j, k, l] = K * expit(R * (t[i] - S))
+                    output[time_idx, :, season_idx, region_idx, strata_idx] = K * expit(
+                        R * (t[time_idx] - S)
+                    )
 
     return output

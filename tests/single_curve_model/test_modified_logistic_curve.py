@@ -1,3 +1,5 @@
+"""Tests for the modified logistic curve function."""
+
 import numpy as np
 import numpy.typing as npt
 import pytest
@@ -32,6 +34,7 @@ def test_modified_logistic_curve_output_validation(
     k: float | np.float64,
     c0: float | np.float64,
 ) -> None:
+    """Test the output of the modified logistic curve function."""
     y = modified_logistic_curve(t, r, k, c0)
     # First check the output type
     if isinstance(t, np.ndarray):

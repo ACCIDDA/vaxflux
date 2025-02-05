@@ -1,4 +1,4 @@
-__all__: tuple[str] = ()
+__all__: tuple[str, ...] = ()
 
 
 import re
