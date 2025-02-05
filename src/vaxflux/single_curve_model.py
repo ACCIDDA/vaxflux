@@ -14,7 +14,7 @@ __all__ = (
 )
 
 
-from typing import Any
+from typing import Any, cast
 
 import arviz as az
 import numpy as np
@@ -22,7 +22,7 @@ import numpy.typing as npt
 import pymc as pm
 from pytensor.compile.ops import as_op
 import pytensor.tensor as pt
-from scipy.optimize import least_squares, OptimizeResult
+from scipy.optimize import OptimizeResult, least_squares
 from scipy.special import expit, logit
 
 
@@ -62,7 +62,7 @@ def modified_logistic_curve_least_squares(
     t: npt.NDArray[np.float64],
     y: npt.NDArray[np.float64],
     x0: tuple[float | None, float | None, float | None] = (None, None, None),
-    **kwargs: dict[str, Any],
+    **kwargs: Any,
 ) -> OptimizeResult:
     """
     Fit the given data to a modified logistic curve using least squares.
@@ -106,13 +106,13 @@ def modified_logistic_curve_least_squares(
     """
     # First make educated guesses for the least squares fit
     r0, k0, c0 = x0
-    k0 = 1.1 * np.max(y) if k0 is None else k0
+    k0 = float(1.1 * np.max(y) if k0 is None else k0)
     c0 = t[np.argsort(y)[len(y) // 2]] if c0 is None else c0
     if r0 is None:
         with np.errstate(divide="ignore"):
             z = logit(y / k0) / (t - c0)
         z = z[np.isfinite(z)]
-        r0 = np.nanmean(z) if len(z) > 3 else 1.0
+        r0 = float(np.nanmean(z) if len(z) > 3 else 1.0)
     x0 = (r0, k0, c0)
 
     # Define the residual function
@@ -120,7 +120,7 @@ def modified_logistic_curve_least_squares(
         return y - modified_logistic_curve(t, *x)
 
     # Now fit and return
-    opt_result = least_squares(_residuals, x0, **kwargs)
+    opt_result = least_squares(_residuals, x0, **kwargs)  # type: ignore[operator]
     return opt_result
 
 
@@ -145,6 +145,7 @@ def modified_logistic_curve_bayes_model(
     """
     # Least squares fit for initial guesses
     opt_result = modified_logistic_curve_least_squares(t, y)
+    r_init, k_init, c0_init = cast(npt.NDArray[np.number], opt_result.x)
 
     # Local helpers
     sigma_r, sigma_k, sigma_c0, sigma_sigma = sigma
@@ -158,9 +159,9 @@ def modified_logistic_curve_bayes_model(
     # Construct model
     with pm.Model() as model:
         # Priors
-        r = pm.Normal("r", mu=0.0, sigma=sigma_r, initval=opt_result.x[0])
-        k = pm.HalfNormal("k", sigma=sigma_k, initval=opt_result.x[1])
-        c0 = pm.Normal("c0", mu=0.0, sigma=sigma_c0, initval=opt_result.x[2])
+        r = pm.Normal("r", mu=0.0, sigma=sigma_r, initval=r_init)
+        k = pm.HalfNormal("k", sigma=sigma_k, initval=k_init)
+        c0 = pm.Normal("c0", mu=0.0, sigma=sigma_c0, initval=c0_init)
         sigma = pm.HalfNormal("sigma", sigma=sigma_sigma)
 
         # Likelihood
