@@ -1,7 +1,7 @@
 """
 Functionality for creating a single curve model.
 
-This module contains the needed utilities to create and fit a single curve model. 
+This module contains the needed utilities to create and fit a single curve model.
 Currently exported functionality includes:
 - `modified_logistic_curve`
 - `modified_logistic_curve_least_squares`

@@ -1,7 +1,7 @@
 """
 Functionality for creating a multilevel model of vaccine uptake.
 
-This module contains the needed utilities to create and fit a multilevel model of 
+This module contains the needed utilities to create and fit a multilevel model of
 vaccine uptake.
 """
 

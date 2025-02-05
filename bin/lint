@@ -4,8 +4,8 @@ PYTHON_VERSION=$( cat .python-version | xargs )
 TARGET_VERSION=$( echo "py$PYTHON_VERSION" | tr -d '.' )
 echo "Using python version $PYTHON_VERSION"
 
-echo "> Formatting with black..."
-black .
+echo "> Formatting with ruff..."
+ruff format .
 
 echo "> Linting with ruff..."
 ruff check --fix --target-version $TARGET_VERSION
