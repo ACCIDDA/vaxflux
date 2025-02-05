@@ -1,3 +1,5 @@
+"""Model building and analysis functions."""
+
 __all__ = ("build_model", "change_detection", "posterior_forecast")
 
 
@@ -47,6 +49,7 @@ def build_model(  # noqa: PLR0913
 
     Returns:
         A PyMC model object.
+
     """
     if value_type != "rate":
         raise NotImplementedError("Only rate values are supported at the moment.")
@@ -167,7 +170,7 @@ def _strata_region_factors(  # noqa: PLR0913
     season_walk_sigma: float | dict[str, float],
 ) -> None:
     """
-    Helper to construct the region/strata specific factors for a parameter.
+    Construct the region/strata specific factors for a parameter.
 
     Args:
         p: The parameter name.
@@ -181,6 +184,7 @@ def _strata_region_factors(  # noqa: PLR0913
 
     Returns:
         None
+
     """
     if (p_kind := f"{p}{kind.title()}") in parameter_priors:
         dist, dist_params = parameter_priors[p_kind]
@@ -232,6 +236,7 @@ def change_detection(
     Returns:
         A pandas DataFrame with the columns "kind", "param", "name", "test", "metric",
         "test_statistic", "p_value", and "metric_value".
+
     """
     posterior = getattr(trace_before, "posterior")
     test_and_metrics = (
@@ -295,6 +300,7 @@ def posterior_forecast(
     Returns:
         A pandas DataFrame with the columns: 'chain', 'draw', 'season', 'strata',
         'time', 'value', and 'prevalence'.
+
     """
     posterior = getattr(trace, "posterior")
     chains = posterior.coords["chain"].values.tolist()
@@ -365,5 +371,6 @@ def model_parameter_summary(
 
     Returns:
         A pandas DataFrame.
+
     """
     raise NotImplementedError

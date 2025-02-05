@@ -50,6 +50,7 @@ def read_flu_vacc_data():
             dtype=[('season', 'S9'), ('end_date', 'S8'), ('week', '<u8'), ('sort_order', '<u8'), ('doses', '<f8')])
         >>> data["doses"][:5]
         array([ 0.52,  3.23, 10.18, 19.99, 37.38])
+
     """
     csv_file = resources.files(sample_data) / "Flu_Vacc_Data.csv"
     with csv_file.open() as f:
@@ -193,6 +194,7 @@ def format_incidence_dataframe(incidence: pd.DataFrame) -> pd.DataFrame:
         0  All Seasons  All Stratas  All Regions   1.0      0.010
         1  All Seasons  All Stratas  All Regions   1.5      0.020
         2  All Seasons  All Stratas  All Regions   2.0      0.015
+
     """
     incidence = incidence.copy()
     incidence_columns = set(incidence.columns.tolist())
@@ -232,6 +234,7 @@ def coordinates_from_incidence(
 
     Returns:
         A dictionary of coordinates that can be provided to xarray or PyMC.
+
     """
     keys: tuple[Literal["season", "region", "strata"], ...] = (
         "season",
@@ -305,6 +308,7 @@ def create_logistic_sample_dataset(
         11  2023/24  All stratas  All regions  33.0   0.002606
         12  2023/24  All stratas  All regions  36.0   0.000008
         13  2023/24  All stratas  All regions  39.0   0.000721
+
     """
     # TODO: Input validation for parameters
     rs = np.random.RandomState(seed)

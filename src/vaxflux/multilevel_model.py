@@ -31,6 +31,7 @@ class UptakeModelConfig:
         name: An optional name to give to this model config. Only used for pretty
             printing.
         TODO: Document the attributes of this config class
+
     """
 
     data: pd.DataFrame
@@ -62,6 +63,7 @@ class UptakeModelConfig:
         Raises:
             ValueError: If `data` does not have all of the required columns: 'time',
                 'season', 'region', 'strata', and 'rate'.
+
         """
         # Private instance attributes
         self._coords: dict[int, dict[str, list[str]]] = {}
@@ -87,84 +89,85 @@ class UptakeModelConfig:
         # self.data = self.data.set_index(["season", "region", "strata"])
 
     def __repr__(self) -> str:
+        """Return a representation of this object with optional human readable name."""
         if self.name:
             return f"<vaxflux.multilevel_model.UptakeModelConfig named '{self.name}'>"
         return f"<vaxflux.multilevel_model.UptakeModelConfig with id {id(self)}>"
 
     @property
-    def mu_k(self) -> float:
+    def mu_k(self) -> float:  # noqa: D102
         return self.k_prior[0]
 
     @property
-    def sigma_k(self) -> float:
+    def sigma_k(self) -> float:  # noqa: D102
         return self.k_prior[1]
 
     @property
-    def mu_r(self) -> float:
+    def mu_r(self) -> float:  # noqa: D102
         return self.s_prior[0]
 
     @property
-    def sigma_r(self) -> float:
+    def sigma_r(self) -> float:  # noqa: D102
         return self.s_prior[1]
 
     @property
-    def mu_s(self) -> float:
+    def mu_s(self) -> float:  # noqa: D102
         return self.s_prior[0]
 
     @property
-    def sigma_s(self) -> float:
+    def sigma_s(self) -> float:  # noqa: D102
         return self.s_prior[1]
 
     @property
-    def mu_dk_region(self) -> float | None:
+    def mu_dk_region(self) -> float | None:  # noqa: D102
         return self.dk_region_prior[0] if self.dk_region_prior else None
 
     @property
-    def sigma_dk_region(self) -> float | None:
+    def sigma_dk_region(self) -> float | None:  # noqa: D102
         return self.dk_region_prior[1] if self.dk_region_prior else None
 
     @property
-    def mu_dr_region(self) -> float | None:
+    def mu_dr_region(self) -> float | None:  # noqa: D102
         return self.dr_region_prior[0] if self.dr_region_prior else None
 
     @property
-    def sigma_dr_region(self) -> float | None:
+    def sigma_dr_region(self) -> float | None:  # noqa: D102
         return self.dr_region_prior[1] if self.dr_region_prior else None
 
     @property
-    def mu_ds_region(self) -> float | None:
+    def mu_ds_region(self) -> float | None:  # noqa: D102
         return self.ds_region_prior[0] if self.ds_region_prior else None
 
     @property
-    def sigma_ds_region(self) -> float | None:
+    def sigma_ds_region(self) -> float | None:  # noqa: D102
         return self.ds_region_prior[1] if self.ds_region_prior else None
 
     @property
-    def mu_dk_strata(self) -> float | None:
+    def mu_dk_strata(self) -> float | None:  # noqa: D102
         return self.dk_strata_prior[0] if self.dk_strata_prior else None
 
     @property
-    def sigma_dk_strata(self) -> float | None:
+    def sigma_dk_strata(self) -> float | None:  # noqa: D102
         return self.dk_strata_prior[1] if self.dk_strata_prior else None
 
     @property
-    def mu_dr_strata(self) -> float | None:
+    def mu_dr_strata(self) -> float | None:  # noqa: D102
         return self.dr_strata_prior[0] if self.dr_strata_prior else None
 
     @property
-    def sigma_dr_strata(self) -> float | None:
+    def sigma_dr_strata(self) -> float | None:  # noqa: D102
         return self.dr_strata_prior[1] if self.dr_strata_prior else None
 
     @property
-    def mu_ds_strata(self) -> float | None:
+    def mu_ds_strata(self) -> float | None:  # noqa: D102
         return self.ds_strata_prior[0] if self.ds_strata_prior else None
 
     @property
-    def sigma_ds_strata(self) -> float | None:
+    def sigma_ds_strata(self) -> float | None:  # noqa: D102
         return self.ds_strata_prior[1] if self.ds_strata_prior else None
 
     @property
-    def coords(self) -> dict[str, list[str]]:
+    def coords(self) -> dict[str, list[str]]:  # noqa: D102
         if (coords := self._coords.get(id(self.data))) is None:
             coords = {
                 v: self.data[v].unique().tolist()
@@ -185,37 +188,37 @@ class UptakeModelConfig:
         return coords.copy()
 
     @property
-    def coord_dims(self) -> dict[str, int]:
+    def coord_dims(self) -> dict[str, int]:  # noqa: D102
         return {k: len(v) for k, v in self.coords.items()}
 
     @property
-    def season_index(self):
+    def season_index(self):  # noqa: D102
         return (
             self.data["season"].apply(lambda x: self.coords["season"].index(x)).values
         )
 
     @property
-    def region_index(self):
+    def region_index(self):  # noqa: D102
         return (
             self.data["region"].apply(lambda x: self.coords["region"].index(x)).values
         )
 
     @property
-    def strata_index(self):
+    def strata_index(self):  # noqa: D102
         return (
             self.data["strata"].apply(lambda x: self.coords["strata"].index(x)).values
         )
 
     @property
-    def k_season_index(self):
+    def k_season_index(self):  # noqa: D102
         return self.season_index if self.k_season_stratified else np.array([0])
 
     @property
-    def r_season_index(self):
+    def r_season_index(self):  # noqa: D102
         return self.season_index if self.r_season_stratified else np.array([0])
 
     @property
-    def s_season_index(self):
+    def s_season_index(self):  # noqa: D102
         return self.season_index if self.s_season_stratified else np.array([0])
 
 
@@ -233,6 +236,7 @@ def create_multilevel_model(config: UptakeModelConfig) -> pm.Model:
 
     Returns:
         A PyMC model generated from the given uptake model configuration.
+
     """
     # Local inputs
     t = config.data["time"].values.copy()
@@ -361,6 +365,7 @@ def generate_model_outputs(
     Returns:
         A numpy array with the dimensions of 'time', 'sample', 'season', 'region', and
         'strata'.
+
     """
     # Formatting and extraction
     if isinstance(trace, pm.backends.base.MultiTrace):

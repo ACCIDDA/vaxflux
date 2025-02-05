@@ -33,7 +33,7 @@ def modified_logistic_curve(
     c0: float | np.float64,
 ) -> np.float64 | npt.NDArray[np.float64]:
     """
-    A modified and generalized logistic curve.
+    Evaluate a modified and generalized logistic curve.
 
     Args:
         t: The time to evaluate the logistic curve at.
@@ -54,6 +54,7 @@ def modified_logistic_curve(
         >>> modified_logistic_curve(t, 2., 0.5, 0.25)
         array([0.00261006, 0.01866344, 0.11135007, 0.33958935, 0.46995667,
                0.49571126])
+
     """
     return k * expit(r * (t - c0))
 
@@ -103,6 +104,7 @@ def modified_logistic_curve_least_squares(
         active_mask: [ 0.000e+00  0.000e+00  0.000e+00]
                 nfev: 6
                 njev: 6
+
     """
     # First make educated guesses for the least squares fit
     r0, k0, c0 = x0
@@ -142,6 +144,7 @@ def modified_logistic_curve_bayes_model(
 
     Returns:
         A tuple containing the model itself and the trace from sampling.
+
     """
     # Least squares fit for initial guesses
     opt_result = modified_logistic_curve_least_squares(t, y)
