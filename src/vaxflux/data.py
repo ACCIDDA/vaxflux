@@ -208,7 +208,7 @@ def format_incidence_dataframe(incidence: pd.DataFrame) -> pd.DataFrame:
     for column in ("time", "incidence"):
         incidence[column] = pd.to_numeric(incidence[column]).astype("float64")
 
-    for column in {"season", "strata", "region"}:
+    for column in ("season", "strata", "region"):
         if column not in incidence_columns:
             incidence[column] = pd.Series(
                 data=len(incidence) * [f"All {column.capitalize()}s"], dtype="string"

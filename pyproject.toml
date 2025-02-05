@@ -33,6 +33,14 @@ dev-dependencies = [
     "types-requests>=2.32.0.20241016",
 ]
 
+[tool.ruff.lint]
+select = [
+    "PL", # Pylint
+]
+ignore = [
+    "PLR2004", # Consider replacing magic number with a constant variable
+]
+
 [[tool.mypy.overrides]]
 module = ["pymc.*"]
 ignore_missing_imports = true

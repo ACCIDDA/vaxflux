@@ -15,7 +15,7 @@ from vaxflux.curves import IncidenceCurve
 from vaxflux.data import coordinates_from_incidence
 
 
-def build_model(
+def build_model(  # noqa: PLR0913
     data: pd.DataFrame,
     observation_type: Literal["incidence", "prevalence"],
     value_type: Literal["rate", "count"],
@@ -157,7 +157,7 @@ def build_model(
     return model
 
 
-def _strata_region_factors(
+def _strata_region_factors(  # noqa: PLR0913
     p: str,
     kind: Literal["region", "strata"],
     params: dict[str, Any],
