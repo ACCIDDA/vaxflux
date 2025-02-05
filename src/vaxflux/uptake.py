@@ -1,3 +1,5 @@
+"""Tools for constructing uptake models."""
+
 __all__ = ("SeasonalUptakeModel",)
 
 
@@ -20,6 +22,7 @@ class SeasonalUptakeModel:
         curve: The incidence curve family to use.
         name: The name of the model, optional and only used for display.
         dataset: The uptake dataset to use.
+
     """
 
     curve: IncidenceCurve | None = None
@@ -33,7 +36,7 @@ class SeasonalUptakeModel:
         name: str | None = None,
     ) -> None:
         """
-        Constructor for an uptake model.
+        Initialize an uptake model.
 
         Args:
             curve: The incidence curve family to use.
@@ -42,6 +45,7 @@ class SeasonalUptakeModel:
 
         Returns:
             None
+
         """
         # Public attributes
         self.curve = copy.deepcopy(curve)
@@ -59,31 +63,16 @@ class SeasonalUptakeModel:
         self._report_date: str | None = None
         self._season: str | None = None
 
-    @property.setter
-    def dataset(self, dataset: pd.DataFrame | None) -> None:
-        """
-        Set the dataset for the uptake model.
-
-        Args:
-            dataset: The dataset to use.
-
-        Notes:
-            If the model has already been built, the model will be rebuilt with the new
-            dataset.
-        """
-        self._dataset = dataset.copy()
-        if self._model is not None:
-            self.build()
-
     def build(self, debug: bool = False) -> Self:
         """
-        Method to build the model.
+        Build the uptake model.
 
         Args:
             debug: Whether to output debugging information as the model is built.
 
         Returns:
             The uptake model instance for chaining.
+
         """
         self._model = pm.Model()
         with self._model:
@@ -95,14 +84,15 @@ class SeasonalUptakeModel:
         draws: int = 500,
         var_names: Iterable[str] | None = None,
         random_seed: Any = 1,
-        idata_kwargs: dict[str, Any] = None,
-        compile_kwargs: dict[str, Any] = None,
+        idata_kwargs: dict[str, Any] | None = None,
+        compile_kwargs: dict[str, Any] | None = None,
     ) -> az.InferenceData:
         """
         Sample from the prior distribution of the model.
 
         See Also:
             [pymc.sample_prior_predictive](https://www.pymc.io/projects/docs/en/stable/api/generated/pymc.sample_prior_predictive.html)
+
         """
         if self._model is None:
             raise AttributeError(
