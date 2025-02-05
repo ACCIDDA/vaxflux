@@ -1,6 +1,4 @@
-"""
-Model seasonal vaccination uptake curves.
-"""
+"""Model seasonal vaccination uptake curves."""
 
 __all__ = (
     "curves",

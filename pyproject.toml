@@ -25,7 +25,25 @@ demo = [
 
 [tool.uv]
 dev-dependencies = [
-    "black[jupyter]>=24.8.0",
-    "pylint>=3.3.2",
+    "mypy>=1.14.1",
+    "pandas-stubs>=2.2.3.241126",
     "pytest>=8.3.2",
+    "ruff>=0.9.4",
+    "scipy-stubs>=1.15.1.0",
+    "types-requests>=2.32.0.20241016",
 ]
+
+[tool.ruff.lint]
+select = [
+    "D",  # Docstring
+    "PL", # Pylint
+]
+ignore = [
+    "D203",    # 1 blank line required before class docstring
+    "D212",    # Multi-line docstring summary should start at the first line
+    "PLR2004", # Consider replacing magic number with a constant variable
+]
+
+[[tool.mypy.overrides]]
+module = ["pymc.*"]
+ignore_missing_imports = true

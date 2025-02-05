@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+
+PYTHON_VERSION=$( cat .python-version | xargs )
+TARGET_VERSION=$( echo "py$PYTHON_VERSION" | tr -d '.' )
+echo "Using python version $PYTHON_VERSION"
+
+echo "> Formatting with ruff..."
+ruff format --target-version $TARGET_VERSION
+
+echo "> Linting with ruff..."
+ruff check --fix --target-version $TARGET_VERSION
+
+echo "> Type checking with mypy..."
+mypy --python-version $PYTHON_VERSION .
