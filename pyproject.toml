@@ -33,3 +33,7 @@ dev-dependencies = [
     "scipy-stubs>=1.15.1.0",
     "types-requests>=2.32.0.20241016",
 ]
+
+[[tool.mypy.overrides]]
+module = ["pymc.*"]
+ignore_missing_imports = true
