@@ -5,13 +5,20 @@ __all__ = ("SeasonalUptakeModel",)
 
 from collections.abc import Iterable
 import copy
-from typing import Any, Self
+import sys
+from typing import Any
 
 import arviz as az
 import pandas as pd
 import pymc as pm
 
 from vaxflux.curves import IncidenceCurve
+
+
+if sys.version_info >= (3, 11):
+    from typing import Self
+else:
+    Self = Any
 
 
 class SeasonalUptakeModel:
