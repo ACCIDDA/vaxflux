@@ -63,12 +63,38 @@ class SeasonalUptakeModel:
         self._covariates: list[str] | None = None
         self._date: str | None = None
         self._doses_administered: str | None = None
+        self._end_date: str | None = None
         self._model: pm.Model | None = None
         self._observation_type: str | None = None
         self._population: str | None = None
         self._rate: str | None = None
         self._report_date: str | None = None
         self._season: str | None = None
+        self._start_date: str | None = None
+
+    def date_columns(
+        self, date: str, end_date: str | None = None, report_date: str | None = None
+    ) -> Self:
+        """
+        Set the date columns for the uptake model.
+
+        Args:
+            date: The date column in the dataset.
+            end_date: The end date column in the dataset if relevant. If given it's
+                assumed that `date` corresponds to the start date.
+            report_date: The report date column in the dataset if relevant.
+
+        Returns:
+            The uptake model instance for chaining.
+
+        """
+        if end_date is None:
+            self._date = date
+        else:
+            self._start_date = date
+            self._end_date = end_date
+        self._report_date = report_date
+        return self
 
     def build(self, debug: bool = False) -> Self:
         """
