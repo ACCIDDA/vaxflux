@@ -3,7 +3,7 @@
 __all__ = ("SeasonalUptakeModel",)
 
 
-from collections.abc import Iterable
+from collections.abc import Iterable, Sequence
 import copy
 import sys
 from typing import Any
@@ -66,6 +66,7 @@ class SeasonalUptakeModel:
         self._model: pm.Model | None = None
         self._report_date: str | None = None
         self._season: str | None = None
+        self._season_labels: Sequence[str] | None = None
         self._seasonal_parameters: dict[
             str, tuple[pm.Distribution, dict[str, Any], bool]
         ] = {}
@@ -92,18 +93,24 @@ class SeasonalUptakeModel:
         self._report_date = report_date
         return self
 
-    def season_column(self, season: str) -> Self:
+    def season_column(
+        self, season: str, season_labels: Sequence[str] | None = None
+    ) -> Self:
         """
         Set the season column for the uptake model.
 
         Args:
             season: The season column in the dataset.
+            season_labels: The labels for the season column or `None` to be inferred
+                from the dataset. If given they should be given in in ascending order,
+                e.g. `('2021/22', '2022/23')`.
 
         Returns:
             The uptake model instance for chaining.
 
         """
         self._season = season
+        self._season_labels = season_labels
         return self
 
     def set_seasonal_parameter(

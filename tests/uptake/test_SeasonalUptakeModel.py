@@ -1,5 +1,6 @@
 """Unit tests for the `SeasonalUptakeModel` class."""
 
+from collections.abc import Sequence
 from typing import Any, TypedDict
 
 import pymc as pm
@@ -35,11 +36,18 @@ def test_date_columns_method(
 
 
 @pytest.mark.parametrize("season", ("season", "season_name", "year"))
-def test_season_method(season: str) -> None:
+@pytest.mark.parametrize(
+    "season_labels",
+    (None, ("2021/22", "2022/23"), ["xyz", "abc", "these are arbitrary"]),
+)
+def test_season_method(season: str, season_labels: Sequence[str] | None) -> None:
     """Test the `season_column` method."""
     curve = LogisticIncidenceCurve()
-    uptake_model = SeasonalUptakeModel(curve).season_column(season)
+    uptake_model = SeasonalUptakeModel(curve).season_column(
+        season, season_labels=season_labels
+    )
     assert uptake_model._season == season
+    assert uptake_model._season_labels == season_labels
 
 
 @pytest.mark.parametrize("parameter", ("a", "b", "c"))
