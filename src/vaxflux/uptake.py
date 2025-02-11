@@ -66,6 +66,9 @@ class SeasonalUptakeModel:
         self._model: pm.Model | None = None
         self._report_date: str | None = None
         self._season: str | None = None
+        self._seasonal_parameters: dict[
+            str, tuple[pm.Distribution, dict[str, Any], bool]
+        ] = {}
         self._series: str | None = None
         self._start_date: str | None = None
 
@@ -101,6 +104,40 @@ class SeasonalUptakeModel:
 
         """
         self._season = season
+        return self
+
+    def set_seasonal_parameter(
+        self,
+        parameter: str,
+        distribution: pm.Distribution,
+        distribution_kwargs: dict[str, Any],
+        hierarchical: bool = True,
+    ) -> Self:
+        """
+        Set a seasonal parameter for the uptake model.
+
+        Args:
+            parameter: The parameter to set.
+            distribution: The distribution to use for the parameter.
+            distribution_kwargs: The keyword arguments for the distribution.
+            hierarchical: Whether the parameter is hierarchical.
+
+        Returns:
+            The uptake model instance for chaining.
+
+        Raises:
+            ValueError: If the parameter is not used by the curve family.
+
+        """
+        if self.curve is not None and parameter not in self.curve.parameters:
+            raise ValueError(
+                f"The parameter '{parameter}' is not used by the curve family."
+            )
+        self._seasonal_parameters[parameter] = (
+            distribution,
+            distribution_kwargs,
+            hierarchical,
+        )
         return self
 
     def build(self, debug: bool = False) -> Self:
