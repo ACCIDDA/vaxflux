@@ -99,6 +99,27 @@ class IncidenceCurve(ABC):
         """
         raise NotImplementedError
 
+    def prevalence_difference(
+        self,
+        t0: npt.NDArray[np.number] | pt.variable.TensorVariable,
+        t1: npt.NDArray[np.number] | pt.variable.TensorVariable,
+        **kwargs: npt.NDArray[np.number] | pt.variable.TensorVariable,
+    ) -> pt.variable.TensorVariable:
+        """
+        Evaluate the difference in prevalence between two time steps.
+
+        Args:
+            t0: The first time step to evaluate the prevalence curve at.
+            t1: The second time step to evaluate the prevalence curve at.
+            kwargs: Further keyword arguments, must be the parameters for this model as
+                returned by the `get_parameters` method.
+
+        Returns:
+            The difference in prevalence between the two time steps provided.
+
+        """
+        return self.prevalence(t1, **kwargs) - self.prevalence(t0, **kwargs)
+
 
 class LogisticIncidenceCurve(IncidenceCurve):
     r"""
