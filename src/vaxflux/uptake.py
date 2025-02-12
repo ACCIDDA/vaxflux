@@ -1,15 +1,21 @@
 """Tools for constructing uptake models."""
 
-__all__ = ("SeasonalUptakeModel",)
+__all__ = (
+    "DateRange",
+    "ScenarioDateRanges",
+    "SeasonalUptakeModel",
+)
 
 
 from collections.abc import Iterable, Sequence
 import copy
+from datetime import date
 import sys
-from typing import Any
+from typing import Any, NamedTuple
 
 import arviz as az
 import pandas as pd
+from pandas.api.types import is_datetime64_any_dtype
 import pymc as pm
 
 from vaxflux.curves import IncidenceCurve
@@ -19,6 +25,102 @@ if sys.version_info >= (3, 11):
     from typing import Self
 else:
     Self = Any
+
+
+class DateRange(NamedTuple):
+    """
+    A representation of a date range for uptake scenarios.
+
+    Attributes:
+        season: The season for the date range.
+        start_date: The start date of the date range.
+        end_date: The end date of the date range.
+        report_date: The report date of the date range.
+
+    """
+
+    season: str
+    start_date: date
+    end_date: date
+    report_date: date
+
+
+class ScenarioDateRanges:
+    """A representation of date ranges for uptake scenarios."""
+
+    def __init__(self, date_ranges: Sequence[DateRange]) -> None:
+        """
+        Construct a set of date ranges for uptake scenarios.
+
+        Args:
+            date_ranges: The date ranges for the uptake scenarios.
+
+        Returns:
+            None
+
+        Raises:
+            ValueError: If duplicate date ranges are found in the input.
+
+        """
+        self._date_ranges = date_ranges
+        unique_hashes = {hash(date_range) for date_range in date_ranges}
+        if (len_unique_hashes := len(unique_hashes)) < (
+            len_date_ranges := len(date_ranges)
+        ):
+            raise ValueError(
+                f"Duplicate date ranges found in the input, given {len_date_ranges} "
+                f"date ranges and {len_unique_hashes} unique date ranges."
+            )
+
+    @classmethod
+    def from_pandas(
+        cls,
+        df: pd.DataFrame,
+        season: str = "season",
+        start_date: str = "start_date",
+        end_date: str = "end_date",
+        report_date: str = "report_date",
+    ) -> Self:
+        """
+        Construct a set of date ranges for uptake scenarios from a DataFrame.
+
+        Args:
+            df: The DataFrame containing the date ranges.
+            season: The column containing the season.
+            start_date: The column containing the start date.
+            end_date: The column containing the end date.
+            report_date: The column containing the report date.
+
+        Returns:
+            The date ranges for the uptake scenarios.
+
+        Raises:
+            ValueError: If a required column is not found in the DataFrame.
+
+        """
+        for arg in ("season", "start_date", "end_date", "report_date"):
+            if (col := locals().get(arg)) not in df.columns:
+                raise ValueError(
+                    f"Column '{col}' for `{arg}` not found in the DataFrame."
+                )
+        date_columns = [start_date, end_date, report_date]
+        copied = False
+        for col in date_columns:
+            if not is_datetime64_any_dtype(df[col]):
+                df = df if copied else df.copy()
+                copied = True
+                df[col] = pd.to_datetime(df[col])
+        return cls(
+            [
+                DateRange(
+                    str(getattr(row, season)),
+                    getattr(row, start_date).date(),
+                    getattr(row, end_date).date(),
+                    getattr(row, report_date).date(),
+                )
+                for row in df.itertuples(index=False)
+            ]
+        )
 
 
 class SeasonalUptakeModel:
