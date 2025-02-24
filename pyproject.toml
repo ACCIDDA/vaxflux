@@ -44,6 +44,9 @@ ignore = [
     "PLR2004", # Consider replacing magic number with a constant variable
 ]
 
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
 [[tool.mypy.overrides]]
 module = ["pymc.*"]
 ignore_missing_imports = true
