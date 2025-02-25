@@ -1,6 +1,5 @@
 """Unit tests for the `ScenarioDateRanges` class."""
 
-from collections.abc import Sequence
 from datetime import date
 
 import pandas as pd

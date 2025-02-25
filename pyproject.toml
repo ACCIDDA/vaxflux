@@ -37,6 +37,7 @@ dev-dependencies = [
 [tool.ruff.lint]
 select = [
     "D",  # Docstring
+    "F",  # Pyflakes
     "PL", # Pylint
 ]
 ignore = [
