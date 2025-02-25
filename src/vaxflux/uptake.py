@@ -1,7 +1,9 @@
 """Tools for constructing uptake models."""
 
 __all__ = (
+    "Covariate",
     "DateRange",
+    "PooledCovariate",
     "ScenarioDateRanges",
     "ScenarioSeasonRanges",
     "SeasonalUptakeModel",
@@ -9,6 +11,7 @@ __all__ = (
 )
 
 
+from abc import ABC, abstractmethod
 from collections.abc import Iterable
 import copy
 from datetime import date
@@ -28,6 +31,63 @@ if sys.version_info >= (3, 11):
     from typing import Self
 else:
     Self = Any
+
+
+class Covariate(ABC, BaseModel):
+    """
+    Abstract class for the implementation of covariates in uptake models.
+
+    Attributes:
+        parameter: The parameter from the incidence curve family this covariate applies
+            to.
+        covariate: The name of the covariate in the dataset or `None` if the covariate
+            is a seasonal effect.
+    """
+
+    parameter: str
+    covariate: str | None
+
+    @abstractmethod
+    def pymc_distribution(
+        self, name: str, coords: dict[str, list[str]]
+    ) -> pm.Distribution:
+        """
+        Return a PyMC3 distribution for the covariate.
+
+        Args:
+            name: The name of the distribution.
+            coords: The coordinates for the uptake model.
+        """
+        raise NotImplementedError
+
+
+class PooledCovariate(Covariate):
+    """
+    A pooled covariate for uptake models.
+
+    Attributes:
+        distribution: The PyMC3 distribution to use for the covariate.
+        distribution_kwargs: The keyword arguments to pass to the PyMC3 distribution.
+    """
+
+    distribution: str
+    distribution_kwargs: dict[str, Any]
+
+    def pymc_distribution(
+        self, name: str, coords: dict[str, list[str]]
+    ) -> pm.Distribution:
+        """
+        Return a PyMC3 distribution for the pooled covariate.
+
+        Args:
+            name: The name of the distribution.
+            coords: The coordinates for the uptake model.
+        """
+        return getattr(pm, self.distribution)(
+            name=name,
+            **self.distribution_kwargs,
+            shape=coords["season"],
+        )
 
 
 class SeasonRange(BaseModel):
@@ -171,13 +231,13 @@ class SeasonalUptakeModel:
 
     """
 
-    curve: IncidenceCurve | None = None
     dataset: pd.DataFrame | None = None
     name: str | None = None
 
     def __init__(
         self,
         curve: IncidenceCurve,
+        covariates: list[Covariate],
         dataset: pd.DataFrame | None = None,
         name: str | None = None,
     ) -> None:
@@ -186,6 +246,7 @@ class SeasonalUptakeModel:
 
         Args:
             curve: The incidence curve family to use.
+            covariates: The covariates to use.
             dataset: The uptake dataset to use.
             name: The name of the model, optional and only used for display.
 
@@ -198,82 +259,20 @@ class SeasonalUptakeModel:
         if dataset is not None:
             self.dataset = dataset.copy()
         self.name = name
+
         # Private attributes
-        self._covariates: list[str] | None = None
-        self._doses_administered: str | None = None
+        self._covariates = copy.deepcopy(covariates)
         self._model: pm.Model | None = None
-        self._scenario_date_ranges: ScenarioDateRanges | None = None
-        self._scenario_season_ranges: ScenarioSeasonRanges | None = None
-        self._seasonal_parameters: dict[
-            str, tuple[pm.Distribution, dict[str, Any], bool]
-        ] = {}
-        self._series: str | None = None
 
-    def set_scenario_season_ranges(
-        self, scenario_season_ranges: ScenarioSeasonRanges
-    ) -> Self:
-        """
-        Set the scenario season ranges for the uptake model.
-
-        Args:
-            scenario_season_ranges: The scenario season ranges to set.
-
-        Returns:
-            The uptake model instance for chaining.
-
-        """
-        self._scenario_season_ranges = scenario_season_ranges
-        return self
-
-    def set_scenario_date_ranges(
-        self, scenario_date_ranges: ScenarioDateRanges
-    ) -> Self:
-        """
-        Set the scenario date ranges for the uptake model.
-
-        Args:
-            scenario_date_ranges: The scenario date ranges to set.
-
-        Returns:
-            The uptake model instance for chaining.
-
-        """
-        self._scenario_date_ranges = scenario_date_ranges
-        return self
-
-    def set_seasonal_parameter(
-        self,
-        parameter: str,
-        distribution: pm.Distribution,
-        distribution_kwargs: dict[str, Any],
-        hierarchical: bool = True,
-    ) -> Self:
-        """
-        Set a seasonal parameter for the uptake model.
-
-        Args:
-            parameter: The parameter to set.
-            distribution: The distribution to use for the parameter.
-            distribution_kwargs: The keyword arguments for the distribution.
-            hierarchical: Whether the parameter is hierarchical.
-
-        Returns:
-            The uptake model instance for chaining.
-
-        Raises:
-            ValueError: If the parameter is not used by the curve family.
-
-        """
-        if self.curve is not None and parameter not in self.curve.parameters:
+        # Input validation
+        if covariate_parameters_not_present := {
+            covariate.parameter for covariate in self._covariates
+        } - set(self.curve.parameters):
             raise ValueError(
-                f"The parameter '{parameter}' is not used by the curve family."
+                "The following parameters were given in the covariates, "
+                "but not present in the curve family parameters: "
+                f"{sorted(covariate_parameters_not_present)}."
             )
-        self._seasonal_parameters[parameter] = (
-            distribution,
-            distribution_kwargs,
-            hierarchical,
-        )
-        return self
 
     def build(self, debug: bool = False) -> Self:
         """
