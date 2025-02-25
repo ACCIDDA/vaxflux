@@ -3,7 +3,9 @@
 __all__ = (
     "DateRange",
     "ScenarioDateRanges",
+    "ScenarioSeasonRanges",
     "SeasonalUptakeModel",
+    "SeasonRange",
 )
 
 
@@ -28,6 +30,38 @@ else:
     Self = Any
 
 
+class SeasonRange(BaseModel):
+    """
+    A representation of a season range for uptake scenarios.
+
+    Attributes:
+        season: The name of the season for the season range.
+        start_date: The start date of the season range, used to make seasonal dates
+            relative.
+        end_date: The end date of the season range, used for validation if given.
+
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    season: str
+    start_date: date
+    end_date: date | None = None
+
+
+class ScenarioSeasonRanges(BaseModel):
+    """
+    A representation of season ranges for uptake scenarios.
+
+    Attributes:
+        season_ranges: The set of season ranges for the uptake scenarios.
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    season_ranges: set[SeasonRange]
+
+
 class DateRange(BaseModel):
     """
     A representation of a date range for uptake scenarios.
@@ -49,7 +83,12 @@ class DateRange(BaseModel):
 
 
 class ScenarioDateRanges(BaseModel):
-    """A representation of date ranges for uptake scenarios."""
+    """
+    A representation of date ranges for uptake scenarios.
+
+    Attributes:
+        date_ranges: The set of date ranges for the uptake scenarios.
+    """
 
     model_config = ConfigDict(frozen=True)
 
@@ -164,10 +203,27 @@ class SeasonalUptakeModel:
         self._doses_administered: str | None = None
         self._model: pm.Model | None = None
         self._scenario_date_ranges: ScenarioDateRanges | None = None
+        self._scenario_season_ranges: ScenarioSeasonRanges | None = None
         self._seasonal_parameters: dict[
             str, tuple[pm.Distribution, dict[str, Any], bool]
         ] = {}
         self._series: str | None = None
+
+    def set_scenario_season_ranges(
+        self, scenario_season_ranges: ScenarioSeasonRanges
+    ) -> Self:
+        """
+        Set the scenario season ranges for the uptake model.
+
+        Args:
+            scenario_season_ranges: The scenario season ranges to set.
+
+        Returns:
+            The uptake model instance for chaining.
+
+        """
+        self._scenario_season_ranges = scenario_season_ranges
+        return self
 
     def set_scenario_date_ranges(
         self, scenario_date_ranges: ScenarioDateRanges
