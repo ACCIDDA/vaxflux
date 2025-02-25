@@ -4,7 +4,6 @@ __all__ = (
     "Covariate",
     "DateRange",
     "PooledCovariate",
-    "ScenarioDateRanges",
     "ScenarioSeasonRanges",
     "SeasonalUptakeModel",
     "SeasonRange",
@@ -12,11 +11,11 @@ __all__ = (
 
 
 from abc import ABC, abstractmethod
-from collections.abc import Iterable, Sequence
+from collections.abc import Iterable
 import copy
-from datetime import date
+from datetime import date, datetime
 import sys
-from typing import Any
+from typing import Any, NamedTuple
 
 import arviz as az
 import pandas as pd
@@ -142,82 +141,65 @@ class DateRange(BaseModel):
     report_date: date
 
 
-class ScenarioDateRanges(BaseModel):
+class ObservationDateRow(NamedTuple):
+    season: str
+    start_date: datetime
+    end_date: datetime
+    report_date: datetime
+
+
+def _infer_date_ranges_from_observations(
+    observations: pd.DataFrame | None, date_ranges: list[DateRange]
+) -> list[DateRange]:
     """
-    A representation of date ranges for uptake scenarios.
+    Infer scenario date ranges from the observations and explicit date ranges.
 
-    Attributes:
-        date_ranges: The set of date ranges for the uptake scenarios.
+    Args:
+        observations: The uptake dataset to use or `None` to just accept `date_ranges`.
+        date_ranges: The date ranges for the uptake scenarios.
+
+    Returns:
+        The inferred date ranges for the uptake scenarios.
     """
-
-    model_config = ConfigDict(frozen=True)
-
-    date_ranges: set[DateRange]
-
-    @classmethod
-    def from_pandas(
-        cls,
-        df: pd.DataFrame,
-        season: str = "season",
-        start_date: str = "start_date",
-        end_date: str = "end_date",
-        report_date: str = "report_date",
-    ) -> Self:
-        """
-        Construct a set of date ranges for uptake scenarios from a DataFrame.
-
-        Args:
-            df: The DataFrame containing the date ranges.
-            season: The column containing the season.
-            start_date: The column containing the start date.
-            end_date: The column containing the end date.
-            report_date: The column containing the report date.
-
-        Returns:
-            The date ranges for the uptake scenarios.
-
-        Raises:
-            ValueError: If a required column is not found in the DataFrame.
-
-        """
-        for arg in ("season", "start_date", "end_date", "report_date"):
-            if (col := locals().get(arg)) not in df.columns:
+    if observations:
+        if not date_ranges:
+            if missing_date_columns := {
+                "season",
+                "start_date",
+                "end_date",
+                "report_date",
+            } - set(observations.columns):
                 raise ValueError(
-                    f"Column '{col}' for `{arg}` not found in the DataFrame."
+                    f"Missing required columns in the observations: {missing_date_columns}."
                 )
-        date_columns = [start_date, end_date, report_date]
-        copied = False
-        for col in date_columns:
-            if not is_datetime64_any_dtype(df[col]):
-                df = df if copied else df.copy()
-                copied = True
-                df[col] = pd.to_datetime(df[col])
-        return cls(
-            date_ranges={
+            observation_dates = observations[
+                ["season", "start_date", "end_date", "report_date"]
+            ].drop_duplicates(ignore_index=True)
+            for col in ("start_date", "end_date", "report_date"):
+                if not is_datetime64_any_dtype(observation_dates[col]):
+                    observation_dates[col] = pd.to_datetime(observation_dates[col])
+            observation_dates = observation_dates.sort_values(
+                ["season", "start_date", "end_date", "report_date"], ignore_index=True
+            )
+            return [
                 DateRange(
-                    season=str(getattr(row, season)),
-                    start_date=getattr(row, start_date).date(),
-                    end_date=getattr(row, end_date).date(),
-                    report_date=getattr(row, report_date).date(),
+                    season=str(row.season),
+                    start_date=row.start_date.date(),  # type: ignore[union-attr]
+                    end_date=row.end_date.date(),  # type: ignore[union-attr]
+                    report_date=row.report_date.date(),  # type: ignore[union-attr]
                 )
-                for row in df.itertuples(index=False)
-            }
-        )
-
-    def union(self, other: "ScenarioDateRanges") -> "ScenarioDateRanges":
-        """
-        Compute the union of two sets of date ranges.
-
-        Args:
-            other: The other set of date ranges to compute the union with.
-
-        Returns:
-            The union of the two sets of date ranges.
-
-        """
-        return ScenarioDateRanges(
-            date_ranges=set(self.date_ranges) | set(other.date_ranges)
-        )
+                for row in observation_dates.itertuples(
+                    index=False, name="ObservationDateRow"
+                )
+            ]
+        if {"season", "start_date", "end_date", "report_date"}.issubset(
+            observation_dates.columns
+        ):
+            observation_date_ranges = _infer_date_ranges_from_observations(
+                observations, []
+            )
+            return list(set(date_ranges) | set(observation_date_ranges))
+    return date_ranges
 
 
 class SeasonalUptakeModel:
@@ -236,8 +218,8 @@ class SeasonalUptakeModel:
         curve: IncidenceCurve,
         covariates: list[Covariate],
         observations: pd.DataFrame | None = None,
-        season_ranges: Sequence[SeasonRange] | None = None,
-        date_ranges: Sequence[DateRange] | None = None,
+        season_ranges: list[SeasonRange] | None = None,
+        date_ranges: list[DateRange] | None = None,
         name: str | None = None,
     ) -> None:
         """
@@ -268,12 +250,12 @@ class SeasonalUptakeModel:
 
         # Private attributes
         self._covariates = copy.deepcopy(covariates)
-        self._date_ranges: Sequence[DateRange] = (
-            copy.deepcopy(date_ranges) if date_ranges else tuple()
+        self._date_ranges: list[DateRange] = (
+            copy.deepcopy(date_ranges) if date_ranges else list()
         )
         self._model: pm.Model | None = None
-        self._season_ranges: Sequence[SeasonRange] = (
-            copy.deepcopy(season_ranges) if season_ranges else tuple()
+        self._season_ranges: list[SeasonRange] = (
+            copy.deepcopy(season_ranges) if season_ranges else list()
         )
 
         # Input validation
@@ -306,6 +288,11 @@ class SeasonalUptakeModel:
             raise ValueError(
                 "At least one of `observations` or `season_ranges` is required."
             )
+
+        # Infer parameters from the observations
+        self._date_ranges = _infer_date_ranges_from_observations(
+            self.observations, self._date_ranges
+        )
 
     def coordinates(self) -> dict[str, list[str]]:
         """
