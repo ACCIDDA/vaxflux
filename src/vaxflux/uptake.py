@@ -158,14 +158,13 @@ def _infer_date_ranges_from_observations(
                 raise ValueError(
                     f"Missing required columns in the observations: {missing_date_columns}."
                 )
-            observation_dates = observations[
-                ["season", "start_date", "end_date", "report_date"]
-            ].drop_duplicates(ignore_index=True)
-            for col in ("start_date", "end_date", "report_date"):
-                if not is_datetime64_any_dtype(observation_dates[col]):
-                    observation_dates[col] = pd.to_datetime(observation_dates[col])
-            observation_dates = observation_dates.sort_values(
-                ["season", "start_date", "end_date", "report_date"], ignore_index=True
+            observation_dates = (
+                observations[["season", "start_date", "end_date", "report_date"]]
+                .drop_duplicates(ignore_index=True)
+                .sort_values(
+                    ["season", "start_date", "end_date", "report_date"],
+                    ignore_index=True,
+                )
             )
             return [
                 DateRange(
@@ -233,6 +232,12 @@ class SeasonalUptakeModel:
         self.curve = copy.deepcopy(curve)
         self.name = name
         self.observations = None if observations is None else observations.copy()
+        if self.observations:
+            for col in {"start_date", "end_date", "report_date"}.intersection(
+                self.observations.columns
+            ):
+                if not is_datetime64_any_dtype(self.observations[col]):
+                    self.observations[col] = pd.to_datetime(self.observations[col])
 
         # Private attributes
         self._covariates = copy.deepcopy(covariates)
