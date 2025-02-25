@@ -227,18 +227,17 @@ class SeasonalUptakeModel:
     Attributes:
         curve: The incidence curve family to use.
         name: The name of the model, optional and only used for display.
-        dataset: The uptake dataset to use.
+        observations: The uptake dataset to use.
 
     """
-
-    dataset: pd.DataFrame | None = None
-    name: str | None = None
 
     def __init__(
         self,
         curve: IncidenceCurve,
         covariates: list[Covariate],
-        dataset: pd.DataFrame | None = None,
+        observations: pd.DataFrame | None = None,
+        season_ranges: set[SeasonRange] | None = None,
+        date_ranges: set[DateRange] | None = None,
         name: str | None = None,
     ) -> None:
         """
@@ -247,31 +246,57 @@ class SeasonalUptakeModel:
         Args:
             curve: The incidence curve family to use.
             covariates: The covariates to use.
-            dataset: The uptake dataset to use.
+            observations: The uptake dataset to use.
+            date_ranges: The date ranges for the uptake scenarios or `None` to derive
+                them from the observations.
+            season_ranges: The season ranges for the uptake scenarios or `None` to
+                derive them from the observations.
             name: The name of the model, optional and only used for display.
 
         Returns:
             None
 
+        Raises:
+            ValueError: If a covariate parameter is not present in the curve family
+                parameters.
+
         """
         # Public attributes
         self.curve = copy.deepcopy(curve)
-        if dataset is not None:
-            self.dataset = dataset.copy()
         self.name = name
+        self.observations = None if observations is None else observations.copy()
 
         # Private attributes
         self._covariates = copy.deepcopy(covariates)
+        self._date_ranges: set[DateRange] = (
+            copy.deepcopy(date_ranges) if date_ranges else set()
+        )
         self._model: pm.Model | None = None
+        self._season_ranges: set[SeasonRange] = (
+            copy.deepcopy(season_ranges) if season_ranges else set()
+        )
 
         # Input validation
-        if covariate_parameters_not_present := {
+        if covariate_parameters_missing := {
             covariate.parameter for covariate in self._covariates
         } - set(self.curve.parameters):
             raise ValueError(
                 "The following parameters were given in the covariates, "
                 "but not present in the curve family parameters: "
-                f"{sorted(covariate_parameters_not_present)}."
+                f"{sorted(covariate_parameters_missing)}."
+            )
+        if self.observations and (
+            covariate_covariates_missing := {
+                covariate.covariate
+                for covariate in self._covariates
+                if covariate.covariate is not None
+            }
+            - set(self.observations.columns)
+        ):
+            raise ValueError(
+                "The following covariates were given in the covariates, "
+                "but not present in the observation columns: "
+                f"{sorted(covariate_covariates_missing)}."
             )
 
     def coordinates(self) -> dict[str, list[str]]:
