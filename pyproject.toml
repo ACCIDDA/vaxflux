@@ -49,6 +49,9 @@ ignore = [
 [tool.ruff.lint.pydocstyle]
 convention = "google"
 
+[tool.ruff.lint.pylint]
+max-args = 8  # Default is 5
+
 [[tool.mypy.overrides]]
 module = ["pymc.*"]
 ignore_missing_imports = true
