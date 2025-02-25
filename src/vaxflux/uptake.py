@@ -12,7 +12,7 @@ __all__ = (
 
 
 from abc import ABC, abstractmethod
-from collections.abc import Iterable
+from collections.abc import Iterable, Sequence
 import copy
 from datetime import date
 import sys
@@ -236,8 +236,8 @@ class SeasonalUptakeModel:
         curve: IncidenceCurve,
         covariates: list[Covariate],
         observations: pd.DataFrame | None = None,
-        season_ranges: set[SeasonRange] | None = None,
-        date_ranges: set[DateRange] | None = None,
+        season_ranges: Sequence[SeasonRange] | None = None,
+        date_ranges: Sequence[DateRange] | None = None,
         name: str | None = None,
     ) -> None:
         """
@@ -268,12 +268,12 @@ class SeasonalUptakeModel:
 
         # Private attributes
         self._covariates = copy.deepcopy(covariates)
-        self._date_ranges: set[DateRange] = (
-            copy.deepcopy(date_ranges) if date_ranges else set()
+        self._date_ranges: Sequence[DateRange] = (
+            copy.deepcopy(date_ranges) if date_ranges else tuple()
         )
         self._model: pm.Model | None = None
-        self._season_ranges: set[SeasonRange] = (
-            copy.deepcopy(season_ranges) if season_ranges else set()
+        self._season_ranges: Sequence[SeasonRange] = (
+            copy.deepcopy(season_ranges) if season_ranges else tuple()
         )
 
         # Input validation
@@ -297,6 +297,14 @@ class SeasonalUptakeModel:
                 "The following covariates were given in the covariates, "
                 "but not present in the observation columns: "
                 f"{sorted(covariate_covariates_missing)}."
+            )
+        if not self.observations and not self._date_ranges:
+            raise ValueError(
+                "At least one of `observations` or `date_ranges` is required."
+            )
+        if not self.observations and not self._season_ranges:
+            raise ValueError(
+                "At least one of `observations` or `season_ranges` is required."
             )
 
     def coordinates(self) -> dict[str, list[str]]:
