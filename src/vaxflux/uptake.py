@@ -274,6 +274,16 @@ class SeasonalUptakeModel:
                 f"{sorted(covariate_parameters_not_present)}."
             )
 
+    def coordinates(self) -> dict[str, list[str]]:
+        """
+        Get the coordinates for the uptake model.
+
+        Returns:
+            The coordinates for the uptake model.
+
+        """
+        return {}
+
     def build(self, debug: bool = False) -> Self:
         """
         Build the uptake model.
