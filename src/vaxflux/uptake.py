@@ -309,7 +309,9 @@ class SeasonalUptakeModel:
             The coordinates for the uptake model.
 
         """
-        return {}
+        coords = {}
+        coords["season"] = [season.season for season in self._season_ranges]
+        return coords
 
     def build(self, debug: bool = False) -> Self:
         """
