@@ -7,15 +7,16 @@ __all__ = (
 )
 
 
-from collections.abc import Iterable, Sequence
+from collections.abc import Iterable
 import copy
 from datetime import date
 import sys
-from typing import Any, NamedTuple
+from typing import Any
 
 import arviz as az
 import pandas as pd
 from pandas.api.types import is_datetime64_any_dtype
+from pydantic import BaseModel, ConfigDict
 import pymc as pm
 
 from vaxflux.curves import IncidenceCurve
@@ -27,7 +28,7 @@ else:
     Self = Any
 
 
-class DateRange(NamedTuple):
+class DateRange(BaseModel):
     """
     A representation of a date range for uptake scenarios.
 
@@ -39,38 +40,20 @@ class DateRange(NamedTuple):
 
     """
 
+    model_config = ConfigDict(frozen=True)
+
     season: str
     start_date: date
     end_date: date
     report_date: date
 
 
-class ScenarioDateRanges:
+class ScenarioDateRanges(BaseModel):
     """A representation of date ranges for uptake scenarios."""
 
-    def __init__(self, date_ranges: Sequence[DateRange]) -> None:
-        """
-        Construct a set of date ranges for uptake scenarios.
+    model_config = ConfigDict(frozen=True)
 
-        Args:
-            date_ranges: The date ranges for the uptake scenarios.
-
-        Returns:
-            None
-
-        Raises:
-            ValueError: If duplicate date ranges are found in the input.
-
-        """
-        self._date_ranges = date_ranges
-        unique_hashes = {hash(date_range) for date_range in date_ranges}
-        if (len_unique_hashes := len(unique_hashes)) < (
-            len_date_ranges := len(date_ranges)
-        ):
-            raise ValueError(
-                f"Duplicate date ranges found in the input, given {len_date_ranges} "
-                f"date ranges and {len_unique_hashes} unique date ranges."
-            )
+    date_ranges: set[DateRange]
 
     @classmethod
     def from_pandas(
@@ -111,15 +94,30 @@ class ScenarioDateRanges:
                 copied = True
                 df[col] = pd.to_datetime(df[col])
         return cls(
-            [
+            date_ranges={
                 DateRange(
-                    str(getattr(row, season)),
-                    getattr(row, start_date).date(),
-                    getattr(row, end_date).date(),
-                    getattr(row, report_date).date(),
+                    season=str(getattr(row, season)),
+                    start_date=getattr(row, start_date).date(),
+                    end_date=getattr(row, end_date).date(),
+                    report_date=getattr(row, report_date).date(),
                 )
                 for row in df.itertuples(index=False)
-            ]
+            }
+        )
+
+    def union(self, other: "ScenarioDateRanges") -> "ScenarioDateRanges":
+        """
+        Compute the union of two sets of date ranges.
+
+        Args:
+            other: The other set of date ranges to compute the union with.
+
+        Returns:
+            The union of the two sets of date ranges.
+
+        """
+        return ScenarioDateRanges(
+            date_ranges=set(self.date_ranges) | set(other.date_ranges)
         )
 
 
@@ -164,55 +162,27 @@ class SeasonalUptakeModel:
         # Private attributes
         self._covariates: list[str] | None = None
         self._doses_administered: str | None = None
-        self._end_date: str | None = None
         self._model: pm.Model | None = None
-        self._report_date: str | None = None
-        self._season: str | None = None
-        self._season_labels: Sequence[str] | None = None
+        self._scenario_date_ranges: ScenarioDateRanges | None = None
         self._seasonal_parameters: dict[
             str, tuple[pm.Distribution, dict[str, Any], bool]
         ] = {}
         self._series: str | None = None
-        self._start_date: str | None = None
 
-    def date_columns(
-        self, start_date: str, end_date: str, report_date: str | None = None
+    def set_scenario_date_ranges(
+        self, scenario_date_ranges: ScenarioDateRanges
     ) -> Self:
         """
-        Set the date columns for the uptake model.
+        Set the scenario date ranges for the uptake model.
 
         Args:
-            start_date: The start date column in the dataset.
-            end_date: The end date column in the dataset if relevant.
-            report_date: The report date column in the dataset if relevant.
+            scenario_date_ranges: The scenario date ranges to set.
 
         Returns:
             The uptake model instance for chaining.
 
         """
-        self._start_date = start_date
-        self._end_date = end_date
-        self._report_date = report_date
-        return self
-
-    def season_column(
-        self, season: str, season_labels: Sequence[str] | None = None
-    ) -> Self:
-        """
-        Set the season column for the uptake model.
-
-        Args:
-            season: The season column in the dataset.
-            season_labels: The labels for the season column or `None` to be inferred
-                from the dataset. If given they should be given in in ascending order,
-                e.g. `('2021/22', '2022/23')`.
-
-        Returns:
-            The uptake model instance for chaining.
-
-        """
-        self._season = season
-        self._season_labels = season_labels
+        self._scenario_date_ranges = scenario_date_ranges
         return self
 
     def set_seasonal_parameter(

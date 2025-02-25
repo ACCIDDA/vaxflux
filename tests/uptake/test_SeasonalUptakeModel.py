@@ -19,37 +19,6 @@ class SetSeasonalParameterKwargs(TypedDict):
     hierarchical: bool
 
 
-@pytest.mark.parametrize("start_date", ("period_start", "start_date"))
-@pytest.mark.parametrize("end_date", ("period_end", "end_date"))
-@pytest.mark.parametrize("report_date", (None, "date_posted"))
-def test_date_columns_method(
-    start_date: str, end_date: str, report_date: str | None
-) -> None:
-    """Test the `date_columns` method."""
-    curve = LogisticIncidenceCurve()
-    uptake_model = SeasonalUptakeModel(curve).date_columns(
-        start_date, end_date, report_date
-    )
-    assert uptake_model._start_date == start_date
-    assert uptake_model._end_date == end_date
-    assert uptake_model._report_date == report_date
-
-
-@pytest.mark.parametrize("season", ("season", "season_name", "year"))
-@pytest.mark.parametrize(
-    "season_labels",
-    (None, ("2021/22", "2022/23"), ["xyz", "abc", "these are arbitrary"]),
-)
-def test_season_method(season: str, season_labels: Sequence[str] | None) -> None:
-    """Test the `season_column` method."""
-    curve = LogisticIncidenceCurve()
-    uptake_model = SeasonalUptakeModel(curve).season_column(
-        season, season_labels=season_labels
-    )
-    assert uptake_model._season == season
-    assert uptake_model._season_labels == season_labels
-
-
 @pytest.mark.parametrize("parameter", ("a", "b", "c"))
 def test_set_seasonal_parameter_given_parameter_not_used_value_error(
     parameter: str,
