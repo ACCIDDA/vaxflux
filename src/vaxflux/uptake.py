@@ -14,7 +14,7 @@ from collections.abc import Iterable
 import copy
 from datetime import date, datetime
 import sys
-from typing import Any, NamedTuple
+from typing import Any, Literal, NamedTuple, TypeVar, cast
 
 import arviz as az
 import pandas as pd
@@ -134,122 +134,78 @@ class ObservationDateRow(NamedTuple):
     report_date: datetime
 
 
-def _infer_date_ranges_from_observations(
-    observations: pd.DataFrame | None, date_ranges: list[DateRange]
-) -> list[DateRange]:
-    """
-    Infer scenario date ranges from the observations and explicit date ranges.
-
-    Args:
-        observations: The uptake dataset to use or `None` to just accept `date_ranges`.
-        date_ranges: The date ranges for the uptake scenarios.
-
-    Returns:
-        The inferred date ranges for the uptake scenarios.
-
-    Raises:
-        ValueError: If neither `observations` nor `date_ranges` are provided.
-    """
-    if not observations and not date_ranges:
-        raise ValueError("At least one of `observations` or `date_ranges` is required.")
-    if observations:
-        if not date_ranges:
-            if missing_date_columns := {
-                "season",
-                "start_date",
-                "end_date",
-                "report_date",
-            } - set(observations.columns):
-                raise ValueError(
-                    "Missing required columns in the "
-                    f"observations: {missing_date_columns}."
-                )
-            observation_dates = (
-                observations[["season", "start_date", "end_date", "report_date"]]
-                .drop_duplicates(ignore_index=True)
-                .sort_values(
-                    ["season", "start_date", "end_date", "report_date"],
-                    ignore_index=True,
-                )
-            )
-            return [
-                DateRange(
-                    season=str(row.season),
-                    start_date=row.start_date.date(),  # type: ignore[union-attr]
-                    end_date=row.end_date.date(),  # type: ignore[union-attr]
-                    report_date=row.report_date.date(),  # type: ignore[union-attr]
-                )
-                for row in observation_dates.itertuples(
-                    index=False, name="ObservationDateRow"
-                )
-            ]
-        if {"season", "start_date", "end_date", "report_date"}.issubset(
-            observation_dates.columns
-        ):
-            observation_date_ranges = _infer_date_ranges_from_observations(
-                observations, []
-            )
-            return list(set(date_ranges) | set(observation_date_ranges))
-    return date_ranges
-
-
 class ObservationSeasonRow(NamedTuple):
     season: str
     season_start_date: datetime
     season_end_date: datetime
 
 
-def _infer_season_ranges_from_observations(
-    observations: pd.DataFrame | None, season_ranges: list[SeasonRange]
-) -> list[SeasonRange]:
-    if not observations and not season_ranges:
-        raise ValueError(
-            "At least one of `observations` or `season_ranges` is required."
-        )
+DateOrSeasonRange = TypeVar("DateOrSeasonRange", bound=DateRange | SeasonRange)
+
+
+def _infer_ranges_from_observations(
+    observations: pd.DataFrame | None,
+    ranges: list[DateOrSeasonRange],
+    mode: Literal["date", "season"],
+) -> list[DateOrSeasonRange]:
+    """
+    Infer the date or season ranges from the observations.
+
+    Args:
+        observations: The uptake dataset to use.
+        ranges: The date or season ranges for the uptake scenarios.
+        mode: The mode of the inference, either "date" or "season".
+
+    Returns:
+        The inferred date or season ranges, depending on the `mode`.
+
+    Raises:
+        ValueError: If both `observations` and `ranges` are empty.
+        ValueError: If the required columns are missing in the observations.
+        ValueError: If the observed season ranges are not consistent with the explicit
+            season ranges, only applicable for the season mode.
+    """
+    if not observations and not ranges:
+        raise ValueError("At least one of `observations` or `ranges` is required.")
+    cls = DateRange if mode == "date" else SeasonRange
+    columns = {
+        "date": {"season", "start_date", "end_date", "report_date"},
+        "season": {"season", "season_start_date", "season_end_date"},
+    }[mode]
     if observations:
-        if not season_ranges:
-            if missing_season_column := {
-                "season",
-                "season_start_date",
-                "season_end_date",
-            } - set(observations.columns):
+        # Only observations
+        if not ranges:
+            if missing_columns := columns - set(observations.columns):
                 raise ValueError(
-                    "Missing required columns in the "
-                    f"observations: {missing_season_column}."
+                    f"Missing required columns in the observations: {missing_columns}."
                 )
-            observation_seasons = (
-                observations[["season", "season_start_date", "season_end_date"]]
+            observations_ranges = (
+                observations[list(columns)]
                 .drop_duplicates(ignore_index=True)
-                .sort_values(
-                    ["season", "season_start_date", "season_end_date"],
-                    ignore_index=True,
-                )
+                .sort_values(list(columns), ignore_index=True)
             )
             return [
-                SeasonRange(
-                    season=str(row.season),  # type: ignore[union-attr]
-                    start_date=row.season_start_date.date(),  # type: ignore[union-attr]
-                    end_date=row.season_end_date.date(),  # type: ignore[union-attr]
-                )
-                for row in observation_seasons.itertuples(
-                    index=False, name="ObservationSeasonRow"
+                cls(row._asdict())  # type: ignore
+                for row in observations_ranges.itertuples(
+                    index=False, name=f"Observation{mode.capitalize()}Row"
                 )
             ]
-        if {"season", "season_start_date", "season_end_date"}.issubset(
-            observation_seasons.columns
-        ):
-            observation_season_ranges = _infer_season_ranges_from_observations(
-                observations, []
+        # Both ranges and observations
+        if columns.issubset(observations.columns):
+            observation_ranges: list[DateOrSeasonRange] = (
+                _infer_ranges_from_observations(observations, [], mode)
             )
-            if non_explicit_ranges := set(observation_season_ranges) - set(
-                season_ranges
-            ):
-                season_names = {season.season for season in non_explicit_ranges}
+            if mode == "date":
+                return list(set(ranges) | set(observation_ranges))
+            if non_explicit_ranges := set(observation_ranges) - set(ranges):
+                non_explicit_season_ranges = cast(set[SeasonRange], non_explicit_ranges)
+                season_names = {season.season for season in non_explicit_season_ranges}
                 raise ValueError(
                     "The observed season ranges are not consistent with the "
                     f"explicit season ranges, not accounting for: {season_names}."
                 )
-    return season_ranges
+    # Only ranges
+    return ranges
 
 
 class SeasonalUptakeModel:
@@ -338,11 +294,11 @@ class SeasonalUptakeModel:
             )
 
         # Infer parameters from the observations
-        self._date_ranges = _infer_date_ranges_from_observations(
-            self.observations, self._date_ranges
+        self._date_ranges = _infer_ranges_from_observations(
+            self.observations, self._date_ranges, "date"
         )
-        self._season_ranges = _infer_season_ranges_from_observations(
-            self.observations, self._season_ranges
+        self._season_ranges = _infer_ranges_from_observations(
+            self.observations, self._season_ranges, "season"
         )
 
     def coordinates(self) -> dict[str, list[str]]:
