@@ -4,7 +4,6 @@ __all__ = (
     "Covariate",
     "DateRange",
     "PooledCovariate",
-    "ScenarioSeasonRanges",
     "SeasonalUptakeModel",
     "SeasonRange",
 )
@@ -106,19 +105,6 @@ class SeasonRange(BaseModel):
     season: str
     start_date: date
     end_date: date | None = None
-
-
-class ScenarioSeasonRanges(BaseModel):
-    """
-    A representation of season ranges for uptake scenarios.
-
-    Attributes:
-        season_ranges: The set of season ranges for the uptake scenarios.
-    """
-
-    model_config = ConfigDict(frozen=True)
-
-    season_ranges: set[SeasonRange]
 
 
 class DateRange(BaseModel):
