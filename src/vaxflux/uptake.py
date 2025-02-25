@@ -22,6 +22,7 @@ from pandas.api.types import is_datetime64_any_dtype
 from pydantic import BaseModel, ConfigDict
 import pymc as pm
 
+from vaxflux._util import _pm_name
 from vaxflux.curves import IncidenceCurve
 
 
@@ -370,7 +371,10 @@ class SeasonalUptakeModel:
                         covariate.parameter,
                         covariate.parameter,
                         covariate.pymc_distribution(
-                            covariate.parameter, self.coordinates()
+                            _pm_name(
+                                covariate.parameter, covariate.covariate or "Season"
+                            ),
+                            self.coordinates(),
                         ),
                     ]
                 )
