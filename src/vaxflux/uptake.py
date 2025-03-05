@@ -13,6 +13,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Iterable
 import copy
 from datetime import date, datetime
+import logging
 import sys
 from typing import Any, Literal, NamedTuple, TypeVar, cast
 
@@ -325,6 +326,13 @@ class SeasonalUptakeModel:
             The uptake model instance for chaining.
 
         """
+        # Get the logger
+        logger = logging.getLogger(__name__)
+        logger.setLevel(logging.DEBUG if debug else logging.CRITICAL + 1)
+        stream_handler = logging.StreamHandler()
+        stream_handler.setFormatter(logging.Formatter("%(levelname)s: %(message)s"))
+        logger.addHandler(stream_handler)
+
         # Preprocessing data
         season_start = {
             season.season: season.start_date for season in self._season_ranges
@@ -341,6 +349,9 @@ class SeasonalUptakeModel:
             (date_range.report_date - season_start[date_range.season]).days
             for date_range in self._date_ranges
         ]
+        logger.info(
+            "Using %u date ranges for the uptake model.", len(self._date_ranges)
+        )
         if self.observations:
             observation_start_t = [
                 (start_date.date() - season_start[season]).days
@@ -360,24 +371,30 @@ class SeasonalUptakeModel:
                     self.observations["season"], self.observations["report_date"]
                 )
             ]
+            logger.info(
+                "Using %u observational date ranges for the uptake model.",
+                len(self.observations),
+            )
+        else:
+            logger.error(
+                "No observations were provided, will not be able "
+                "to calibrate model only sample from prior."
+            )
 
         # Build the model
         self._model = pm.Model(coords=self.coordinates())
         with self._model:
             params = []
             for covariate in self._covariates:
+                name = _pm_name(covariate.parameter, covariate.covariate or "Season")
                 params.append(
                     [
                         covariate.parameter,
                         covariate.parameter,
-                        covariate.pymc_distribution(
-                            _pm_name(
-                                covariate.parameter, covariate.covariate or "Season"
-                            ),
-                            self.coordinates(),
-                        ),
+                        covariate.pymc_distribution(name, self.coordinates()),
                     ]
                 )
+                logger.info("Added covariate %s to the model.", name)
 
         return self
 
