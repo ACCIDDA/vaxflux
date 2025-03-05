@@ -5,6 +5,7 @@ __all__ = ("SeasonalUptakeModel",)
 
 from collections.abc import Iterable
 import copy
+from datetime import timedelta
 import logging
 import sys
 from typing import Any
@@ -14,7 +15,7 @@ import pandas as pd
 from pandas.api.types import is_datetime64_any_dtype
 import pymc as pm
 
-from vaxflux._util import _pm_name
+from vaxflux._util import _coord_name, _pm_name
 from vaxflux.covariates import Covariate
 from vaxflux.curves import IncidenceCurve
 from vaxflux.dates import DateRange, SeasonRange, _infer_ranges_from_observations
@@ -129,6 +130,12 @@ class SeasonalUptakeModel:
         """
         coords = {}
         coords["season"] = [season.season for season in self._season_ranges]
+        for season_range in self._season_ranges:
+            n_days = (season_range.end_date - season_range.start_date).days + 1
+            coords[_coord_name("season", season_range.season, "dates")] = [
+                (season_range.start_date + timedelta(days=i)).strftime("%Y-%m-%d")
+                for i in range(n_days)
+            ]
         return coords
 
     def build(self, debug: bool = False) -> Self:
