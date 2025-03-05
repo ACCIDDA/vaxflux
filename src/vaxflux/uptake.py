@@ -98,7 +98,7 @@ class SeasonRange(BaseModel):
         season: The name of the season for the season range.
         start_date: The start date of the season range, used to make seasonal dates
             relative.
-        end_date: The end date of the season range, used for validation if given.
+        end_date: The end date of the season range.
 
     """
 
@@ -106,7 +106,7 @@ class SeasonRange(BaseModel):
 
     season: str
     start_date: date
-    end_date: date | None = None
+    end_date: date
 
 
 class DateRange(BaseModel):
