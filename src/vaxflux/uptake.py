@@ -85,7 +85,7 @@ class PooledCovariate(Covariate):
         return getattr(pm, self.distribution)(
             name=name,
             **self.distribution_kwargs,
-            shape=coords["season"],
+            dims="season",
         )
 
 
