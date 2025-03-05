@@ -2,8 +2,9 @@
 
 import pytest
 
+from vaxflux.covariates import PooledCovariate
 from vaxflux.curves import LogisticIncidenceCurve
-from vaxflux.uptake import PooledCovariate, SeasonalUptakeModel
+from vaxflux.uptake import SeasonalUptakeModel
 
 
 def test_covariate_parameters_missing_value_error() -> None:
