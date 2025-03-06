@@ -16,7 +16,11 @@ from pandas.api.types import is_datetime64_any_dtype
 import pymc as pm
 
 from vaxflux._util import _coord_name, _pm_name
-from vaxflux.covariates import Covariate
+from vaxflux.covariates import (
+    Covariate,
+    CovariateCategories,
+    _infer_covariate_categories_from_observations,
+)
 from vaxflux.curves import IncidenceCurve
 from vaxflux.dates import DateRange, SeasonRange, _infer_ranges_from_observations
 
@@ -43,6 +47,7 @@ class SeasonalUptakeModel:
         curve: IncidenceCurve,
         covariates: list[Covariate],
         observations: pd.DataFrame | None = None,
+        covariate_categories: list[CovariateCategories] | None = None,
         season_ranges: list[SeasonRange] | None = None,
         date_ranges: list[DateRange] | None = None,
         name: str | None = None,
@@ -54,6 +59,8 @@ class SeasonalUptakeModel:
             curve: The incidence curve family to use.
             covariates: The covariates to use.
             observations: The uptake dataset to use.
+            covariate_categories: The covariate categories for the uptake scenarios or
+                `None` to derive them from the observations.
             date_ranges: The date ranges for the uptake scenarios or `None` to derive
                 them from the observations.
             season_ranges: The season ranges for the uptake scenarios or `None` to
@@ -81,6 +88,9 @@ class SeasonalUptakeModel:
 
         # Private attributes
         self._covariates = copy.deepcopy(covariates)
+        self._covariate_categories: list[CovariateCategories] = (
+            copy.deepcopy(covariate_categories) if covariate_categories else list()
+        )
         self._date_ranges: list[DateRange] = (
             copy.deepcopy(date_ranges) if date_ranges else list()
         )
@@ -113,6 +123,9 @@ class SeasonalUptakeModel:
             )
 
         # Infer parameters from the observations
+        self._covariate_categories = _infer_covariate_categories_from_observations(
+            self.observations, self._covariates, self._covariate_categories
+        )
         self._date_ranges = _infer_ranges_from_observations(
             self.observations, self._date_ranges, "date"
         )
@@ -136,6 +149,10 @@ class SeasonalUptakeModel:
                 (season_range.start_date + timedelta(days=i)).strftime("%Y-%m-%d")
                 for i in range(n_days)
             ]
+        for covariate_category in self._covariate_categories:
+            coords[
+                _coord_name("covariate", covariate_category.covariate, "categories")
+            ] = list(covariate_category.categories)
         return coords
 
     def build(self, debug: bool = False) -> Self:
