@@ -174,43 +174,43 @@ class SeasonalUptakeModel:
         logger.addHandler(stream_handler)
 
         # Preprocessing data
-        season_start = {
-            season.season: season.start_date for season in self._season_ranges
-        }
-        start_t = [
-            (date_range.start_date - season_start[date_range.season]).days
-            for date_range in self._date_ranges
-        ]
-        end_t = [
-            (date_range.end_date - season_start[date_range.season]).days
-            for date_range in self._date_ranges
-        ]
-        report_t = [
-            (date_range.report_date - season_start[date_range.season]).days
-            for date_range in self._date_ranges
-        ]
+        # season_start = {
+        #     season.season: season.start_date for season in self._season_ranges
+        # }
+        # start_t = [
+        #     (date_range.start_date - season_start[date_range.season]).days
+        #     for date_range in self._date_ranges
+        # ]
+        # end_t = [
+        #     (date_range.end_date - season_start[date_range.season]).days
+        #     for date_range in self._date_ranges
+        # ]
+        # report_t = [
+        #     (date_range.report_date - season_start[date_range.season]).days
+        #     for date_range in self._date_ranges
+        # ]
         logger.info(
             "Using %u date ranges for the uptake model.", len(self._date_ranges)
         )
         if self.observations:
-            observation_start_t = [
-                (start_date.date() - season_start[season]).days
-                for season, start_date in zip(
-                    self.observations["season"], self.observations["start_date"]
-                )
-            ]
-            observation_end_t = [
-                (end_date.date() - season_start[season]).days
-                for season, end_date in zip(
-                    self.observations["season"], self.observations["end_date"]
-                )
-            ]
-            observation_report_t = [
-                (report_date.date() - season_start[season]).days
-                for season, report_date in zip(
-                    self.observations["season"], self.observations["report_date"]
-                )
-            ]
+            # observation_start_t = [
+            #     (start_date.date() - season_start[season]).days
+            #     for season, start_date in zip(
+            #         self.observations["season"], self.observations["start_date"]
+            #     )
+            # ]
+            # observation_end_t = [
+            #     (end_date.date() - season_start[season]).days
+            #     for season, end_date in zip(
+            #         self.observations["season"], self.observations["end_date"]
+            #     )
+            # ]
+            # observation_report_t = [
+            #     (report_date.date() - season_start[season]).days
+            #     for season, report_date in zip(
+            #         self.observations["season"], self.observations["report_date"]
+            #     )
+            # ]
             logger.info(
                 "Using %u observational date ranges for the uptake model.",
                 len(self.observations),
