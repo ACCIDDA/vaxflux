@@ -1,13 +1,38 @@
 """Functionality for covariates in uptake models."""
 
-__all__ = ("Covariate", "PooledCovariate")
+__all__ = ("Covariate", "CovariateCategories", "PooledCovariate")
 
 
 from abc import ABC, abstractmethod
 from typing import Any
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict, field_validator
 import pymc as pm
+
+
+class CovariateCategories(BaseModel):
+    """
+    A representation of the categories for a covariate.
+
+    Attributes:
+        covariate: The name of the covariate.
+        categories: The categories for the covariate.
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    covariate: str
+    categories: tuple[str, ...]
+
+    @field_validator("categories", mode="after")
+    @classmethod
+    def _are_categories_unique(cls, categories: tuple[str]) -> tuple[str]:
+        unique_categories = set()
+        for category in categories:
+            if category in unique_categories:
+                raise ValueError(f"Category '{category}' is not unique.")
+            unique_categories.add(category)
+        return categories
 
 
 class Covariate(ABC, BaseModel):
