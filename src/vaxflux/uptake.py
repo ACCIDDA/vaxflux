@@ -149,7 +149,9 @@ class SeasonalUptakeModel:
                 (season_range.start_date + timedelta(days=i)).strftime("%Y-%m-%d")
                 for i in range(n_days)
             ]
+        covariate_names = []
         for covariate_category in self._covariate_categories:
+            covariate_names.append(covariate_category.covariate)
             categories = list(covariate_category.categories)
             coords[
                 _coord_name("covariate", covariate_category.covariate, "categories")
@@ -159,6 +161,8 @@ class SeasonalUptakeModel:
                     "covariate", covariate_category.covariate, "categories", "limited"
                 )
             ] = categories[1:]
+        coords["covariate_names"] = covariate_names
+        coords["parameters"] = list(self.curve.parameters)
         return coords
 
     def build(self, debug: bool = False) -> Self:
@@ -230,6 +234,18 @@ class SeasonalUptakeModel:
         # Build the model
         self._model = pm.Model(coords=self.coordinates())
         with self._model:
+            date_indexes = {}
+            for season_range in self._season_ranges:
+                n_days = (season_range.end_date - season_range.start_date).days + 1
+                date_indexes[season_range.season] = pm.Data(
+                    _pm_name("season", season_range.season, "dates"), range(n_days)
+                )
+                logger.info(
+                    "Added season %s to the model with %u days.",
+                    season_range.season,
+                    n_days,
+                )
+
             params: list[tuple[str, str | None, pm.Distribution, tuple[str, ...]]] = []
             for covariate in self._covariates:
                 name = _pm_name(covariate.parameter, covariate.covariate or "Season")
