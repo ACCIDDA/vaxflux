@@ -60,7 +60,7 @@ class Covariate(ABC, BaseModel):
     @abstractmethod
     def pymc_distribution(
         self, name: str, coords: dict[str, list[str]]
-    ) -> pm.Distribution:
+    ) -> tuple[pm.Distribution, tuple[str, ...]]:
         """
         Return a PyMC3 distribution for the covariate.
 
@@ -69,7 +69,8 @@ class Covariate(ABC, BaseModel):
             coords: The coordinates for the uptake model.
 
         Returns:
-            A PyMC3 distribution describing the effect of the covariate.
+            A PyMC3 distribution describing the effect of the covariate along with the
+            dims of the distribution.
         """
         raise NotImplementedError
 
@@ -83,7 +84,8 @@ class PooledCovariate(Covariate):
         distribution_kwargs: The keyword arguments to pass to the PyMC3 distribution.
 
     Returns:
-        A PyMC3 distribution describing the effect of the covariate.
+        A PyMC3 distribution describing the effect of the covariate along with the
+        dims of the distribution.
     """
 
     distribution: str
@@ -91,7 +93,7 @@ class PooledCovariate(Covariate):
 
     def pymc_distribution(
         self, name: str, coords: dict[str, list[str]]
-    ) -> pm.Distribution:
+    ) -> tuple[pm.Distribution, tuple[str, ...]]:
         """
         Return a PyMC3 distribution for the pooled covariate.
 
@@ -103,7 +105,7 @@ class PooledCovariate(Covariate):
             name=name,
             **self.distribution_kwargs,
             dims="season",
-        )
+        ), ("season",)
 
 
 class GaussianRandomWalkCovariate(Covariate):
@@ -118,7 +120,8 @@ class GaussianRandomWalkCovariate(Covariate):
             a multivariate gaussian random walk.
 
     Returns:
-        A PyMC3 distribution describing the effect of the covariate.
+        A PyMC3 distribution describing the effect of the covariate along with the
+        dims of the distribution.
     """
 
     init_mu: ListOfFloats
@@ -128,13 +131,17 @@ class GaussianRandomWalkCovariate(Covariate):
 
     def pymc_distribution(
         self, name: str, coords: dict[str, list[str]]
-    ) -> pm.Distribution:
+    ) -> tuple[pm.Distribution, tuple[str, ...]]:
         """
         Return a PyMC3 distribution for the pooled covariate.
 
         Args:
             name: The name of the distribution already formatted.
             coords: The coordinates for the uptake model.
+
+        Returns:
+            A PyMC3 distribution describing the effect of the covariate along with the
+            dims of the distribution.
         """
         if self.covariate is None:
             raise ValueError(
@@ -163,7 +170,7 @@ class GaussianRandomWalkCovariate(Covariate):
                 sigma=self.sigma[0],
                 init_dist=pm.Normal.dist(mu=self.init_mu[0], sigma=self.sigma[0]),
                 dims="season",
-            )
+            ), ("season",)
         raise NotImplementedError(
             "More than one limited category is not supported "
             "for a gaussian random walk covariate."

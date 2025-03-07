@@ -230,15 +230,17 @@ class SeasonalUptakeModel:
         # Build the model
         self._model = pm.Model(coords=self.coordinates())
         with self._model:
-            params = []
+            params: list[tuple[str, str | None, pm.Distribution, tuple[str, ...]]] = []
             for covariate in self._covariates:
                 name = _pm_name(covariate.parameter, covariate.covariate or "Season")
+                dist, dims = covariate.pymc_distribution(name, self.coordinates())
                 params.append(
-                    [
+                    (
                         covariate.parameter,
-                        covariate.parameter,
-                        covariate.pymc_distribution(name, self.coordinates()),
-                    ]
+                        covariate.covariate,
+                        dist,
+                        dims,
+                    )
                 )
                 logger.info("Added covariate %s to the model.", name)
 
