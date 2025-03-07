@@ -1,14 +1,21 @@
 """Functionality for covariates in uptake models."""
 
-__all__ = ("Covariate", "CovariateCategories", "PooledCovariate")
+__all__ = (
+    "Covariate",
+    "CovariateCategories",
+    "GaussianRandomWalkCovariate",
+    "PooledCovariate",
+)
 
 
 from abc import ABC, abstractmethod
-from typing import Any
+from typing import Annotated, Any
 
 import pandas as pd
-from pydantic import BaseModel, ConfigDict, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 import pymc as pm
+
+from vaxflux._util import ListOfFloats, _coord_name
 
 
 class CovariateCategories(BaseModel):
@@ -23,7 +30,7 @@ class CovariateCategories(BaseModel):
     model_config = ConfigDict(frozen=True)
 
     covariate: str
-    categories: tuple[str, ...]
+    categories: Annotated[tuple[str, ...], Field(min_length=2)]
 
     @field_validator("categories", mode="after")
     @classmethod
@@ -58,8 +65,11 @@ class Covariate(ABC, BaseModel):
         Return a PyMC3 distribution for the covariate.
 
         Args:
-            name: The name of the distribution.
+            name: The name of the distribution already formatted.
             coords: The coordinates for the uptake model.
+
+        Returns:
+            A PyMC3 distribution describing the effect of the covariate.
         """
         raise NotImplementedError
 
@@ -71,6 +81,9 @@ class PooledCovariate(Covariate):
     Attributes:
         distribution: The PyMC3 distribution to use for the covariate.
         distribution_kwargs: The keyword arguments to pass to the PyMC3 distribution.
+
+    Returns:
+        A PyMC3 distribution describing the effect of the covariate.
     """
 
     distribution: str
@@ -83,13 +96,77 @@ class PooledCovariate(Covariate):
         Return a PyMC3 distribution for the pooled covariate.
 
         Args:
-            name: The name of the distribution.
+            name: The name of the distribution already formatted.
             coords: The coordinates for the uptake model.
         """
         return getattr(pm, self.distribution)(
             name=name,
             **self.distribution_kwargs,
             dims="season",
+        )
+
+
+class GaussianRandomWalkCovariate(Covariate):
+    """
+    A gaussian random walk covariate for uptake models.
+
+    Attributes:
+        init_mu: The initial mean for the gaussian random walk.
+        mu: The drift for the gaussian random walk.
+        sigma: The standard deviation for the gaussian random walk.
+        eta: The shape parameter for the LKJ distribution for the covariance matrix of
+            a multivariate gaussian random walk.
+
+    Returns:
+        A PyMC3 distribution describing the effect of the covariate.
+    """
+
+    init_mu: ListOfFloats
+    mu: ListOfFloats
+    sigma: ListOfFloats
+    eta: Annotated[float, Field(gt=0.0)] = 1.0
+
+    def pymc_distribution(
+        self, name: str, coords: dict[str, list[str]]
+    ) -> pm.Distribution:
+        """
+        Return a PyMC3 distribution for the pooled covariate.
+
+        Args:
+            name: The name of the distribution already formatted.
+            coords: The coordinates for the uptake model.
+        """
+        if self.covariate is None:
+            raise ValueError(
+                "A covariate name is required for a gaussian random walk covariate."
+            )
+        categories_limited = coords.get(
+            _coord_name("covariate", self.covariate, "categories", "limited")
+        )
+        if not categories_limited:
+            raise ValueError(
+                f"Missing limited categories for '{self.covariate}' in the coordinates."
+            )
+        len_categories_limited = len(categories_limited)
+        for param in ("init_mu", "mu", "sigma"):
+            attr = getattr(self, param)
+            if (len_attr := len(attr)) != len_categories_limited:
+                raise ValueError(
+                    f"The number of values for the '{param}' parameter, "
+                    f"{len_attr}, must match the number of limited "
+                    f"categories, {len_categories_limited}."
+                )
+        if len(categories_limited) == 1:
+            return pm.GaussianRandomWalk(
+                name=name,
+                mu=self.mu[0],
+                sigma=self.sigma[0],
+                init_dist=pm.Normal.dist(mu=self.init_mu[0], sigma=self.sigma[0]),
+                dims="season",
+            )
+        raise NotImplementedError(
+            "More than one limited category is not supported "
+            "for a gaussian random walk covariate."
         )
 
 
