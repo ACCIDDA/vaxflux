@@ -150,9 +150,15 @@ class SeasonalUptakeModel:
                 for i in range(n_days)
             ]
         for covariate_category in self._covariate_categories:
+            categories = list(covariate_category.categories)
             coords[
                 _coord_name("covariate", covariate_category.covariate, "categories")
-            ] = list(covariate_category.categories)
+            ] = categories
+            coords[
+                _coord_name(
+                    "covariate", covariate_category.covariate, "categories", "limited"
+                )
+            ] = categories[1:]
         return coords
 
     def build(self, debug: bool = False) -> Self:
