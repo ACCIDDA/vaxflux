@@ -2,7 +2,9 @@ __all__: tuple[str, ...] = ()
 
 
 import re
-from typing import Callable
+from typing import Annotated, Any, Callable, overload
+
+from pydantic import BeforeValidator
 
 
 _CLEAN_TEXT_REGEX = re.compile(r"[^a-zA-Z0-9]")
@@ -109,3 +111,46 @@ def _coord_name(*args: str | None) -> str:
         'covariate_age_categories'
     """
     return _clean_name(*args, joiner="_", transform=lambda x: x.lower())
+
+
+@overload
+def _make_float_list(x: int) -> list[float]: ...
+
+
+@overload
+def _make_float_list(x: float) -> list[float]: ...
+
+
+@overload
+def _make_float_list(x: Any) -> Any: ...
+
+
+def _make_float_list(x: float | int | Any) -> list[float] | Any:
+    """
+    Utility function to make a float list from a single float or integer.
+
+    Args:
+        x: The value to convert to a float list if an integer or float.
+
+    Returns:
+        The float list or the original value.
+
+    Examples:
+        >>> from vaxflux._util import _make_float_list
+        >>> _make_float_list(1.2)
+        [1.2]
+        >>> _make_float_list(3)
+        [3.0]
+        >>> _make_float_list([1.2, 3])
+        [1.2, 3]
+        >>> _make_float_list((1.2, 3))
+        (1.2, 3)
+        >>> _make_float_list("abc")
+        'abc'
+        >>> _make_float_list(None) is None
+        True
+    """
+    return [float(x)] if isinstance(x, (int, float)) else x
+
+
+ListOfFloats = Annotated[list[float], BeforeValidator(_make_float_list)]
