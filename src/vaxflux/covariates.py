@@ -147,9 +147,10 @@ class GaussianRandomWalkCovariate(Covariate):
             raise ValueError(
                 "A covariate name is required for a gaussian random walk covariate."
             )
-        categories_limited = coords.get(
-            _coord_name("covariate", self.covariate, "categories", "limited")
+        categories_limited_coord_name = _coord_name(
+            "covariate", self.covariate, "categories", "limited"
         )
+        categories_limited = coords.get(categories_limited_coord_name)
         if not categories_limited:
             raise ValueError(
                 f"Missing limited categories for '{self.covariate}' in the coordinates."
@@ -163,7 +164,7 @@ class GaussianRandomWalkCovariate(Covariate):
                     f"{len_attr}, must match the number of limited "
                     f"categories, {len_categories_limited}."
                 )
-        if len(categories_limited) == 1:
+        if len_categories_limited == 1:
             return pm.GaussianRandomWalk(
                 name=name,
                 mu=self.mu[0],
@@ -171,10 +172,25 @@ class GaussianRandomWalkCovariate(Covariate):
                 init_dist=pm.Normal.dist(mu=self.init_mu[0], sigma=self.sigma[0]),
                 dims="season",
             ), ("season",)
-        raise NotImplementedError(
-            "More than one limited category is not supported "
-            "for a gaussian random walk covariate."
+        packed_chol = pm.LKJCholeskyCov(
+            name=f"{name}PackedChol",
+            eta=self.eta,
+            n=len_categories_limited,
+            sd_dist=pm.Exponential.dist(lam=[1.0 / sigma for sigma in self.sigma]),
+            compute_corr=False,
+            store_in_trace=False,
         )
+        chol = pm.expand_packed_triangular(len_categories_limited, packed_chol)
+        init_dist = pm.MvNormal.dist(
+            mu=self.init_mu, chol=chol, shape=(len_categories_limited,)
+        )
+        return pm.MvGaussianRandomWalk(
+            name=name,
+            mu=self.mu,
+            chol=chol,
+            init_dist=init_dist,
+            dims=(categories_limited_coord_name, "season"),
+        ), (categories_limited_coord_name, "season")
 
 
 def _infer_covariate_categories_from_observations(
