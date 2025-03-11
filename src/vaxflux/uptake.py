@@ -275,6 +275,34 @@ class SeasonalUptakeModel:
                             summed_params[name] = pm.Data(name, 0.0)
                         logger.info("Added summed parameter %s to the model.", name)
 
+            incidence = {}
+            for category_combo in category_combinations:
+                pm_cov_names = [
+                    item
+                    for pair in zip(coords["covariate_names"], category_combo)
+                    for item in pair
+                ]
+                for season_range in self._season_ranges:
+                    kwargs = {
+                        param: summed_params[
+                            _pm_name(
+                                *([param, "season", season_range.season] + pm_cov_names)
+                            )
+                        ]
+                        for param in coords["parameters"]
+                    }
+                    name_args = ["incidence", season_range.season] + pm_cov_names
+                    name = _pm_name(*name_args)
+                    incidence[season_range.season] = pm.Deterministic(
+                        name,
+                        self.curve.prevalence_difference(
+                            date_indexes[season_range.season],
+                            date_indexes[season_range.season] + 1.0,
+                            **kwargs,
+                        ),
+                        dims=(_coord_name("season", season_range.season, "dates"),),
+                    )
+
         return self
 
     def sample_prior(
@@ -301,7 +329,7 @@ class SeasonalUptakeModel:
                 draws=draws,
                 var_names=var_names,
                 random_seed=random_seed,
-                return_idata=True,
+                return_inferencedata=True,
                 idata_kwargs=idata_kwargs,
                 compile_kwargs=compile_kwargs,
             )
