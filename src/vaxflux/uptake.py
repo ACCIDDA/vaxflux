@@ -6,6 +6,7 @@ __all__ = ("SeasonalUptakeModel",)
 from collections.abc import Iterable
 import copy
 from datetime import timedelta
+import itertools
 import logging
 import sys
 from typing import Any
@@ -15,7 +16,7 @@ import pandas as pd
 from pandas.api.types import is_datetime64_any_dtype
 import pymc as pm
 
-from vaxflux._util import _coord_name, _pm_name
+from vaxflux._util import _coord_index, _coord_name, _pm_name
 from vaxflux.covariates import (
     Covariate,
     CovariateCategories,
@@ -165,7 +166,8 @@ class SeasonalUptakeModel:
         coords["parameters"] = list(self.curve.parameters)
         return coords
 
-    def build(self, debug: bool = False) -> Self:
+    # TODO: Split this method into smaller parts to address noqa issues.
+    def build(self, debug: bool = False) -> Self:  # noqa: PLR0912
         """
         Build the uptake model.
 
@@ -184,43 +186,10 @@ class SeasonalUptakeModel:
         logger.addHandler(stream_handler)
 
         # Preprocessing data
-        # season_start = {
-        #     season.season: season.start_date for season in self._season_ranges
-        # }
-        # start_t = [
-        #     (date_range.start_date - season_start[date_range.season]).days
-        #     for date_range in self._date_ranges
-        # ]
-        # end_t = [
-        #     (date_range.end_date - season_start[date_range.season]).days
-        #     for date_range in self._date_ranges
-        # ]
-        # report_t = [
-        #     (date_range.report_date - season_start[date_range.season]).days
-        #     for date_range in self._date_ranges
-        # ]
         logger.info(
             "Using %u date ranges for the uptake model.", len(self._date_ranges)
         )
         if self.observations:
-            # observation_start_t = [
-            #     (start_date.date() - season_start[season]).days
-            #     for season, start_date in zip(
-            #         self.observations["season"], self.observations["start_date"]
-            #     )
-            # ]
-            # observation_end_t = [
-            #     (end_date.date() - season_start[season]).days
-            #     for season, end_date in zip(
-            #         self.observations["season"], self.observations["end_date"]
-            #     )
-            # ]
-            # observation_report_t = [
-            #     (report_date.date() - season_start[season]).days
-            #     for season, report_date in zip(
-            #         self.observations["season"], self.observations["report_date"]
-            #     )
-            # ]
             logger.info(
                 "Using %u observational date ranges for the uptake model.",
                 len(self.observations),
@@ -232,7 +201,8 @@ class SeasonalUptakeModel:
             )
 
         # Build the model
-        self._model = pm.Model(coords=self.coordinates())
+        coords = self.coordinates()
+        self._model = pm.Model(coords=coords)
         with self._model:
             date_indexes = {}
             for season_range in self._season_ranges:
@@ -246,19 +216,64 @@ class SeasonalUptakeModel:
                     n_days,
                 )
 
-            params: list[tuple[str, str | None, pm.Distribution, tuple[str, ...]]] = []
+            params: dict[int, tuple[pm.Distribution, tuple[str, ...]]] = {}
             for covariate in self._covariates:
                 name = _pm_name(covariate.parameter, covariate.covariate or "Season")
-                dist, dims = covariate.pymc_distribution(name, self.coordinates())
-                params.append(
-                    (
-                        covariate.parameter,
-                        covariate.covariate,
-                        dist,
-                        dims,
-                    )
+                params[hash((covariate.parameter, covariate.covariate))] = (
+                    covariate.pymc_distribution(name, coords)
                 )
                 logger.info("Added covariate %s to the model.", name)
+
+            summed_params: dict[str, pm.Distribution] = {}
+            category_combinations = list(
+                itertools.product(
+                    *[
+                        coords[_coord_name("covariate", covariate_name, "categories")]
+                        for covariate_name in coords["covariate_names"]
+                    ]
+                )
+            )
+            for category_combo in category_combinations:
+                for season_range in self._season_ranges:
+                    for param in coords["parameters"]:
+                        param_components: list[pm.Data | pm.Deterministic] = []
+                        result = params.get(hash((param, None)))
+                        if result is not None:
+                            dist, dims = result
+                            if (
+                                idx := _coord_index(
+                                    dims, season_range.season, None, None, coords
+                                )
+                            ) is not None:
+                                param_components.append(dist[*idx])
+                        for i, covariate_name in enumerate(coords["covariate_names"]):
+                            result = params.get(hash((param, covariate_name)))
+                            if result is None:
+                                continue
+                            dist, dims = result
+                            if (
+                                idx := _coord_index(
+                                    dims,
+                                    season_range.season,
+                                    covariate_name,
+                                    category_combo[i],
+                                    coords,
+                                )
+                            ) is not None:
+                                param_components.append(dist[*idx])
+                        name_args = [param, "season", season_range.season] + [
+                            item
+                            for pair in zip(coords["covariate_names"], category_combo)
+                            for item in pair
+                        ]
+                        name = _pm_name(*name_args)
+                        if param_components:
+                            summed_params[name] = pm.Deterministic(
+                                name, sum(param_components)
+                            )
+                        else:
+                            summed_params[name] = pm.Data(name, 0.0)
+                        logger.info("Added summed parameter %s to the model.", name)
 
         return self
 
