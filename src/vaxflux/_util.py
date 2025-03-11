@@ -154,3 +154,109 @@ def _make_float_list(x: float | int | Any) -> list[float] | Any:
 
 
 ListOfFloats = Annotated[list[float], BeforeValidator(_make_float_list)]
+
+
+def _coord_index_dim(
+    dim: str,
+    season: str,
+    covariate_name: str | None,
+    category: str | None,
+    coords: dict[str, list[str]],
+) -> int:
+    """
+    Find the index of the requested dimension.
+
+    Args:
+        dim: The dimension to find the index of.
+        season: The season for this index.
+        covariate_name: The name of the covariate.
+        category: The category of the covariate.
+        coords: The coordinates of the model.
+
+    Returns:
+        The index of the requested dimension.
+
+    Examples:
+        >>> from vaxflux._util import _coord_index_dim
+        >>> coords = {
+        ...     'covariate_age_categories': ['youth', 'adult', 'senior'],
+        ...     'covariate_age_categories_limited': ['adult', 'senior'],
+        ...     'covariate_names': ['sex', 'age'],
+        ...     'covariate_sex_categories': ['female', 'male'],
+        ...     'covariate_sex_categories_limited': ['male'],
+        ...     'season': ['2022/2023', '2023/2024'],
+        ... }
+        >>> _coord_index_dim("season", "2023/2024", "sex", "male", coords)
+        1
+        >>> _coord_index_dim(
+        ...     "covariate_sex_categories", "2023/2024", "sex", "male", coords
+        ... )
+        1
+        >>> _coord_index_dim(
+        ...     "covariate_sex_categories_limited", "2023/2024", "sex", "male", coords
+        ... )
+        0
+        >>> _coord_index_dim("covariate_names", "2023/2024", "sex", "male", coords)
+        0
+        >>> try:
+        ...     _coord_index_dim(
+        ...         "covariate_sex_categories_limited",
+        ...         "2023/2024",
+        ...         "sex",
+        ...         "female",
+        ...         coords
+        ...     )
+        ... except Exception as e:
+        ...     print(e)
+        ...
+        'female' is not in list
+
+    Raises:
+        NotImplementedError: If the `dim` given is unknown.
+
+    """
+    if dim == "season":
+        return coords[dim].index(season)
+    if (
+        covariate_name is not None
+        and category is not None
+        and dim
+        in {
+            _coord_name("covariate", covariate_name, "categories"),
+            _coord_name("covariate", covariate_name, "categories", "limited"),
+        }
+    ):
+        return coords[dim].index(category)
+    if covariate_name is not None and dim == "covariate_names":
+        return coords[dim].index(covariate_name)
+    raise NotImplementedError(f"Unknown dimension: '{dim}'.")
+
+
+def _coord_index(
+    dims: tuple[str, ...],
+    season: str,
+    covariate_name: str | None,
+    category: str | None,
+    coords: dict[str, list[str]],
+) -> tuple[int, ...] | None:
+    """
+    Determine the index of the RV to select.
+
+    Args:
+        dims: The dimensions of the RV.
+        season: The season for this index.
+        covariate_name: The name of the covariate.
+        category: The category of the covariate.
+        coords: The coordinates of the model.
+
+    Returns:
+        Either a tuple of integers corresponding to the index of the RV to select or
+        `None` if the index could not be determined.
+    """
+    try:
+        return tuple(
+            _coord_index_dim(dim, season, covariate_name, category, coords)
+            for dim in dims
+        )
+    except ValueError:
+        return None
