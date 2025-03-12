@@ -12,3 +12,6 @@ ruff check --fix --target-version $TARGET_VERSION
 
 echo "> Type checking with mypy..."
 mypy --python-version $PYTHON_VERSION .
+
+echo "> Running tests with pytest..."
+pytest
