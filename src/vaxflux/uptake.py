@@ -245,7 +245,7 @@ class SeasonalUptakeModel:
                                     dims, season_range.season, None, None, coords
                                 )
                             ) is not None:
-                                param_components.append(dist[*idx])
+                                param_components.append(dist[idx])
                         for i, covariate_name in enumerate(coords["covariate_names"]):
                             result = params.get(hash((param, covariate_name)))
                             if result is None:
@@ -260,7 +260,7 @@ class SeasonalUptakeModel:
                                     coords,
                                 )
                             ) is not None:
-                                param_components.append(dist[*idx])
+                                param_components.append(dist[idx])
                         name_args = [param, "season", season_range.season] + [
                             item
                             for pair in zip(coords["covariate_names"], category_combo)
