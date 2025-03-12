@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-PYTHON_VERSION=$( cat .python-version | xargs )
+PYTHON_VERSION=$( python --version | cut -d ' ' -f 2 | cut -d '.' -f1-2 )
 TARGET_VERSION=$( echo "py$PYTHON_VERSION" | tr -d '.' )
 echo "Using python version $PYTHON_VERSION"
 
