@@ -1,9 +1,9 @@
 """Tools for specifying date ranges for uptake models and scenarios."""
 
-__all__ = ("DateRange", "SeasonRange")
+__all__ = ("DateRange", "SeasonRange", "daily_date_ranges")
 
 
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from typing import Literal, NamedTuple, TypeVar, cast
 
 import pandas as pd
@@ -47,6 +47,67 @@ class DateRange(BaseModel):
     start_date: date
     end_date: date
     report_date: date
+
+
+def daily_date_ranges(
+    season_ranges: list[SeasonRange] | SeasonRange,
+    range_days: int = 0,
+    remainder: Literal["fill", "raise", "skip"] = "raise",
+) -> list[DateRange]:
+    """
+    Create daily date ranges from the season ranges.
+
+    Args:
+        season_ranges: The season ranges to create the daily date ranges from.
+        range_days: The number of days for each daily date range, must be at least 0.
+        remainder: The strategy to handle the remainder of days when the season ranges
+            do not divide evenly into daily date ranges. Options are "fill" to fill the
+            remainder with the last date range, "raise" to raise an error, and "skip" to
+            skip the remainder.
+
+    Returns:
+        The daily date ranges for the uptake scenarios.
+
+    Raises:
+        ValueError: If the number of days for each daily date range is less than 1.
+        ValueError: If the number of days for each daily date range does not divide
+            evenly into the season range and `remainder` is 'raise'.
+
+    """
+    season_ranges = (
+        [season_ranges] if isinstance(season_ranges, SeasonRange) else season_ranges
+    )
+    if range_days < 0:
+        raise ValueError(
+            "The number of days for each daily date range must be at least 0."
+        )
+    date_ranges = []
+    td = timedelta(days=range_days)
+    td_one_day = timedelta(days=1)
+    for season_range in season_ranges:
+        start_date = season_range.start_date
+        while start_date <= season_range.end_date:
+            end_date = start_date + td
+            if end_date > season_range.end_date:
+                if remainder == "raise":
+                    raise ValueError(
+                        "The number of days for each daily date range does not divide "
+                        f"evenly into the season range for {season_range.season}."
+                    )
+                elif remainder == "fill":
+                    end_date = season_range.end_date
+                else:
+                    break
+            date_ranges.append(
+                DateRange(
+                    season=season_range.season,
+                    start_date=start_date,
+                    end_date=end_date,
+                    report_date=end_date,
+                )
+            )
+            start_date = end_date + td_one_day
+    return date_ranges
 
 
 DateOrSeasonRange = TypeVar("DateOrSeasonRange", bound=DateRange | SeasonRange)
