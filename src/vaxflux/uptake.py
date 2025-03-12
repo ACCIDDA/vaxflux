@@ -8,6 +8,7 @@ import copy
 from datetime import timedelta
 import itertools
 import logging
+import math
 import sys
 from typing import Any
 
@@ -51,6 +52,7 @@ class SeasonalUptakeModel:
         covariate_categories: list[CovariateCategories] | None = None,
         season_ranges: list[SeasonRange] | None = None,
         date_ranges: list[DateRange] | None = None,
+        epsilon: float = 5e-4,
         name: str | None = None,
     ) -> None:
         """
@@ -66,6 +68,7 @@ class SeasonalUptakeModel:
                 them from the observations.
             season_ranges: The season ranges for the uptake scenarios or `None` to
                 derive them from the observations.
+            epsilon: The prior average for the standard deviation in observed uptake.
             name: The name of the model, optional and only used for display.
 
         Returns:
@@ -99,6 +102,7 @@ class SeasonalUptakeModel:
         self._season_ranges: list[SeasonRange] = (
             copy.deepcopy(season_ranges) if season_ranges else list()
         )
+        self._epsilon = epsilon
 
         # Input validation
         if covariate_parameters_missing := {
@@ -121,6 +125,10 @@ class SeasonalUptakeModel:
                 "The following covariates were given in the covariates, "
                 "but not present in the observation columns: "
                 f"{sorted(covariate_covariates_missing)}."
+            )
+        if self._epsilon <= 0 or math.isclose(self._epsilon, 0.0):
+            raise ValueError(
+                "The epsilon value must be greater than zero beyond floating point."
             )
 
         # Infer parameters from the observations
@@ -164,6 +172,31 @@ class SeasonalUptakeModel:
             ] = categories[1:]
         coords["covariate_names"] = covariate_names
         coords["parameters"] = list(self.curve.parameters)
+        category_combinations = list(
+            itertools.product(
+                *[
+                    coords[_coord_name("covariate", covariate_name, "categories")]
+                    for covariate_name in coords["covariate_names"]
+                ]
+            )
+        )
+        coords["season_by_category"] = []
+        for season_range in self._season_ranges:
+            for category_combo in category_combinations:
+                coords["season_by_category"].append(
+                    _coord_name(
+                        *(
+                            ["season", season_range.season]
+                            + [
+                                item
+                                for pair in zip(
+                                    coords["covariate_names"], category_combo
+                                )
+                                for item in pair
+                            ]
+                        )
+                    )
+                )
         return coords
 
     # TODO: Split this method into smaller parts to address noqa issues.
@@ -275,6 +308,10 @@ class SeasonalUptakeModel:
                             summed_params[name] = pm.Data(name, 0.0)
                         logger.info("Added summed parameter %s to the model.", name)
 
+            epsilon = pm.Exponential(
+                "epsilon", lam=1.0 / self._epsilon, dims=("season_by_category",)
+            )
+
             incidence = {}
             for category_combo in category_combinations:
                 pm_cov_names = [
@@ -293,13 +330,20 @@ class SeasonalUptakeModel:
                     }
                     name_args = ["incidence", season_range.season] + pm_cov_names
                     name = _pm_name(*name_args)
-                    incidence[season_range.season] = pm.Deterministic(
+                    incidence[season_range.season] = pm.Gamma(
                         name,
-                        self.curve.prevalence_difference(
+                        mu=self.curve.prevalence_difference(
                             date_indexes[season_range.season],
                             date_indexes[season_range.season] + 1.0,
                             **kwargs,
                         ),
+                        sigma=epsilon[
+                            coords["season_by_category"].index(
+                                _coord_name(
+                                    "season", season_range.season, *pm_cov_names
+                                )
+                            )
+                        ],
                         dims=(_coord_name("season", season_range.season, "dates"),),
                     )
 
