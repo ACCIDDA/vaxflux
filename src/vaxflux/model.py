@@ -3,14 +3,14 @@
 __all__ = ("build_model", "change_detection", "posterior_forecast")
 
 
-from collections.abc import Iterable
-from typing import Any, Callable, Literal, cast
+from collections.abc import Callable, Iterable
+from typing import Any, Literal, cast
 
-from arviz import InferenceData
 import numpy as np
 import pandas as pd
 import pymc as pm
 import pytensor.tensor as pt
+from arviz import InferenceData
 
 from vaxflux._util import _clean_text
 from vaxflux.curves import IncidenceCurve
@@ -66,7 +66,7 @@ def build_model(  # noqa: PLR0913
         }
     )
     indexes = {
-        column: data[column].apply(lambda x: coords[column].index(x)).values
+        column: data[column].apply(lambda x: coords[column].index(x)).to_numpy()
         for column in ("season", "region", "strata")
     }
     indexes.update(
@@ -82,8 +82,8 @@ def build_model(  # noqa: PLR0913
     # Build the model
     with pm.Model(coords=coords) as model:
         # **Data**
-        time = pm.Data("time", data["time"].values)
-        observed_incidence = pm.Data("observedIncidence", data["value"].values)
+        time = pm.Data("time", data["time"].to_numpy())
+        observed_incidence = pm.Data("observedIncidence", data["value"].to_numpy())
 
         # **Prior distributions**
         params = {}
@@ -160,7 +160,7 @@ def build_model(  # noqa: PLR0913
     return model
 
 
-def _strata_region_factors(  # noqa: PLR0913
+def _strata_region_factors(
     p: str,
     kind: Literal["region", "strata"],
     params: dict[str, Any],
@@ -303,10 +303,10 @@ def posterior_forecast(
 
     """
     posterior = getattr(trace, "posterior")
-    chains = posterior.coords["chain"].values.tolist()
-    draws = posterior.coords["draw"].values.tolist()
-    seasons = posterior.coords["season"].values.tolist()
-    strata = posterior.coords["strata"].values.tolist()
+    chains = posterior.coords["chain"].values.tolist()  # noqa: PD011
+    draws = posterior.coords["draw"].values.tolist()  # noqa: PD011
+    seasons = posterior.coords["season"].values.tolist()  # noqa: PD011
+    strata = posterior.coords["strata"].values.tolist()  # noqa: PD011
 
     times_array = np.zeros((len(times), len(chains), len(draws)))
     for chain_idx in range(len(chains)):
@@ -318,18 +318,18 @@ def posterior_forecast(
         for stratum in strata:
             # shape: (chains, draws)
             m = (
-                posterior["mMacro"].sel(mSeason=season).values
-                + posterior[f"mStrata{_clean_text(stratum)}"].sel(season=season).values
+                posterior["mMacro"].sel(mSeason=season).values  # noqa: PD011
+                + posterior[f"mStrata{_clean_text(stratum)}"].sel(season=season).values  # noqa: PD011
             )
             # shape: (chains, draws)
             r = (
-                posterior["rMacro"].sel(rSeason=season).values
-                + posterior["rStrata"].sel(strata=stratum).values
+                posterior["rMacro"].sel(rSeason=season).values  # noqa: PD011
+                + posterior["rStrata"].sel(strata=stratum).values  # noqa: PD011
             )
             # shape: (chains, draws)
             s = (
-                posterior["sMacro"].sel(sSeason=season).values
-                + posterior["sStrata"].sel(strata=stratum).values
+                posterior["sMacro"].sel(sSeason=season).values  # noqa: PD011
+                + posterior["sStrata"].sel(strata=stratum).values  # noqa: PD011
             )
             kwargs = {"m": m, "r": r, "s": s}
             # shape: (times, chains, draws)

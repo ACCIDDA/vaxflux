@@ -1,7 +1,7 @@
 """Unit tests for the `vaxflux._util._clean_name` function."""
 
 import re
-from typing import Callable
+from collections.abc import Callable
 
 import pytest
 

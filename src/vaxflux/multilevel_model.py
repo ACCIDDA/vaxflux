@@ -15,8 +15,8 @@ import numpy as np
 import numpy.typing as npt
 import pandas as pd
 import pymc as pm
-from scipy.special import expit
 import xarray as xr
+from scipy.special import expit
 
 
 @dataclass
@@ -72,10 +72,8 @@ class UptakeModelConfig:
         required_columns = {"time", "season", "region", "strata", "rate"}
         if missing_columns := required_columns - set(self.data.columns.tolist()):
             raise ValueError(
-                (
-                    "The `data` provided is missing required columns: "
-                    f"""'{"', '".join(missing_columns)}'."""
-                )
+                "The `data` provided is missing required columns: "
+                f"""'{"', '".join(missing_columns)}'."""
             )
         self.data = self.data[list(required_columns)]
         # TODO: Check that there are no NA values in `data`
@@ -194,19 +192,25 @@ class UptakeModelConfig:
     @property
     def season_index(self):  # noqa: D102
         return (
-            self.data["season"].apply(lambda x: self.coords["season"].index(x)).values
+            self.data["season"]
+            .apply(lambda x: self.coords["season"].index(x))
+            .to_numpy()
         )
 
     @property
     def region_index(self):  # noqa: D102
         return (
-            self.data["region"].apply(lambda x: self.coords["region"].index(x)).values
+            self.data["region"]
+            .apply(lambda x: self.coords["region"].index(x))
+            .to_numpy()
         )
 
     @property
     def strata_index(self):  # noqa: D102
         return (
-            self.data["strata"].apply(lambda x: self.coords["strata"].index(x)).values
+            self.data["strata"]
+            .apply(lambda x: self.coords["strata"].index(x))
+            .to_numpy()
         )
 
     @property
@@ -239,8 +243,8 @@ def create_multilevel_model(config: UptakeModelConfig) -> pm.Model:
 
     """
     # Local inputs
-    t = config.data["time"].values.copy()
-    rate = config.data["rate"].values.copy()
+    t = config.data["time"].to_numpy().copy()
+    rate = config.data["rate"].to_numpy().copy()
 
     # Construct the model
     with pm.Model(coords=config.coords) as model:
@@ -320,24 +324,24 @@ def create_multilevel_model(config: UptakeModelConfig) -> pm.Model:
 
         # **Model computations**
         # Calculate K, R, S intermediates
-        K = pm.math.invlogit(
+        total_k = pm.math.invlogit(
             k[config.k_season_index]
             + dk_region[config.region_index]
             + dk_strata[config.strata_index]
         )
-        R = (
+        total_r = (
             r[config.r_season_index]
             + dr_region[config.region_index]
             + dr_strata[config.strata_index]
         )
-        S = (
+        total_s = (
             s[config.s_season_index]
             + ds_region[config.region_index]
             + ds_strata[config.strata_index]
         )
 
         # Calculate model curve
-        y_model = K * pm.math.invlogit(R * (t - S))
+        y_model = total_k * pm.math.invlogit(total_r * (t - total_s))
 
         # **Observational model**
         # TODO: Should the error term in this observational model be moved to inside
@@ -404,7 +408,7 @@ def generate_model_outputs(
             "t": t,
             "sample": stacked.coords["sample"],
             "season": next(
-                stacked.coords[f"{p}_season"].values
+                stacked.coords[f"{p}_season"].to_numpy()
                 for p in ("k", "r", "s")
                 if stacked.sizes[f"{p}_season"] == seasons_shape
             ),
@@ -416,47 +420,47 @@ def generate_model_outputs(
         for season_idx in range(output_shape[2]):  # season
             for region_idx in range(output_shape[3]):  # region
                 for strata_idx in range(output_shape[4]):  # strata
-                    K = expit(
-                        stacked.k.values[k_idx[season_idx], :]
+                    total_k = expit(
+                        stacked.k.to_numpy()[k_idx[season_idx], :]
                         + (
-                            stacked.variables["dk_region"].values[region_idx, :]
+                            stacked.variables["dk_region"].to_numpy()[region_idx, :]
                             if "dk_region" in stacked.variables
                             else 0.0
                         )
                         + (
-                            stacked.variables["dk_strata"].values[strata_idx, :]
+                            stacked.variables["dk_strata"].to_numpy()[strata_idx, :]
                             if "dk_strata" in stacked.variables
                             else 0.0
                         )
                     )
-                    R = (
-                        stacked.r.values[r_idx[season_idx], :]
+                    total_r = (
+                        stacked.r.to_numpy()[r_idx[season_idx], :]
                         + (
-                            stacked.variables["dr_region"].values[region_idx, :]
+                            stacked.variables["dr_region"].to_numpy()[region_idx, :]
                             if "dr_region" in stacked.variables
                             else 0.0
                         )
                         + (
-                            stacked.variables["dr_strata"].values[strata_idx, :]
+                            stacked.variables["dr_strata"].to_numpy()[strata_idx, :]
                             if "dr_strata" in stacked.variables
                             else 0.0
                         )
                     )
-                    S = (
-                        stacked.s.values[s_idx[season_idx], :]
+                    total_s = (
+                        stacked.s.to_numpy()[s_idx[season_idx], :]
                         + (
-                            stacked.variables["ds_region"].values[region_idx, :]
+                            stacked.variables["ds_region"].to_numpy()[region_idx, :]
                             if "ds_region" in stacked.variables
                             else 0.0
                         )
                         + (
-                            stacked.variables["ds_strata"].values[strata_idx, :]
+                            stacked.variables["ds_strata"].to_numpy()[strata_idx, :]
                             if "ds_strata" in stacked.variables
                             else 0.0
                         )
                     )
-                    output[time_idx, :, season_idx, region_idx, strata_idx] = K * expit(
-                        R * (t[time_idx] - S)
+                    output[time_idx, :, season_idx, region_idx, strata_idx] = (
+                        total_k * expit(total_r * (t[time_idx] - total_s))
                     )
 
     return output

@@ -12,8 +12,8 @@ from abc import ABC, abstractmethod
 from typing import Annotated, Any
 
 import pandas as pd
-from pydantic import BaseModel, ConfigDict, Field, field_validator
 import pymc as pm
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from vaxflux._util import ListOfFloats, _coord_name
 

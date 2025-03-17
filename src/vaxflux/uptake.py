@@ -3,19 +3,19 @@
 __all__ = ("SeasonalUptakeModel",)
 
 
-from collections.abc import Iterable
 import copy
-from datetime import timedelta
 import itertools
 import logging
 import math
 import sys
+from collections.abc import Iterable
+from datetime import timedelta
 from typing import Any
 
 import arviz as az
 import pandas as pd
-from pandas.api.types import is_datetime64_any_dtype
 import pymc as pm
+from pandas.api.types import is_datetime64_any_dtype
 
 from vaxflux._util import _coord_index, _coord_name, _pm_name
 from vaxflux.covariates import (
@@ -26,8 +26,7 @@ from vaxflux.covariates import (
 from vaxflux.curves import IncidenceCurve
 from vaxflux.dates import DateRange, SeasonRange, _infer_ranges_from_observations
 
-
-if sys.version_info >= (3, 11):
+if sys.version_info[:2] >= (3, 11):
     from typing import Self
 else:
     Self = Any
@@ -323,12 +322,12 @@ class SeasonalUptakeModel:
                     kwargs = {
                         param: summed_params[
                             _pm_name(
-                                *([param, "season", season_range.season] + pm_cov_names)
+                                *[param, "season", season_range.season, *pm_cov_names]
                             )
                         ]
                         for param in coords["parameters"]
                     }
-                    name_args = ["incidence", season_range.season] + pm_cov_names
+                    name_args = ["incidence", season_range.season, *pm_cov_names]
                     name = _pm_name(*name_args)
                     incidence[season_range.season] = pm.Gamma(
                         name,

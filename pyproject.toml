@@ -3,7 +3,7 @@ name = "vaxflux"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
-requires-python = ">=3.10,<3.13"
+requires-python = ">=3.10"
 dependencies = [
     "numpy>=1.17.0,<2",
     "pymc>5.16.2",
@@ -36,9 +36,20 @@ dev-dependencies = [
 
 [tool.ruff.lint]
 select = [
-    "D",  # Docstring
-    "F",  # Pyflakes
-    "PL", # Pylint
+    "FLY",  # Flynt
+    "I",    # Isort
+    "NPY",  # Numpy
+    "PD",   # Pandas
+    "N",    # PEP8 Naming
+    "PERF", # Perflint
+    "E",    # Pycodestyle Errors
+    "W",    # Pycodestyle Warnings
+    "D",    # Docstring
+    "F",    # Pyflakes
+    "PL",   # Pylint
+    "UP",   # Pyupgrade
+    "FURB", # Refurb
+    "RUF",  # Ruff
 ]
 ignore = [
     "D203",    # 1 blank line required before class docstring

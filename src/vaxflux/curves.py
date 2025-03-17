@@ -16,14 +16,14 @@ __all__ = (
 )
 
 
-from abc import ABC, abstractmethod
 import warnings
+from abc import ABC, abstractmethod
 
 import numpy as np
 import numpy.typing as npt
 import pymc as pm
-import pytensor.tensor as pt
 import pytensor
+import pytensor.tensor as pt
 
 
 class IncidenceCurve(ABC):
@@ -50,7 +50,7 @@ class IncidenceCurve(ABC):
         raise NotImplementedError
 
     def evaluate(self, *args, **kwargs):
-        """Deprecated in favor of the `incidence` method."""  # noqa: D401
+        """Deprecated in favor of the `incidence` method."""
         warnings.warn(
             "The `evaluate` method is deprecated, use `incidence` instead.",
             DeprecationWarning,
@@ -128,7 +128,8 @@ class LogisticIncidenceCurve(IncidenceCurve):
     This class implements a logistic incidence curve with parameters $m$, $r$, and $s$
     which is given by:
 
-    $$ f(t \vert m, r, s) = \mathrm{expit}(m) r e^{-r(t-s)} \left( 1 + e^{-r(t-s)} \right)^{-2}. $$
+    $$ f(t \vert m, r, s)
+        = \mathrm{expit}(m) r e^{-r(t-s)} \left( 1 + e^{-r(t-s)} \right)^{-2}. $$
 
     Attributes:
         parameters: The names of parameters used by this incidence curve model.

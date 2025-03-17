@@ -8,18 +8,18 @@ data from external data providers. Current exported functionality includes:
 """
 
 __all__ = (
-    "read_flu_vacc_data",
-    "get_ncird_weekly_cumulative_vaccination_coverage",
-    "format_incidence_dataframe",
     "coordinates_from_incidence",
     "create_logistic_sample_dataset",
+    "format_incidence_dataframe",
+    "get_ncird_weekly_cumulative_vaccination_coverage",
+    "read_flu_vacc_data",
 )
 
 
-from datetime import datetime
-from importlib import resources
 import io
 import time
+from datetime import datetime
+from importlib import resources
 from typing import Literal, TypedDict, cast
 
 import numpy as np
@@ -47,7 +47,13 @@ def read_flu_vacc_data():
             (b'2018-2019', b'8/18/18', 32, 3, 10.18),
             (b'2018-2019', b'8/25/18', 33, 4, 19.99),
             (b'2018-2019', b'9/1/18', 34, 5, 37.38)],
-            dtype=[('season', 'S9'), ('end_date', 'S8'), ('week', '<u8'), ('sort_order', '<u8'), ('doses', '<f8')])
+            dtype=[
+                ('season', 'S9'),
+                ('end_date', 'S8'),
+                ('week', '<u8'),
+                ('sort_order', '<u8'),
+                ('doses', '<f8')
+            ])
         >>> data["doses"][:5]
         array([ 0.52,  3.23, 10.18, 19.99, 37.38])
 
@@ -98,7 +104,7 @@ def get_ncird_weekly_cumulative_vaccination_coverage() -> pd.DataFrame:
     )
     # Get and parse the data
     resp = requests.get(url)
-    df = pd.read_csv(
+    ncird_df = pd.read_csv(
         io.BytesIO(resp.content),
         dtype={
             "Geographic_Level": "string",
@@ -126,7 +132,7 @@ def get_ncird_weekly_cumulative_vaccination_coverage() -> pd.DataFrame:
         },
     )
     # Format the data
-    df = df.rename(
+    ncird_df = ncird_df.rename(
         columns={
             "Geographic_Level": "geographic_level",
             "Geographic_Name": "geographic_name",
@@ -153,16 +159,22 @@ def get_ncird_weekly_cumulative_vaccination_coverage() -> pd.DataFrame:
         }
     )
     # Special handling for select columns
-    df["suppression_flag"] = df["suppression_flag"].astype("boolean")
-    df["current_season_week_ending"] = pd.to_datetime(
-        df["current_season_week_ending"], format="%m/%d/%Y %H:%M:%S %p"
+    ncird_df["suppression_flag"] = ncird_df["suppression_flag"].astype("boolean")
+    ncird_df["current_season_week_ending"] = pd.to_datetime(
+        ncird_df["current_season_week_ending"], format="%m/%d/%Y %H:%M:%S %p"
     )
-    df[["95_ci_lower", "95_ci_upper"]] = df["95_ci"].str.split("-", n=1, expand=True)
-    df["95_ci_lower"] = pd.to_numeric(df["95_ci_lower"].str.strip()).astype("Float64")
-    df["95_ci_upper"] = pd.to_numeric(df["95_ci_upper"].str.strip()).astype("Float64")
-    df = df.drop(columns=["week_ending", "95_ci"])
+    ncird_df[["95_ci_lower", "95_ci_upper"]] = ncird_df["95_ci"].str.split(
+        "-", n=1, expand=True
+    )
+    ncird_df["95_ci_lower"] = pd.to_numeric(ncird_df["95_ci_lower"].str.strip()).astype(
+        "Float64"
+    )
+    ncird_df["95_ci_upper"] = pd.to_numeric(ncird_df["95_ci_upper"].str.strip()).astype(
+        "Float64"
+    )
+    ncird_df = ncird_df.drop(columns=["week_ending", "95_ci"])
     # Return
-    return df
+    return ncird_df
 
 
 def format_incidence_dataframe(incidence: pd.DataFrame) -> pd.DataFrame:
@@ -201,10 +213,8 @@ def format_incidence_dataframe(incidence: pd.DataFrame) -> pd.DataFrame:
 
     if missing_columns := {"time", "incidence"} - incidence_columns:
         raise ValueError(
-            (
-                "The `incidence` provided is missing required columns: "
-                f"""'{"', '".join(missing_columns)}'."""
-            )
+            "The `incidence` provided is missing required columns: "
+            f"""'{"', '".join(missing_columns)}'."""
         )
 
     for column in ("time", "incidence"):
