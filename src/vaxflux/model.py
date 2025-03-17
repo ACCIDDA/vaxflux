@@ -3,8 +3,8 @@
 __all__ = ("build_model", "change_detection", "posterior_forecast")
 
 
-from collections.abc import Iterable
-from typing import Any, Callable, Literal, cast
+from collections.abc import Callable, Iterable
+from typing import Any, Literal, cast
 
 import numpy as np
 import pandas as pd

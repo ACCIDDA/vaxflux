@@ -72,10 +72,8 @@ class UptakeModelConfig:
         required_columns = {"time", "season", "region", "strata", "rate"}
         if missing_columns := required_columns - set(self.data.columns.tolist()):
             raise ValueError(
-                (
-                    "The `data` provided is missing required columns: "
-                    f"""'{"', '".join(missing_columns)}'."""
-                )
+                "The `data` provided is missing required columns: "
+                f"""'{"', '".join(missing_columns)}'."""
             )
         self.data = self.data[list(required_columns)]
         # TODO: Check that there are no NA values in `data`

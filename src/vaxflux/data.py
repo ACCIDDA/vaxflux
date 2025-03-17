@@ -47,7 +47,13 @@ def read_flu_vacc_data():
             (b'2018-2019', b'8/18/18', 32, 3, 10.18),
             (b'2018-2019', b'8/25/18', 33, 4, 19.99),
             (b'2018-2019', b'9/1/18', 34, 5, 37.38)],
-            dtype=[('season', 'S9'), ('end_date', 'S8'), ('week', '<u8'), ('sort_order', '<u8'), ('doses', '<f8')])
+            dtype=[
+                ('season', 'S9'),
+                ('end_date', 'S8'),
+                ('week', '<u8'),
+                ('sort_order', '<u8'),
+                ('doses', '<f8')
+            ])
         >>> data["doses"][:5]
         array([ 0.52,  3.23, 10.18, 19.99, 37.38])
 
@@ -207,10 +213,8 @@ def format_incidence_dataframe(incidence: pd.DataFrame) -> pd.DataFrame:
 
     if missing_columns := {"time", "incidence"} - incidence_columns:
         raise ValueError(
-            (
-                "The `incidence` provided is missing required columns: "
-                f"""'{"', '".join(missing_columns)}'."""
-            )
+            "The `incidence` provided is missing required columns: "
+            f"""'{"', '".join(missing_columns)}'."""
         )
 
     for column in ("time", "incidence"):

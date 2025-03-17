@@ -42,9 +42,12 @@ select = [
     "PD",   # Pandas
     "N",    # PEP8 Naming
     "PERF", # Perflint
+    "E",    # Pycodestyle Errors
+    "W",    # Pycodestyle Warnings
     "D",    # Docstring
     "F",    # Pyflakes
     "PL",   # Pylint
+    "UP",   # Pyupgrade
 ]
 ignore = [
     "D203",    # 1 blank line required before class docstring

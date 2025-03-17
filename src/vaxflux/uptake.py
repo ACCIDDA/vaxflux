@@ -26,7 +26,7 @@ from vaxflux.covariates import (
 from vaxflux.curves import IncidenceCurve
 from vaxflux.dates import DateRange, SeasonRange, _infer_ranges_from_observations
 
-if sys.version_info >= (3, 11):
+if sys.version_info[:2] >= (3, 11):
     from typing import Self
 else:
     Self = Any

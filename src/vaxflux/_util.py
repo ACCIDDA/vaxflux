@@ -2,7 +2,8 @@ __all__: tuple[str, ...] = ()
 
 
 import re
-from typing import Annotated, Any, Callable, overload
+from collections.abc import Callable
+from typing import Annotated, Any, overload
 
 from pydantic import BeforeValidator
 
@@ -149,7 +150,7 @@ def _make_float_list(x: float | int | Any) -> list[float] | Any:
         >>> _make_float_list(None) is None
         True
     """
-    return [float(x)] if isinstance(x, (int, float)) else x
+    return [float(x)] if isinstance(x, int | float) else x
 
 
 ListOfFloats = Annotated[list[float], BeforeValidator(_make_float_list)]
