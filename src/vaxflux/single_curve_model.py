@@ -20,8 +20,8 @@ import arviz as az
 import numpy as np
 import numpy.typing as npt
 import pymc as pm
-from pytensor.compile.ops import as_op
 import pytensor.tensor as pt
+from pytensor.compile.ops import as_op
 from scipy.optimize import OptimizeResult, least_squares
 from scipy.special import expit, logit
 

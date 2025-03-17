@@ -3,19 +3,19 @@
 __all__ = ("SeasonalUptakeModel",)
 
 
-from collections.abc import Iterable
 import copy
-from datetime import timedelta
 import itertools
 import logging
 import math
 import sys
+from collections.abc import Iterable
+from datetime import timedelta
 from typing import Any
 
 import arviz as az
 import pandas as pd
-from pandas.api.types import is_datetime64_any_dtype
 import pymc as pm
+from pandas.api.types import is_datetime64_any_dtype
 
 from vaxflux._util import _coord_index, _coord_name, _pm_name
 from vaxflux.covariates import (
@@ -25,7 +25,6 @@ from vaxflux.covariates import (
 )
 from vaxflux.curves import IncidenceCurve
 from vaxflux.dates import DateRange, SeasonRange, _infer_ranges_from_observations
-
 
 if sys.version_info >= (3, 11):
     from typing import Self

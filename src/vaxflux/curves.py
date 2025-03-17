@@ -16,14 +16,14 @@ __all__ = (
 )
 
 
-from abc import ABC, abstractmethod
 import warnings
+from abc import ABC, abstractmethod
 
 import numpy as np
 import numpy.typing as npt
 import pymc as pm
-import pytensor.tensor as pt
 import pytensor
+import pytensor.tensor as pt
 
 
 class IncidenceCurve(ABC):

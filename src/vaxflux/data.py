@@ -16,10 +16,10 @@ __all__ = (
 )
 
 
-from datetime import datetime
-from importlib import resources
 import io
 import time
+from datetime import datetime
+from importlib import resources
 from typing import Literal, TypedDict, cast
 
 import numpy as np
@@ -98,7 +98,7 @@ def get_ncird_weekly_cumulative_vaccination_coverage() -> pd.DataFrame:
     )
     # Get and parse the data
     resp = requests.get(url)
-    df = pd.read_csv(
+    ncird_df = pd.read_csv(
         io.BytesIO(resp.content),
         dtype={
             "Geographic_Level": "string",
@@ -126,7 +126,7 @@ def get_ncird_weekly_cumulative_vaccination_coverage() -> pd.DataFrame:
         },
     )
     # Format the data
-    df = df.rename(
+    ncird_df = ncird_df.rename(
         columns={
             "Geographic_Level": "geographic_level",
             "Geographic_Name": "geographic_name",
@@ -153,16 +153,22 @@ def get_ncird_weekly_cumulative_vaccination_coverage() -> pd.DataFrame:
         }
     )
     # Special handling for select columns
-    df["suppression_flag"] = df["suppression_flag"].astype("boolean")
-    df["current_season_week_ending"] = pd.to_datetime(
-        df["current_season_week_ending"], format="%m/%d/%Y %H:%M:%S %p"
+    ncird_df["suppression_flag"] = ncird_df["suppression_flag"].astype("boolean")
+    ncird_df["current_season_week_ending"] = pd.to_datetime(
+        ncird_df["current_season_week_ending"], format="%m/%d/%Y %H:%M:%S %p"
     )
-    df[["95_ci_lower", "95_ci_upper"]] = df["95_ci"].str.split("-", n=1, expand=True)
-    df["95_ci_lower"] = pd.to_numeric(df["95_ci_lower"].str.strip()).astype("Float64")
-    df["95_ci_upper"] = pd.to_numeric(df["95_ci_upper"].str.strip()).astype("Float64")
-    df = df.drop(columns=["week_ending", "95_ci"])
+    ncird_df[["95_ci_lower", "95_ci_upper"]] = ncird_df["95_ci"].str.split(
+        "-", n=1, expand=True
+    )
+    ncird_df["95_ci_lower"] = pd.to_numeric(ncird_df["95_ci_lower"].str.strip()).astype(
+        "Float64"
+    )
+    ncird_df["95_ci_upper"] = pd.to_numeric(ncird_df["95_ci_upper"].str.strip()).astype(
+        "Float64"
+    )
+    ncird_df = ncird_df.drop(columns=["week_ending", "95_ci"])
     # Return
-    return df
+    return ncird_df
 
 
 def format_incidence_dataframe(incidence: pd.DataFrame) -> pd.DataFrame:

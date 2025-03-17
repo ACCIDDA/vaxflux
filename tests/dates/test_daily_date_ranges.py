@@ -5,7 +5,7 @@ from typing import Literal
 
 import pytest
 
-from vaxflux.dates import SeasonRange, DateRange, daily_date_ranges
+from vaxflux.dates import DateRange, SeasonRange, daily_date_ranges
 
 
 @pytest.mark.parametrize("range_days", (-10, -1))

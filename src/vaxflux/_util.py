@@ -6,7 +6,6 @@ from typing import Annotated, Any, Callable, overload
 
 from pydantic import BeforeValidator
 
-
 _CLEAN_TEXT_REGEX = re.compile(r"[^a-zA-Z0-9]")
 
 

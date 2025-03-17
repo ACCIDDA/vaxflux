@@ -15,8 +15,8 @@ import numpy as np
 import numpy.typing as npt
 import pandas as pd
 import pymc as pm
-from scipy.special import expit
 import xarray as xr
+from scipy.special import expit
 
 
 @dataclass
@@ -194,19 +194,25 @@ class UptakeModelConfig:
     @property
     def season_index(self):  # noqa: D102
         return (
-            self.data["season"].apply(lambda x: self.coords["season"].index(x)).values
+            self.data["season"]
+            .apply(lambda x: self.coords["season"].index(x))
+            .to_numpy()
         )
 
     @property
     def region_index(self):  # noqa: D102
         return (
-            self.data["region"].apply(lambda x: self.coords["region"].index(x)).values
+            self.data["region"]
+            .apply(lambda x: self.coords["region"].index(x))
+            .to_numpy()
         )
 
     @property
     def strata_index(self):  # noqa: D102
         return (
-            self.data["strata"].apply(lambda x: self.coords["strata"].index(x)).values
+            self.data["strata"]
+            .apply(lambda x: self.coords["strata"].index(x))
+            .to_numpy()
         )
 
     @property
@@ -239,8 +245,8 @@ def create_multilevel_model(config: UptakeModelConfig) -> pm.Model:
 
     """
     # Local inputs
-    t = config.data["time"].values.copy()
-    rate = config.data["rate"].values.copy()
+    t = config.data["time"].to_numpy().copy()
+    rate = config.data["rate"].to_numpy().copy()
 
     # Construct the model
     with pm.Model(coords=config.coords) as model:
@@ -404,7 +410,7 @@ def generate_model_outputs(
             "t": t,
             "sample": stacked.coords["sample"],
             "season": next(
-                stacked.coords[f"{p}_season"].values
+                stacked.coords[f"{p}_season"].to_numpy()
                 for p in ("k", "r", "s")
                 if stacked.sizes[f"{p}_season"] == seasons_shape
             ),
@@ -417,40 +423,40 @@ def generate_model_outputs(
             for region_idx in range(output_shape[3]):  # region
                 for strata_idx in range(output_shape[4]):  # strata
                     K = expit(
-                        stacked.k.values[k_idx[season_idx], :]
+                        stacked.k.to_numpy()[k_idx[season_idx], :]
                         + (
-                            stacked.variables["dk_region"].values[region_idx, :]
+                            stacked.variables["dk_region"].to_numpy()[region_idx, :]
                             if "dk_region" in stacked.variables
                             else 0.0
                         )
                         + (
-                            stacked.variables["dk_strata"].values[strata_idx, :]
+                            stacked.variables["dk_strata"].to_numpy()[strata_idx, :]
                             if "dk_strata" in stacked.variables
                             else 0.0
                         )
                     )
                     R = (
-                        stacked.r.values[r_idx[season_idx], :]
+                        stacked.r.to_numpy()[r_idx[season_idx], :]
                         + (
-                            stacked.variables["dr_region"].values[region_idx, :]
+                            stacked.variables["dr_region"].to_numpy()[region_idx, :]
                             if "dr_region" in stacked.variables
                             else 0.0
                         )
                         + (
-                            stacked.variables["dr_strata"].values[strata_idx, :]
+                            stacked.variables["dr_strata"].to_numpy()[strata_idx, :]
                             if "dr_strata" in stacked.variables
                             else 0.0
                         )
                     )
                     S = (
-                        stacked.s.values[s_idx[season_idx], :]
+                        stacked.s.to_numpy()[s_idx[season_idx], :]
                         + (
-                            stacked.variables["ds_region"].values[region_idx, :]
+                            stacked.variables["ds_region"].to_numpy()[region_idx, :]
                             if "ds_region" in stacked.variables
                             else 0.0
                         )
                         + (
-                            stacked.variables["ds_strata"].values[strata_idx, :]
+                            stacked.variables["ds_strata"].to_numpy()[strata_idx, :]
                             if "ds_strata" in stacked.variables
                             else 0.0
                         )
