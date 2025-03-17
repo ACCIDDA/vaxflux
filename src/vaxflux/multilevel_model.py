@@ -326,24 +326,24 @@ def create_multilevel_model(config: UptakeModelConfig) -> pm.Model:
 
         # **Model computations**
         # Calculate K, R, S intermediates
-        K = pm.math.invlogit(
+        total_k = pm.math.invlogit(
             k[config.k_season_index]
             + dk_region[config.region_index]
             + dk_strata[config.strata_index]
         )
-        R = (
+        total_r = (
             r[config.r_season_index]
             + dr_region[config.region_index]
             + dr_strata[config.strata_index]
         )
-        S = (
+        total_s = (
             s[config.s_season_index]
             + ds_region[config.region_index]
             + ds_strata[config.strata_index]
         )
 
         # Calculate model curve
-        y_model = K * pm.math.invlogit(R * (t - S))
+        y_model = total_k * pm.math.invlogit(total_r * (t - total_s))
 
         # **Observational model**
         # TODO: Should the error term in this observational model be moved to inside
@@ -422,7 +422,7 @@ def generate_model_outputs(
         for season_idx in range(output_shape[2]):  # season
             for region_idx in range(output_shape[3]):  # region
                 for strata_idx in range(output_shape[4]):  # strata
-                    K = expit(
+                    total_k = expit(
                         stacked.k.to_numpy()[k_idx[season_idx], :]
                         + (
                             stacked.variables["dk_region"].to_numpy()[region_idx, :]
@@ -435,7 +435,7 @@ def generate_model_outputs(
                             else 0.0
                         )
                     )
-                    R = (
+                    total_r = (
                         stacked.r.to_numpy()[r_idx[season_idx], :]
                         + (
                             stacked.variables["dr_region"].to_numpy()[region_idx, :]
@@ -448,7 +448,7 @@ def generate_model_outputs(
                             else 0.0
                         )
                     )
-                    S = (
+                    total_s = (
                         stacked.s.to_numpy()[s_idx[season_idx], :]
                         + (
                             stacked.variables["ds_region"].to_numpy()[region_idx, :]
@@ -461,8 +461,8 @@ def generate_model_outputs(
                             else 0.0
                         )
                     )
-                    output[time_idx, :, season_idx, region_idx, strata_idx] = K * expit(
-                        R * (t[time_idx] - S)
+                    output[time_idx, :, season_idx, region_idx, strata_idx] = (
+                        total_k * expit(total_r * (t[time_idx] - total_s))
                     )
 
     return output

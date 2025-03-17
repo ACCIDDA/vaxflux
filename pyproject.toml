@@ -36,13 +36,15 @@ dev-dependencies = [
 
 [tool.ruff.lint]
 select = [
-    "FLY", # Flynt
-    "I",   # Isort
-    "NPY", # Numpy
-    "PD",  # Pandas
-    "D",   # Docstring
-    "F",   # Pyflakes
-    "PL",  # Pylint
+    "FLY",  # Flynt
+    "I",    # Isort
+    "NPY",  # Numpy
+    "PD",   # Pandas
+    "N",    # PEP8 Naming
+    "PERF", # Perflint
+    "D",    # Docstring
+    "F",    # Pyflakes
+    "PL",   # Pylint
 ]
 ignore = [
     "D203",    # 1 blank line required before class docstring
