@@ -5,13 +5,13 @@ TARGET_VERSION=$( echo "py$PYTHON_VERSION" | tr -d '.' )
 echo "Using python version $PYTHON_VERSION"
 
 echo "> Formatting with ruff..."
-ruff format --target-version $TARGET_VERSION
+ruff format
 
 echo "> Linting with ruff..."
-ruff check --fix --target-version $TARGET_VERSION
+ruff check --fix
 
 echo "> Type checking with mypy..."
-mypy --python-version $PYTHON_VERSION .
+mypy .
 
 echo "> Running tests with pytest..."
 pytest
