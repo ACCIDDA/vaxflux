@@ -50,7 +50,7 @@ class IncidenceCurve(ABC):
         raise NotImplementedError
 
     def evaluate(self, *args, **kwargs):
-        """Deprecated in favor of the `incidence` method."""  # noqa: D401
+        """Deprecated in favor of the `incidence` method."""
         warnings.warn(
             "The `evaluate` method is deprecated, use `incidence` instead.",
             DeprecationWarning,

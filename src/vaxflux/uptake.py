@@ -322,12 +322,12 @@ class SeasonalUptakeModel:
                     kwargs = {
                         param: summed_params[
                             _pm_name(
-                                *([param, "season", season_range.season] + pm_cov_names)
+                                *[param, "season", season_range.season, *pm_cov_names]
                             )
                         ]
                         for param in coords["parameters"]
                     }
-                    name_args = ["incidence", season_range.season] + pm_cov_names
+                    name_args = ["incidence", season_range.season, *pm_cov_names]
                     name = _pm_name(*name_args)
                     incidence[season_range.season] = pm.Gamma(
                         name,

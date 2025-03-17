@@ -8,11 +8,11 @@ data from external data providers. Current exported functionality includes:
 """
 
 __all__ = (
-    "read_flu_vacc_data",
-    "get_ncird_weekly_cumulative_vaccination_coverage",
-    "format_incidence_dataframe",
     "coordinates_from_incidence",
     "create_logistic_sample_dataset",
+    "format_incidence_dataframe",
+    "get_ncird_weekly_cumulative_vaccination_coverage",
+    "read_flu_vacc_data",
 )
 
 

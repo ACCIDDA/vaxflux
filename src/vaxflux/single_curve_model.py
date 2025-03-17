@@ -9,8 +9,8 @@ Currently exported functionality includes:
 
 __all__ = (
     "modified_logistic_curve",
-    "modified_logistic_curve_least_squares",
     "modified_logistic_curve_bayes_model",
+    "modified_logistic_curve_least_squares",
 )
 
 

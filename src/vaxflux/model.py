@@ -160,7 +160,7 @@ def build_model(  # noqa: PLR0913
     return model
 
 
-def _strata_region_factors(  # noqa: PLR0913
+def _strata_region_factors(
     p: str,
     kind: Literal["region", "strata"],
     params: dict[str, Any],
