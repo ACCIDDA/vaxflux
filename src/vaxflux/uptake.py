@@ -326,9 +326,8 @@ class SeasonalUptakeModel:
                         for param in coords["parameters"]
                     }
                     name_args = ["incidence", season_range.season, *pm_cov_names]
-                    name = _pm_name(*name_args)
-                    incidence[season_range.season] = pm.Gamma(
-                        name,
+                    incidence[_coord_name(*name_args)] = pm.Gamma(
+                        _pm_name(*name_args),
                         mu=self.curve.prevalence_difference(
                             date_indexes[season_range.season],
                             date_indexes[season_range.season] + 1.0,
