@@ -15,9 +15,13 @@ from typing import Any
 import arviz as az
 import pandas as pd
 import pymc as pm
-from pandas.api.types import is_datetime64_any_dtype
 
-from vaxflux._util import _coord_index, _coord_name, _pm_name
+from vaxflux._util import (
+    _coord_index,
+    _coord_name,
+    _pm_name,
+    _validate_and_format_observations,
+)
 from vaxflux.covariates import (
     Covariate,
     CovariateCategories,
@@ -81,13 +85,7 @@ class SeasonalUptakeModel:
         # Public attributes
         self.curve = copy.deepcopy(curve)
         self.name = name
-        self.observations = None if observations is None else observations.copy()
-        if self.observations:
-            for col in {"start_date", "end_date", "report_date"}.intersection(
-                self.observations.columns
-            ):
-                if not is_datetime64_any_dtype(self.observations[col]):
-                    self.observations[col] = pd.to_datetime(self.observations[col])
+        self.observations = _validate_and_format_observations(observations)
 
         # Private attributes
         self._covariates = copy.deepcopy(covariates)

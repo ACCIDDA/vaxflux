@@ -5,6 +5,8 @@ import re
 from collections.abc import Callable
 from typing import Annotated, Any, overload
 
+import pandas as pd
+from pandas.api.types import is_datetime64_any_dtype
 from pydantic import BeforeValidator
 
 _CLEAN_TEXT_REGEX = re.compile(r"[^a-zA-Z0-9]")
@@ -260,3 +262,46 @@ def _coord_index(
         )
     except ValueError:
         return None
+
+
+@overload
+def _validate_and_format_observations(observations: pd.DataFrame) -> pd.DataFrame: ...
+
+
+@overload
+def _validate_and_format_observations(observations: None) -> None: ...
+
+
+def _validate_and_format_observations(
+    observations: pd.DataFrame | None,
+) -> pd.DataFrame | None:
+    """
+    Validate and format user provided observations DataFrames.
+
+    Args:
+        observations: The observations DataFrame to validate and format or `None`.
+
+    Returns:
+        The validated and formatted observations DataFrame or `None` if given `None`.
+
+    Raises:
+        ValueError: If the observations DataFrame is empty.
+        NotImplementedError: If the observations DataFrame does not contain an
+            'incidence' column.
+    """
+    if observations is None:
+        return None
+    if not len(observations):
+        raise ValueError("No observations provided.")
+    if "incidence" not in observations.columns:
+        raise NotImplementedError(
+            "Only 'incidence' data is supported, 'prevalence' "
+            "and count equivalents are planned."
+        )
+    observations = observations.copy()
+    for col in {"start_date", "end_date", "report_date"}.intersection(
+        observations.columns
+    ):
+        if not is_datetime64_any_dtype(observations[col]):
+            observations[col] = pd.to_datetime(observations[col])
+    return observations
