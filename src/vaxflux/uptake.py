@@ -15,6 +15,7 @@ from typing import Any
 import arviz as az
 import pandas as pd
 import pymc as pm
+import pytensor.tensor as pt
 
 from vaxflux._util import (
     _coord_index,
@@ -197,7 +198,7 @@ class SeasonalUptakeModel:
         return coords
 
     # TODO: Split this method into smaller parts to address noqa issues.
-    def build(self, debug: bool = False) -> Self:  # noqa: PLR0912
+    def build(self, debug: bool = False) -> Self:  # noqa: PLR0912, PLR0915
         """
         Build the uptake model.
 
@@ -234,6 +235,7 @@ class SeasonalUptakeModel:
         coords = self.coordinates()
         self._model = pm.Model(coords=coords)
         with self._model:
+            # Create the date indexes for each season
             date_indexes = {}
             for season_range in self._season_ranges:
                 n_days = (season_range.end_date - season_range.start_date).days + 1
@@ -246,6 +248,7 @@ class SeasonalUptakeModel:
                     n_days,
                 )
 
+            # Create the covariate parameters
             params: dict[int, tuple[pm.Distribution, tuple[str, ...]]] = {}
             for covariate in self._covariates:
                 name = _pm_name(covariate.parameter, covariate.covariate or "Season")
@@ -254,6 +257,7 @@ class SeasonalUptakeModel:
                 )
                 logger.info("Added covariate %s to the model.", name)
 
+            # Create the summed parameters
             summed_params: dict[str, pm.Distribution] = {}
             category_combinations = list(
                 itertools.product(
@@ -305,10 +309,12 @@ class SeasonalUptakeModel:
                             summed_params[name] = pm.Data(name, 0.0)
                         logger.info("Added summed parameter %s to the model.", name)
 
+            # Sample noise shape for each time series from exponential hyperprior
             epsilon = pm.Exponential(
                 "epsilon", lam=1.0 / self._epsilon, dims=("season_by_category",)
             )
 
+            # Generate the incidence time series at a daily level
             incidence = {}
             for category_combo in category_combinations:
                 pm_cov_names = [
@@ -341,6 +347,15 @@ class SeasonalUptakeModel:
                             )
                         ],
                         dims=(_coord_name("season", season_range.season, "dates"),),
+                    )
+                    # Use custom potential to ensure prevalence is constrained to [0, 1]
+                    prevalence = pt.cumsum(incidence[_coord_name(*name_args)])
+                    constraint = (
+                        pm.math.ge(prevalence, 0.0) * pm.math.le(prevalence, 1.0)
+                    ).all()
+                    pm.Potential(
+                        _pm_name(*name_args, "prevalence", "constraint"),
+                        pm.math.log(pm.math.switch(constraint, 1.0, 0.0)),
                     )
 
         return self
