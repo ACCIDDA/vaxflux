@@ -285,23 +285,44 @@ def _validate_and_format_observations(
         The validated and formatted observations DataFrame or `None` if given `None`.
 
     Raises:
-        ValueError: If the observations DataFrame is empty.
         NotImplementedError: If the observations DataFrame does not contain an
             'incidence' column.
+        NotImplementedError: If the observations DataFrame contains differing report
+            dates, nowcasting is not yet supported.
+        ValueError: If the observations DataFrame is empty.
+        ValueError: If the observations DataFrame is missing required columns:
+            'start_date', 'end_date'.
     """
     if observations is None:
         return None
     if not len(observations):
         raise ValueError("No observations provided.")
-    if "incidence" not in observations.columns:
+    observation_columns = set(observations.columns)
+    if "incidence" not in observation_columns:
         raise NotImplementedError(
             "Only 'incidence' data is supported, 'prevalence' "
             "and count equivalents are planned."
         )
+    if missing_columns := {"start_date", "end_date"} - observation_columns:
+        raise ValueError(
+            "The observations DataFrame is missing "
+            f"required columns: {missing_columns}."
+        )
     observations = observations.copy()
     for col in {"start_date", "end_date", "report_date"}.intersection(
-        observations.columns
+        observation_columns
     ):
         if not is_datetime64_any_dtype(observations[col]):
             observations[col] = pd.to_datetime(observations[col])
+    if "report_date" not in observations.columns:
+        observations["report_date"] = observations["end_date"].copy()
+    unique_start_end = observations.drop_duplicates(["start_date", "end_date"])
+    unique_start_end_report = observations.drop_duplicates(
+        ["start_date", "end_date", "report_date"]
+    )
+    if len(unique_start_end) != len(unique_start_end_report):
+        raise NotImplementedError(
+            "Observations with differing report dates were provided, "
+            "nowcasting is not currently supported but planned."
+        )
     return observations

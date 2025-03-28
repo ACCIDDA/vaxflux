@@ -40,7 +40,32 @@ def test_incidence_column_not_in_columns_raises_not_implemented_error() -> None:
 @pytest.mark.parametrize(
     "observations",
     [
-        pd.DataFrame(data={"incidence": [0]}),
+        pd.DataFrame(data={"incidence": [0], "start_date": ["2025-01-01"]}),
+        pd.DataFrame(data={"incidence": [0], "end_date": ["2025-01-31"]}),
+        pd.DataFrame(data={"incidence": [0], "report_date": ["2025-01-31"]}),
+    ],
+)
+def test_missing_required_columns_raises_value_error(
+    observations: pd.DataFrame,
+) -> None:
+    """Providing a DataFrame missing required columns raises a `ValueError`."""
+    with pytest.raises(
+        ValueError,
+        match="^The observations DataFrame is missing required columns: .*.$",
+    ):
+        _validate_and_format_observations(observations)
+
+
+@pytest.mark.parametrize(
+    "observations",
+    [
+        pd.DataFrame(
+            data={
+                "start_date": ["2025-01-01"],
+                "end_date": ["2025-01-31"],
+                "incidence": [0],
+            }
+        ),
         pd.DataFrame(
             data={
                 "incidence": [0.5, 0.5],
@@ -73,7 +98,8 @@ def test_returns_copy_of_original_data_frame(observations: pd.DataFrame) -> None
         pd.DataFrame(
             data={
                 "start_date": ["2020-01-01", "2020-01-02"],
-                "other_date": ["2020-01-01", "2020-01-02"],
+                "end_date": ["2020-01-02", "2020-01-03"],
+                "other_date": ["2020-01-03", "2020-01-04"],
                 "incidence": [0.5, 0.5],
             }
         ),
