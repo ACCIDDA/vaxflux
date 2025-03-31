@@ -111,7 +111,7 @@ class SeasonalUptakeModel:
                 "but not present in the curve family parameters: "
                 f"{sorted(covariate_parameters_missing)}."
             )
-        if self.observations and (
+        if self.observations is not None and (
             covariate_covariates_missing := {
                 covariate.covariate
                 for covariate in self._covariates
@@ -220,7 +220,7 @@ class SeasonalUptakeModel:
         logger.info(
             "Using %u date ranges for the uptake model.", len(self._date_ranges)
         )
-        if self.observations:
+        if self.observations is not None:
             logger.info(
                 "Using %u observational date ranges for the uptake model.",
                 len(self.observations),

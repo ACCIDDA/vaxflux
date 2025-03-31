@@ -148,14 +148,14 @@ def _infer_ranges_from_observations(
         ValueError: If the observed season ranges are not consistent with the explicit
             season ranges, only applicable for the season mode.
     """
-    if not observations and not ranges:
+    if observations is None and not ranges:
         raise ValueError("At least one of `observations` or `ranges` is required.")
     cls = DateRange if mode == "date" else SeasonRange
     columns = {
         "date": {"season", "start_date", "end_date", "report_date"},
         "season": {"season", "season_start_date", "season_end_date"},
     }[mode]
-    if observations:
+    if observations is not None:
         # Only observations
         if not ranges:
             if missing_columns := columns - set(observations.columns):
@@ -168,7 +168,7 @@ def _infer_ranges_from_observations(
                 .sort_values(list(columns), ignore_index=True)
             )
             return [
-                cls(row._asdict())  # type: ignore
+                cls.model_validate(row._asdict())  # type: ignore
                 for row in observations_ranges.itertuples(
                     index=False, name=f"Observation{mode.capitalize()}Row"
                 )
