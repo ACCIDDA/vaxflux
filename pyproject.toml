@@ -13,6 +13,7 @@ dependencies = [
     "pandas>=2.2.2",
     "xarray>=2024.7.0",
     "pydantic>=2.10.6",
+    "blackjax>=1.2.5",
 ]
 
 [project.optional-dependencies]
