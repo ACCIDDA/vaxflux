@@ -290,7 +290,7 @@ def _validate_and_format_observations(
         NotImplementedError: If the observations DataFrame contains differing report
             dates, nowcasting is not yet supported.
         ValueError: If the observations DataFrame is empty.
-        ValueError: If the observations DataFrame is missing required columns:
+        ValueError: If the observations DataFrame is missing required columns: 'season',
             'start_date', 'end_date'.
     """
     if observations is None:
@@ -303,7 +303,7 @@ def _validate_and_format_observations(
             "Only 'incidence' data is supported, 'prevalence' "
             "and count equivalents are planned."
         )
-    if missing_columns := {"start_date", "end_date"} - observation_columns:
+    if missing_columns := {"season", "start_date", "end_date"} - observation_columns:
         raise ValueError(
             "The observations DataFrame is missing "
             f"required columns: {missing_columns}."

@@ -40,9 +40,23 @@ def test_incidence_column_not_in_columns_raises_not_implemented_error() -> None:
 @pytest.mark.parametrize(
     "observations",
     [
-        pd.DataFrame(data={"incidence": [0], "start_date": ["2025-01-01"]}),
-        pd.DataFrame(data={"incidence": [0], "end_date": ["2025-01-31"]}),
-        pd.DataFrame(data={"incidence": [0], "report_date": ["2025-01-31"]}),
+        pd.DataFrame(data={"season": ["2024/25"], "incidence": [0]}),
+        pd.DataFrame(data={"start_date": ["2025-01-01"], "incidence": [0]}),
+        pd.DataFrame(data={"end_date": ["2025-01-31"], "incidence": [0]}),
+        pd.DataFrame(
+            data={"season": ["2024/25"], "start_date": ["2025-01-01"], "incidence": [0]}
+        ),
+        pd.DataFrame(
+            data={"season": ["2024/25"], "end_date": ["2025-01-31"], "incidence": [0]}
+        ),
+        pd.DataFrame(
+            data={
+                "start_date": ["2025-01-01"],
+                "end_date": ["2025-01-31"],
+                "incidence": [0],
+            }
+        ),
+        pd.DataFrame(data={"other_date": ["2025-01-31"], "incidence": [0]}),
     ],
 )
 def test_missing_required_columns_raises_value_error(
@@ -61,6 +75,7 @@ def test_missing_required_columns_raises_value_error(
     [
         pd.DataFrame(
             data={
+                "season": ["Winter 2021"],
                 "start_date": ["2025-01-01"],
                 "end_date": ["2025-01-31"],
                 "incidence": [0],
@@ -68,10 +83,10 @@ def test_missing_required_columns_raises_value_error(
         ),
         pd.DataFrame(
             data={
-                "incidence": [0.5, 0.5],
-                "start_date": ["2020-01-01", "2020-01-02"],
-                "end_date": ["2020-01-01", "2020-01-02"],
-                "report_date": ["2020-01-01", "2020-01-02"],
+                "season": ["2020/21", "2020/21"],
+                "start_date": ["1/1/2021", "2/1/2021"],
+                "end_date": ["1/31/2021", "2/28/2021"],
+                "incidence": [0.55, 0.62],
             }
         ),
     ],
@@ -89,18 +104,20 @@ def test_returns_copy_of_original_data_frame(observations: pd.DataFrame) -> None
     [
         pd.DataFrame(
             data={
-                "incidence": [0.5, 0.5],
+                "season": ["2019-2020", "2019-2020"],
                 "start_date": ["2020-01-01", "2020-01-02"],
                 "end_date": ["2020-01-01", "2020-01-02"],
                 "report_date": ["2020-01-01", "2020-01-02"],
+                "incidence": [0.4, 0.5],
             }
         ),
         pd.DataFrame(
             data={
-                "start_date": ["2020-01-01", "2020-01-02"],
-                "end_date": ["2020-01-02", "2020-01-03"],
-                "other_date": ["2020-01-03", "2020-01-04"],
-                "incidence": [0.5, 0.5],
+                "season": ["2020/21", "2020/21"],
+                "start_date": ["1/1/2021", "1/8/2021"],
+                "end_date": ["1/7/2021", "1/14/2021"],
+                "other_date": ["1/8/2021", "1/15/2021"],
+                "incidence": [0.6, 0.7],
             }
         ),
     ],
