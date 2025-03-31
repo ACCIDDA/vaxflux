@@ -389,3 +389,27 @@ class SeasonalUptakeModel:
                 compile_kwargs=compile_kwargs,
             )
         return prior
+
+    def add_observations(self, observations: pd.DataFrame) -> "SeasonalUptakeModel":
+        """
+        Create a copy of the uptake model with added observations.
+
+        Args:
+            observations: The observations to add to the model.
+
+        Returns:
+            A new instance of the uptake model with the added observations.
+
+        """
+        if self.observations is not None:
+            raise ValueError("Observations have already been added to the model.")
+        return SeasonalUptakeModel(
+            curve=self.curve,
+            covariates=self._covariates,
+            observations=observations,
+            covariate_categories=self._covariate_categories,
+            season_ranges=self._season_ranges,
+            date_ranges=self._date_ranges,
+            epsilon=self._epsilon,
+            name=self.name,
+        )
