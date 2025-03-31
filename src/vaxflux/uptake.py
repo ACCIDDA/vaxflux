@@ -358,6 +358,36 @@ class SeasonalUptakeModel:
                         pm.math.log(pm.math.switch(constraint, 1.0, 0.0)),
                     )
 
+            # If observations are provided, add likelihoods
+            if self.observations is not None:
+                for obs_idx, row in self.observations.iterrows():
+                    start_index = coords[
+                        _coord_name("season", row["season"], "dates")
+                    ].index(row["start_date"].strftime("%Y-%m-%d"))
+                    end_index = coords[
+                        _coord_name("season", row["season"], "dates")
+                    ].index(row["end_date"].strftime("%Y-%m-%d"))
+                    incidence_name = [
+                        "incidence",
+                        row["season"],
+                        *[
+                            item
+                            for cov_name in coords["covariate_names"]
+                            for item in [cov_name, row[cov_name]]
+                        ],
+                    ]
+                    incidence_series = incidence[_coord_name(*incidence_name)]
+                    # PyMC does not allow for directly observing the sum of random vars,
+                    # see https://discourse.pymc.io/t/sum-of-random-variables/1652.
+                    # Instead, use a normal distribution with a very small standard
+                    # deviation to approximate the sum.
+                    pm.Normal(
+                        name=_pm_name("observation", str(obs_idx)),
+                        mu=incidence_series[start_index:end_index].sum(),
+                        sigma=1.0e-8,
+                        observed=row["incidence"],
+                    )
+
         return self
 
     def sample_prior(
