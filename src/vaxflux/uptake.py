@@ -422,6 +422,43 @@ class SeasonalUptakeModel:
             )
         return prior
 
+    def sample(
+        self, random_seed: Any = 1, nuts_sampler: str = "blackjax", **kwargs: Any
+    ) -> az.InferenceData:
+        """
+        Sample from the posterior distribution of the model.
+
+        Args:
+            random_seed: The random seed to use for sampling.
+            nuts_sampler: The NUTS sampler to use.
+            kwargs: Further keyword arguments to pass to the sampler. See
+                [pymc.sample](https://www.pymc.io/projects/docs/en/stable/api/generated/pymc.sample.html)
+                for more details.
+
+        Notes:
+            PyMC's built-in NUTS sampler has trouble compiling this model, so we use
+            BlackJAX's NUTS sampler instead. This requires the `blackjax` package to be
+            installed.
+
+        Returns:
+            The posterior samples as an InferenceData object.
+
+        Raises:
+            AttributeError: If the `build` method has not been called before this
+                method.
+
+        """
+        if self._model is None:
+            raise AttributeError("The `build` method must be called before `sample`.")
+        with self._model:
+            trace = pm.sample(
+                random_seed=random_seed,
+                nuts_sampler=nuts_sampler,
+                return_inferencedata=True,
+                **kwargs,
+            )
+        return trace
+
     def add_observations(self, observations: pd.DataFrame) -> "SeasonalUptakeModel":
         """
         Create a copy of the uptake model with added observations.
