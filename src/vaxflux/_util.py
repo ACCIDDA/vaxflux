@@ -3,13 +3,21 @@ __all__: tuple[str, ...] = ()
 
 import re
 from collections.abc import Callable
-from typing import Annotated, Any, overload
+from typing import Annotated, Any, Final, overload
 
 import pandas as pd
 from pandas.api.types import is_datetime64_any_dtype
 from pydantic import BeforeValidator
 
-_CLEAN_TEXT_REGEX = re.compile(r"[^a-zA-Z0-9]")
+_CLEAN_TEXT_REGEX: Final = re.compile(r"[^a-zA-Z0-9]")
+_OBSERVATION_TYPE_CATEGORIES: Final = ("incidence", "prevalence")
+_REQUIRED_OBSERVATION_COLUMNS: Final = {
+    "season",
+    "start_date",
+    "end_date",
+    "type",
+    "value",
+}
 
 
 def _clean_text(text: str) -> str:
@@ -285,30 +293,54 @@ def _validate_and_format_observations(
         The validated and formatted observations DataFrame or `None` if given `None`.
 
     Raises:
-        NotImplementedError: If the observations DataFrame does not contain an
-            'incidence' column.
         NotImplementedError: If the observations DataFrame contains differing report
             dates, nowcasting is not yet supported.
+        ValueError: If the 'type' column contains values other than 'incidence', other
+            values are not yet supported.
         ValueError: If the observations DataFrame is empty.
         ValueError: If the observations DataFrame is missing required columns: 'season',
-            'start_date', 'end_date'.
+            'start_date', 'end_date', 'type', 'value'.
+        ValueError: If the observations DataFrame contains invalid values in the 'value'
+            column, must be numeric.
+        ValueError: If the observations DataFrame contains negative values in the
+            'value' column.
+        ValueError: If the observations DataFrame contains invalid values in the 'type'
+            column, must be one of 'incidence', 'prevalence'.
     """
     if observations is None:
         return None
     if not len(observations):
         raise ValueError("No observations provided.")
     observation_columns = set(observations.columns)
-    if "incidence" not in observation_columns:
-        raise NotImplementedError(
-            "Only 'incidence' data is supported, 'prevalence' "
-            "and count equivalents are planned."
-        )
-    if missing_columns := {"season", "start_date", "end_date"} - observation_columns:
+    if missing_columns := _REQUIRED_OBSERVATION_COLUMNS - observation_columns:
         raise ValueError(
             "The observations DataFrame is missing "
             f"required columns: {missing_columns}."
         )
     observations = observations.copy()
+    observations["season"] = observations["season"].astype(str)
+    observations["value"] = pd.to_numeric(observations["value"])
+    if observations["value"].isna().any():
+        raise ValueError(
+            "The observations DataFrame contains invalid values in the 'value' column."
+        )
+    if observations["value"].lt(0).any():
+        raise ValueError(
+            "The observations DataFrame contains negative values in the 'value' column."
+        )
+    observations["type"] = pd.Categorical(
+        observations["type"].astype(str), categories=_OBSERVATION_TYPE_CATEGORIES
+    )
+    if observations["type"].isna().any():
+        raise ValueError(
+            "The observations DataFrame contains invalid values in the "
+            f"'type' column, must be one of {_OBSERVATION_TYPE_CATEGORIES}."
+        )
+    if {"incidence"} != set(observations["type"].unique().tolist()):
+        raise NotImplementedError(
+            "Only 'incidence' data is supported, 'prevalence' and count equivalents "
+            "are planned."
+        )
     for col in {"start_date", "end_date", "report_date"}.intersection(
         observation_columns
     ):
