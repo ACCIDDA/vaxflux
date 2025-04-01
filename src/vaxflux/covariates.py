@@ -218,7 +218,7 @@ def _infer_covariate_categories_from_observations(
         for covariate in covariates
         if covariate.covariate is not None
     }
-    if observations:
+    if observations is not None:
         # Only observations
         if not covariate_categories:
             if missing_columns := covariate_names - set(observations.columns):

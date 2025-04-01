@@ -15,9 +15,14 @@ from typing import Any
 import arviz as az
 import pandas as pd
 import pymc as pm
-from pandas.api.types import is_datetime64_any_dtype
+import pytensor.tensor as pt
 
-from vaxflux._util import _coord_index, _coord_name, _pm_name
+from vaxflux._util import (
+    _coord_index,
+    _coord_name,
+    _pm_name,
+    _validate_and_format_observations,
+)
 from vaxflux.covariates import (
     Covariate,
     CovariateCategories,
@@ -42,6 +47,8 @@ class SeasonalUptakeModel:
         observations: The uptake dataset to use.
 
     """
+
+    _observation_sigma = 1.0e-9
 
     def __init__(
         self,
@@ -81,13 +88,7 @@ class SeasonalUptakeModel:
         # Public attributes
         self.curve = copy.deepcopy(curve)
         self.name = name
-        self.observations = None if observations is None else observations.copy()
-        if self.observations:
-            for col in {"start_date", "end_date", "report_date"}.intersection(
-                self.observations.columns
-            ):
-                if not is_datetime64_any_dtype(self.observations[col]):
-                    self.observations[col] = pd.to_datetime(self.observations[col])
+        self.observations = _validate_and_format_observations(observations)
 
         # Private attributes
         self._covariates = copy.deepcopy(covariates)
@@ -97,11 +98,12 @@ class SeasonalUptakeModel:
         self._date_ranges: list[DateRange] = (
             copy.deepcopy(date_ranges) if date_ranges else list()
         )
+        self._epsilon = epsilon
         self._model: pm.Model | None = None
         self._season_ranges: list[SeasonRange] = (
             copy.deepcopy(season_ranges) if season_ranges else list()
         )
-        self._epsilon = epsilon
+        self._trace: az.InferenceData | None = None
 
         # Input validation
         if covariate_parameters_missing := {
@@ -112,7 +114,7 @@ class SeasonalUptakeModel:
                 "but not present in the curve family parameters: "
                 f"{sorted(covariate_parameters_missing)}."
             )
-        if self.observations and (
+        if self.observations is not None and (
             covariate_covariates_missing := {
                 covariate.covariate
                 for covariate in self._covariates
@@ -198,8 +200,7 @@ class SeasonalUptakeModel:
                 )
         return coords
 
-    # TODO: Split this method into smaller parts to address noqa issues.
-    def build(self, debug: bool = False) -> Self:  # noqa: PLR0912
+    def build(self, debug: bool = False) -> Self:  # noqa: PLR0912, PLR0915
         """
         Build the uptake model.
 
@@ -221,7 +222,7 @@ class SeasonalUptakeModel:
         logger.info(
             "Using %u date ranges for the uptake model.", len(self._date_ranges)
         )
-        if self.observations:
+        if self.observations is not None:
             logger.info(
                 "Using %u observational date ranges for the uptake model.",
                 len(self.observations),
@@ -236,6 +237,7 @@ class SeasonalUptakeModel:
         coords = self.coordinates()
         self._model = pm.Model(coords=coords)
         with self._model:
+            # Create the date indexes for each season
             date_indexes = {}
             for season_range in self._season_ranges:
                 n_days = (season_range.end_date - season_range.start_date).days + 1
@@ -248,6 +250,7 @@ class SeasonalUptakeModel:
                     n_days,
                 )
 
+            # Create the covariate parameters
             params: dict[int, tuple[pm.Distribution, tuple[str, ...]]] = {}
             for covariate in self._covariates:
                 name = _pm_name(covariate.parameter, covariate.covariate or "Season")
@@ -256,6 +259,7 @@ class SeasonalUptakeModel:
                 )
                 logger.info("Added covariate %s to the model.", name)
 
+            # Create the summed parameters
             summed_params: dict[str, pm.Distribution] = {}
             category_combinations = list(
                 itertools.product(
@@ -307,10 +311,12 @@ class SeasonalUptakeModel:
                             summed_params[name] = pm.Data(name, 0.0)
                         logger.info("Added summed parameter %s to the model.", name)
 
+            # Sample noise shape for each time series from exponential hyperprior
             epsilon = pm.Exponential(
                 "epsilon", lam=1.0 / self._epsilon, dims=("season_by_category",)
             )
 
+            # Generate the incidence time series at a daily level
             incidence = {}
             for category_combo in category_combinations:
                 pm_cov_names = [
@@ -328,9 +334,8 @@ class SeasonalUptakeModel:
                         for param in coords["parameters"]
                     }
                     name_args = ["incidence", season_range.season, *pm_cov_names]
-                    name = _pm_name(*name_args)
-                    incidence[season_range.season] = pm.Gamma(
-                        name,
+                    incidence[_coord_name(*name_args)] = pm.Gamma(
+                        _pm_name(*name_args),
                         mu=self.curve.prevalence_difference(
                             date_indexes[season_range.season],
                             date_indexes[season_range.season] + 1.0,
@@ -345,6 +350,47 @@ class SeasonalUptakeModel:
                         ],
                         dims=(_coord_name("season", season_range.season, "dates"),),
                     )
+                    # Use custom potential to ensure prevalence is constrained to [0, 1]
+                    prevalence = pt.cumsum(incidence[_coord_name(*name_args)])
+                    constraint = (
+                        pm.math.ge(prevalence, 0.0) * pm.math.le(prevalence, 1.0)
+                    ).all()
+                    pm.Potential(
+                        _pm_name(*name_args, "prevalence", "constraint"),
+                        pm.math.log(pm.math.switch(constraint, 1.0, 0.0)),
+                    )
+
+            # If observations are provided, add likelihoods
+            if self.observations is not None:
+                for obs_idx, row in self.observations.iterrows():
+                    start_index = coords[
+                        _coord_name("season", row["season"], "dates")
+                    ].index(row["start_date"].strftime("%Y-%m-%d"))
+                    end_index = coords[
+                        _coord_name("season", row["season"], "dates")
+                    ].index(row["end_date"].strftime("%Y-%m-%d"))
+                    if row["type"] == "incidence":
+                        incidence_name = [
+                            "incidence",
+                            row["season"],
+                            *[
+                                item
+                                for cov_name in coords["covariate_names"]
+                                for item in [cov_name, row[cov_name]]
+                            ],
+                        ]
+                        incidence_series = incidence[_coord_name(*incidence_name)]
+                        # PyMC does not allow for directly observing the sum of random
+                        # vars, see
+                        # https://discourse.pymc.io/t/sum-of-random-variables/1652.
+                        # Instead, use a normal distribution with a very small standard
+                        # deviation to approximate the sum.
+                        pm.Normal(
+                            name=_pm_name("observation", str(obs_idx)),
+                            mu=incidence_series[start_index:end_index].sum(),
+                            sigma=self._observation_sigma,
+                            observed=row["value"],
+                        )
 
         return self
 
@@ -377,3 +423,64 @@ class SeasonalUptakeModel:
                 compile_kwargs=compile_kwargs,
             )
         return prior
+
+    def sample(
+        self, random_seed: Any = 1, nuts_sampler: str = "blackjax", **kwargs: Any
+    ) -> Self:
+        """
+        Sample from the posterior distribution of the model.
+
+        Args:
+            random_seed: The random seed to use for sampling.
+            nuts_sampler: The NUTS sampler to use.
+            kwargs: Further keyword arguments to pass to the sampler. See
+                [pymc.sample](https://www.pymc.io/projects/docs/en/stable/api/generated/pymc.sample.html)
+                for more details.
+
+        Notes:
+            PyMC's built-in NUTS sampler has trouble compiling this model, so we use
+            BlackJAX's NUTS sampler instead. This requires the `blackjax` package to be
+            installed.
+
+        Returns:
+            The posterior samples as an InferenceData object.
+
+        Raises:
+            AttributeError: If the `build` method has not been called before this
+                method.
+
+        """
+        if self._model is None:
+            raise AttributeError("The `build` method must be called before `sample`.")
+        with self._model:
+            self._trace = pm.sample(
+                random_seed=random_seed,
+                nuts_sampler=nuts_sampler,
+                return_inferencedata=True,
+                **kwargs,
+            )
+        return self
+
+    def add_observations(self, observations: pd.DataFrame) -> "SeasonalUptakeModel":
+        """
+        Create a copy of the uptake model with added observations.
+
+        Args:
+            observations: The observations to add to the model.
+
+        Returns:
+            A new instance of the uptake model with the added observations.
+
+        """
+        if self.observations is not None:
+            raise ValueError("Observations have already been added to the model.")
+        return SeasonalUptakeModel(
+            curve=self.curve,
+            covariates=self._covariates,
+            observations=observations,
+            covariate_categories=self._covariate_categories,
+            season_ranges=self._season_ranges,
+            date_ranges=self._date_ranges,
+            epsilon=self._epsilon,
+            name=self.name,
+        )
