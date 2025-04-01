@@ -98,11 +98,12 @@ class SeasonalUptakeModel:
         self._date_ranges: list[DateRange] = (
             copy.deepcopy(date_ranges) if date_ranges else list()
         )
+        self._epsilon = epsilon
         self._model: pm.Model | None = None
         self._season_ranges: list[SeasonRange] = (
             copy.deepcopy(season_ranges) if season_ranges else list()
         )
-        self._epsilon = epsilon
+        self._trace: az.InferenceData | None = None
 
         # Input validation
         if covariate_parameters_missing := {
@@ -425,7 +426,7 @@ class SeasonalUptakeModel:
 
     def sample(
         self, random_seed: Any = 1, nuts_sampler: str = "blackjax", **kwargs: Any
-    ) -> az.InferenceData:
+    ) -> Self:
         """
         Sample from the posterior distribution of the model.
 
@@ -452,13 +453,13 @@ class SeasonalUptakeModel:
         if self._model is None:
             raise AttributeError("The `build` method must be called before `sample`.")
         with self._model:
-            trace = pm.sample(
+            self._trace = pm.sample(
                 random_seed=random_seed,
                 nuts_sampler=nuts_sampler,
                 return_inferencedata=True,
                 **kwargs,
             )
-        return trace
+        return self
 
     def add_observations(self, observations: pd.DataFrame) -> "SeasonalUptakeModel":
         """
