@@ -484,3 +484,66 @@ class SeasonalUptakeModel:
             epsilon=self._epsilon,
             name=self.name,
         )
+
+    def dataframe(self) -> pd.DataFrame:
+        """
+        Get the posterior incidence data as a pandas DataFrame.
+
+        Returns:
+            A pandas DataFrame with the posterior incidence data, contains the columns
+            'draw', 'chain', 'date', 'type', 'value, and the covariate names.
+
+        Raises:
+            AttributeError: If the `sample` method has not been called before this
+                method.
+
+        """
+        if self._trace is None:
+            raise AttributeError(
+                "The `sample` method must be called before `dataframe`."
+            )
+        coords = self.coordinates()
+        incidence_dataframes: list[pd.DataFrame] = []
+        category_combinations = list(
+            itertools.product(
+                *[
+                    coords[_coord_name("covariate", covariate_name, "categories")]
+                    for covariate_name in coords["covariate_names"]
+                ]
+            )
+        )
+        for category_combo in category_combinations:
+            pm_cov_names = [
+                item
+                for pair in zip(coords["covariate_names"], category_combo)
+                for item in pair
+            ]
+            for season_range in self._season_ranges:
+                name_args = ["incidence", season_range.season, *pm_cov_names]
+                incidence_name = _pm_name(*name_args)
+                tmp_df = (
+                    self._trace.posterior[incidence_name]  # type: ignore[attr-defined]
+                    .to_dataframe()
+                    .reset_index()
+                )
+                tmp_df = tmp_df.rename(
+                    columns={
+                        _coord_name("season", season_range.season, "dates"): "date",
+                        incidence_name: "value",
+                    }
+                )
+                tmp_df["type"] = pd.Series(len(tmp_df) * ["incidence"], dtype="string")
+                for cov_name, cov_value in zip(
+                    coords["covariate_names"], category_combo
+                ):
+                    tmp_df[cov_name] = pd.Series(
+                        len(tmp_df) * [cov_value], dtype="string"
+                    )
+                tmp_df = tmp_df[
+                    ["draw", "chain", "date"]
+                    + coords["covariate_names"]
+                    + ["type", "value"]
+                ]
+                incidence_dataframes.append(tmp_df)
+        incidence_df = pd.concat(incidence_dataframes)
+        return incidence_df
