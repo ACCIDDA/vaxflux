@@ -199,7 +199,6 @@ class SeasonalUptakeModel:
                 )
         return coords
 
-    # TODO: Split this method into smaller parts to address noqa issues.
     def build(self, debug: bool = False) -> Self:  # noqa: PLR0912, PLR0915
         """
         Build the uptake model.
