@@ -13,10 +13,12 @@ __all__ = (
     "format_incidence_dataframe",
     "get_ncird_weekly_cumulative_vaccination_coverage",
     "read_flu_vacc_data",
+    "sample_dataset",
 )
 
 
 import io
+import sys
 import time
 from datetime import datetime
 from importlib import resources
@@ -29,6 +31,14 @@ import requests
 from scipy.special import expit
 
 from vaxflux import sample_data
+from vaxflux.covariates import CovariateCategories, _covariate_categories_product
+from vaxflux.curves import IncidenceCurve
+from vaxflux.dates import DateRange, SeasonRange
+
+if sys.version_info[:2] >= (3, 11):
+    ParametersTuple = tuple[*tuple[str, ...], float]
+else:
+    ParametersTuple = tuple[tuple[str | float, ...]]
 
 
 def read_flu_vacc_data():
@@ -347,3 +357,86 @@ def create_logistic_sample_dataset(
     incidence_df = format_incidence_dataframe(incidence_df)
     incidence_df = incidence_df.rename(columns={"incidence": "value"})
     return incidence_df
+
+
+def sample_dataset(
+    curve: IncidenceCurve,
+    season_ranges: list[SeasonRange],
+    date_ranges: list[DateRange],
+    covariate_categories: list[CovariateCategories],
+    parameters: list[ParametersTuple],
+    epsilon: float = 0.0001,
+    random_seed: int = 1,
+) -> pd.DataFrame:
+    """
+    Generate a sample dataset from the given incidence curve.
+
+    Args:
+        curve: The incidence curve to sample from.
+        season_ranges: The season ranges to sample from.
+        date_ranges: The date ranges to generate observations for.
+        covariate_categories: The covariate categories to sample from.
+        parameters: The parameters to sample from. List of tuples with the first element
+            being the curve parameter name, the second element being the season, and the
+            following being the covariate categories and the last element being the
+            value.
+        epsilon: The standard deviation to use in the resulting observations.
+        random_seed: The random seed to use for reproducibility.
+
+    Returns:
+        A pandas DataFrame of observations with the columns 'season',
+        'season_start_date', 'season_end_date', 'start_date', 'end_date', 'report_date',
+        'type', and 'value' as well as the covariate categories covariate names.
+
+    """
+    generator = np.random.default_rng(seed=random_seed)
+    season_ranges_map = {
+        season_range.season: season_range for season_range in season_ranges
+    }
+    categories_prod = _covariate_categories_product(covariate_categories)
+    records = []
+    for date_range in date_ranges:
+        for category_prod in categories_prod:
+            season_range = season_ranges_map[date_range.season]
+            kwargs = {}
+            for parameter in parameters:
+                if list(parameter)[1:-1] == [
+                    season_range.season,
+                    *category_prod.values(),
+                ]:
+                    kwargs[str(parameter[0])] = np.array(float(parameter[-1]))
+            tstart = (date_range.start_date - season_range.start_date).days
+            tend = (date_range.end_date - season_range.start_date).days + 1.0
+            t0 = np.array([float(i) for i in range(int(tstart), int(tend))])
+            t1 = t0 + 1.0
+            y = curve.prevalence_difference(t0, t1, **kwargs).eval()
+            if epsilon > 0:
+                y = generator.gamma(
+                    shape=np.power(y / epsilon, 2.0), scale=(epsilon**2.0) / y
+                )
+            value = sum(y)
+            record = (
+                {
+                    "season": date_range.season,
+                    "season_start_date": season_range.start_date,
+                    "season_end_date": season_range.end_date,
+                    "start_date": date_range.start_date,
+                    "end_date": date_range.end_date,
+                    "report_date": date_range.report_date,
+                }
+                | category_prod
+                | {"type": "incidence", "value": value}
+            )
+            records.append(record)
+    observations = pd.DataFrame.from_records(records)
+    for col in ("season", "type"):
+        observations[col] = observations[col].astype("string")
+    for col in (
+        "season_start_date",
+        "season_end_date",
+        "start_date",
+        "end_date",
+        "report_date",
+    ):
+        observations[col] = pd.to_datetime(observations[col])
+    return observations
