@@ -18,7 +18,6 @@ __all__ = (
 
 
 import io
-import sys
 import time
 from datetime import datetime
 from importlib import resources
@@ -34,11 +33,6 @@ from vaxflux import sample_data
 from vaxflux.covariates import CovariateCategories, _covariate_categories_product
 from vaxflux.curves import IncidenceCurve
 from vaxflux.dates import DateRange, SeasonRange
-
-if sys.version_info[:2] >= (3, 11):
-    ParametersTuple = tuple[*tuple[str, ...], float]
-else:
-    ParametersTuple = tuple[tuple[str | float, ...]]
 
 
 def read_flu_vacc_data():
@@ -364,7 +358,7 @@ def sample_dataset(
     season_ranges: list[SeasonRange],
     date_ranges: list[DateRange],
     covariate_categories: list[CovariateCategories],
-    parameters: list[ParametersTuple],
+    parameters: list[tuple[str | float, ...]],
     epsilon: float = 0.0001,
     random_seed: int = 1,
 ) -> pd.DataFrame:
