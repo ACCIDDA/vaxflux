@@ -491,7 +491,7 @@ class SeasonalUptakeModel:
 
         Returns:
             A pandas DataFrame with the posterior incidence data, contains the columns
-            'draw', 'chain', 'date', 'type', 'value, and the covariate names.
+            'draw', 'chain', 'season', 'date', 'type', 'value, and the covariate names.
 
         Raises:
             AttributeError: If the `sample` method has not been called before this
@@ -532,6 +532,9 @@ class SeasonalUptakeModel:
                         incidence_name: "value",
                     }
                 )
+                tmp_df["season"] = pd.Series(
+                    len(tmp_df) * [season_range.season], dtype="string"
+                )
                 tmp_df["type"] = pd.Series(len(tmp_df) * ["incidence"], dtype="string")
                 for cov_name, cov_value in zip(
                     coords["covariate_names"], category_combo
@@ -540,7 +543,7 @@ class SeasonalUptakeModel:
                         len(tmp_df) * [cov_value], dtype="string"
                     )
                 tmp_df = tmp_df[
-                    ["draw", "chain", "date"]
+                    ["draw", "chain", "season", "date"]
                     + coords["covariate_names"]
                     + ["type", "value"]
                 ]
