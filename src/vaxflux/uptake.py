@@ -48,8 +48,6 @@ class SeasonalUptakeModel:
 
     """
 
-    _observation_sigma = 1.0e-9
-
     def __init__(
         self,
         curve: IncidenceCurve,
@@ -402,7 +400,7 @@ class SeasonalUptakeModel:
                         pm.Normal(
                             name=_pm_name("observation", str(obs_idx)),
                             mu=incidence_series[start_index:end_index].sum(),
-                            sigma=self._observation_sigma,
+                            sigma=self._kwargs.get("observation_sigma", 1.0e-9),
                             observed=row["value"],
                         )
 
@@ -497,6 +495,7 @@ class SeasonalUptakeModel:
             date_ranges=self._date_ranges,
             epsilon=self._epsilon,
             name=self.name,
+            **self._kwargs,
         )
 
     def dataframe(self) -> pd.DataFrame:
