@@ -359,7 +359,7 @@ def sample_dataset(
     date_ranges: list[DateRange],
     covariate_categories: list[CovariateCategories],
     parameters: list[tuple[str | float, ...]],
-    epsilon: float = 0.0001,
+    epsilon: float,
     random_seed: int = 1,
 ) -> pd.DataFrame:
     """
