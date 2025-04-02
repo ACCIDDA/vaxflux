@@ -257,13 +257,14 @@ class GaussianRandomWalkCovariate(Covariate):
         init_dist = pm.MvNormal.dist(
             mu=self.init_mu, chol=chol, shape=(len_categories_limited,)
         )
+        dims = ("season", categories_limited_coord_name)
         return pm.MvGaussianRandomWalk(
             name=name,
             mu=self.mu,
             chol=chol,
             init_dist=init_dist,
-            dims=(categories_limited_coord_name, "season"),
-        ), (categories_limited_coord_name, "season")
+            dims=dims,
+        ), dims
 
 
 def _infer_covariate_categories_from_observations(

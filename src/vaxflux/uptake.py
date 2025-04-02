@@ -254,10 +254,14 @@ class SeasonalUptakeModel:
             params: dict[int, tuple[pm.Distribution, tuple[str, ...]]] = {}
             for covariate in self._covariates:
                 name = _pm_name(covariate.parameter, covariate.covariate or "Season")
-                params[hash((covariate.parameter, covariate.covariate))] = (
-                    covariate.pymc_distribution(name, coords)
+                print(f"Adding covariate for {name}: {covariate}")
+                dist, dims = covariate.pymc_distribution(name, coords)
+                params[hash((covariate.parameter, covariate.covariate))] = (dist, dims)
+                logger.info(
+                    "Added covariate %s to the model with shape %s.",
+                    name,
+                    dist.shape.eval(),
                 )
-                logger.info("Added covariate %s to the model.", name)
 
             # Create the summed parameters
             summed_params: dict[str, pm.Distribution] = {}
