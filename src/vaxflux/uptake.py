@@ -60,6 +60,7 @@ class SeasonalUptakeModel:
         date_ranges: list[DateRange] | None = None,
         epsilon: float = 5e-4,
         name: str | None = None,
+        **kwargs: Any,
     ) -> None:
         """
         Initialize an uptake model.
@@ -76,6 +77,7 @@ class SeasonalUptakeModel:
                 derive them from the observations.
             epsilon: The prior average for the standard deviation in observed uptake.
             name: The name of the model, optional and only used for display.
+            kwargs: Further keyword arguments to pass to the model.
 
         Returns:
             None
@@ -99,6 +101,7 @@ class SeasonalUptakeModel:
             copy.deepcopy(date_ranges) if date_ranges else list()
         )
         self._epsilon = epsilon
+        self._kwargs = copy.deepcopy(kwargs)
         self._model: pm.Model | None = None
         self._season_ranges: list[SeasonRange] = (
             copy.deepcopy(season_ranges) if season_ranges else list()
@@ -254,7 +257,6 @@ class SeasonalUptakeModel:
             params: dict[int, tuple[pm.Distribution, tuple[str, ...]]] = {}
             for covariate in self._covariates:
                 name = _pm_name(covariate.parameter, covariate.covariate or "Season")
-                print(f"Adding covariate for {name}: {covariate}")
                 dist, dims = covariate.pymc_distribution(name, coords)
                 params[hash((covariate.parameter, covariate.covariate))] = (dist, dims)
                 logger.info(
@@ -355,14 +357,22 @@ class SeasonalUptakeModel:
                         dims=(_coord_name("season", season_range.season, "dates"),),
                     )
                     # Use custom potential to ensure prevalence is constrained to [0, 1]
-                    prevalence = pt.cumsum(incidence[_coord_name(*name_args)])
-                    constraint = (
-                        pm.math.ge(prevalence, 0.0) * pm.math.le(prevalence, 1.0)
-                    ).all()
-                    pm.Potential(
-                        _pm_name(*name_args, "prevalence", "constraint"),
-                        pm.math.log(pm.math.switch(constraint, 1.0, 0.0)),
-                    )
+                    if self._kwargs.get("constrain_prevalence", True):
+                        prevalence = pt.cumsum(incidence[_coord_name(*name_args)])
+                        constraint = (
+                            pm.math.ge(prevalence, 0.0) * pm.math.le(prevalence, 1.0)
+                        ).all()
+                        prevalence_constraint_name = _pm_name(
+                            *name_args, "prevalence", "constraint"
+                        )
+                        pm.Potential(
+                            prevalence_constraint_name,
+                            pm.math.log(pm.math.switch(constraint, 1.0, 0.0)),
+                        )
+                        logger.info(
+                            "Added prevalence constraint %s.",
+                            prevalence_constraint_name,
+                        )
 
             # If observations are provided, add likelihoods
             if self.observations is not None:
