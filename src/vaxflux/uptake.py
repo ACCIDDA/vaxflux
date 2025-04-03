@@ -316,9 +316,14 @@ class SeasonalUptakeModel:
                         logger.info("Added summed parameter %s to the model.", name)
 
             # Sample noise shape for each time series from exponential hyperprior
-            epsilon = pm.Exponential(
-                "epsilon", lam=1.0 / self._epsilon, dims=("season_by_category",)
-            )
+            if self._kwargs.get("pooled_epsilon", False):
+                # If pooled epsilon is used, use a single epsilon for all time series
+                epsilon = pm.Exponential("epsilon", lam=1.0 / self._epsilon, shape=1)
+            else:
+                # If not pooled, use a different epsilon for each time series
+                epsilon = pm.Exponential(
+                    "epsilon", lam=1.0 / self._epsilon, dims=("season_by_category",)
+                )
 
             # Generate the incidence time series at a daily level
             incidence = {}
@@ -338,6 +343,17 @@ class SeasonalUptakeModel:
                         for param in coords["parameters"]
                     }
                     name_args = ["incidence", season_range.season, *pm_cov_names]
+                    eps = (
+                        epsilon
+                        if self._kwargs.get("pooled_epsilon", False)
+                        else epsilon[
+                            coords["season_by_category"].index(
+                                _coord_name(
+                                    "season", season_range.season, *pm_cov_names
+                                )
+                            )
+                        ]
+                    )
                     incidence[_coord_name(*name_args)] = pm.Gamma(
                         _pm_name(*name_args),
                         mu=self.curve.prevalence_difference(
@@ -345,13 +361,7 @@ class SeasonalUptakeModel:
                             date_indexes[season_range.season] + 1.0,
                             **kwargs,
                         ),
-                        sigma=epsilon[
-                            coords["season_by_category"].index(
-                                _coord_name(
-                                    "season", season_range.season, *pm_cov_names
-                                )
-                            )
-                        ],
+                        sigma=eps,
                         dims=(_coord_name("season", season_range.season, "dates"),),
                     )
                     # Use custom potential to ensure prevalence is constrained to [0, 1]
