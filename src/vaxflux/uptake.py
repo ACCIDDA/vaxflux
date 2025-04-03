@@ -17,6 +17,7 @@ import pandas as pd
 import pymc as pm
 import pytensor.tensor as pt
 
+from vaxflux._pymc import _modified_gamma_logp
 from vaxflux._util import (
     _coord_index,
     _coord_name,
@@ -354,16 +355,27 @@ class SeasonalUptakeModel:
                             )
                         ]
                     )
-                    incidence[_coord_name(*name_args)] = pm.Gamma(
-                        _pm_name(*name_args),
-                        mu=self.curve.prevalence_difference(
-                            date_indexes[season_range.season],
-                            date_indexes[season_range.season] + 1.0,
-                            **kwargs,
-                        ),
-                        sigma=eps,
-                        dims=(_coord_name("season", season_range.season, "dates"),),
-                    )
+                    if self._kwargs.get("use_modified_gamma", False):
+                        incidence[_coord_name(*name_args)] = pm.Deterministic(
+                            _pm_name(*name_args),
+                            self.curve.prevalence_difference(
+                                date_indexes[season_range.season],
+                                date_indexes[season_range.season] + 1.0,
+                                **kwargs,
+                            ),
+                            dims=(_coord_name("season", season_range.season, "dates"),),
+                        )
+                    else:
+                        incidence[_coord_name(*name_args)] = pm.Gamma(
+                            _pm_name(*name_args),
+                            mu=self.curve.prevalence_difference(
+                                date_indexes[season_range.season],
+                                date_indexes[season_range.season] + 1.0,
+                                **kwargs,
+                            ),
+                            sigma=eps,
+                            dims=(_coord_name("season", season_range.season, "dates"),),
+                        )
                     # Use custom potential to ensure prevalence is constrained to [0, 1]
                     if self._kwargs.get("constrain_prevalence", True):
                         prevalence = pt.cumsum(incidence[_coord_name(*name_args)])
@@ -392,27 +404,52 @@ class SeasonalUptakeModel:
                         _coord_name("season", row["season"], "dates")
                     ].index(row["end_date"].strftime("%Y-%m-%d"))
                     if row["type"] == "incidence":
-                        incidence_name = [
-                            "incidence",
-                            row["season"],
-                            *[
-                                item
-                                for cov_name in coords["covariate_names"]
-                                for item in [cov_name, row[cov_name]]
-                            ],
+                        pm_cov_names = [
+                            item
+                            for cov_name in coords["covariate_names"]
+                            for item in [cov_name, row[cov_name]]
                         ]
+                        incidence_name = ["incidence", row["season"], *pm_cov_names]
                         incidence_series = incidence[_coord_name(*incidence_name)]
-                        # PyMC does not allow for directly observing the sum of random
-                        # vars, see
-                        # https://discourse.pymc.io/t/sum-of-random-variables/1652.
-                        # Instead, use a normal distribution with a very small standard
-                        # deviation to approximate the sum.
-                        pm.Normal(
-                            name=_pm_name("observation", str(obs_idx)),
-                            mu=incidence_series[start_index:end_index].sum(),
-                            sigma=self._kwargs.get("observation_sigma", 1.0e-9),
-                            observed=row["value"],
-                        )
+                        if self._kwargs.get("use_modified_gamma", False):
+                            eps = (
+                                epsilon
+                                if self._kwargs.get("pooled_epsilon", False)
+                                else epsilon[
+                                    coords["season_by_category"].index(
+                                        _coord_name(
+                                            "season", row["season"], *pm_cov_names
+                                        )
+                                    )
+                                ]
+                            )
+                            logger.info(
+                                "Observation index %u is %u in length.",
+                                obs_idx,
+                                end_index - start_index,
+                            )
+                            pm.Potential(
+                                _pm_name("observation", str(obs_idx)),
+                                _modified_gamma_logp(
+                                    incidence_series[start_index:end_index].sum(),
+                                    row["value"],
+                                    pt.extra_ops.repeat(
+                                        eps, repeats=end_index - start_index
+                                    ),
+                                ),
+                            )
+                        else:
+                            # PyMC does not allow for directly observing the sum of
+                            # random vars, see
+                            # https://discourse.pymc.io/t/sum-of-random-variables/1652.
+                            # Instead, use a normal distribution with a very small
+                            # standard deviation to approximate the sum.
+                            pm.Normal(
+                                name=_pm_name("observation", str(obs_idx)),
+                                mu=incidence_series[start_index:end_index].sum(),
+                                sigma=self._kwargs.get("observation_sigma", 1.0e-9),
+                                observed=row["value"],
+                            )
 
         return self
 
