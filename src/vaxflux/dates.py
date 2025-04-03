@@ -9,6 +9,8 @@ from typing import Literal, NamedTuple, TypeVar, cast
 import pandas as pd
 from pydantic import BaseModel, ConfigDict
 
+from vaxflux._util import _rename_keys
+
 
 class SeasonRange(BaseModel):
     """
@@ -168,7 +170,16 @@ def _infer_ranges_from_observations(
                 .sort_values(list(columns), ignore_index=True)
             )
             return [
-                cls.model_validate(row._asdict())  # type: ignore
+                cls.model_validate(  # type: ignore[misc]
+                    _rename_keys(
+                        row._asdict(),  # type: ignore[operator]
+                        {
+                            "season_start_date": "start_date",
+                            "season_end_date": "end_date",
+                        },
+                        skip_absent=True,
+                    )
+                )
                 for row in observations_ranges.itertuples(
                     index=False, name=f"Observation{mode.capitalize()}Row"
                 )

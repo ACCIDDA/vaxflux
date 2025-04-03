@@ -17,6 +17,7 @@ import pandas as pd
 import pymc as pm
 import pytensor.tensor as pt
 
+from vaxflux._pymc import _modified_gamma_logp
 from vaxflux._util import (
     _coord_index,
     _coord_name,
@@ -48,8 +49,6 @@ class SeasonalUptakeModel:
 
     """
 
-    _observation_sigma = 1.0e-9
-
     def __init__(
         self,
         curve: IncidenceCurve,
@@ -60,6 +59,7 @@ class SeasonalUptakeModel:
         date_ranges: list[DateRange] | None = None,
         epsilon: float = 5e-4,
         name: str | None = None,
+        **kwargs: Any,
     ) -> None:
         """
         Initialize an uptake model.
@@ -76,6 +76,7 @@ class SeasonalUptakeModel:
                 derive them from the observations.
             epsilon: The prior average for the standard deviation in observed uptake.
             name: The name of the model, optional and only used for display.
+            kwargs: Further keyword arguments to pass to the model.
 
         Returns:
             None
@@ -99,6 +100,7 @@ class SeasonalUptakeModel:
             copy.deepcopy(date_ranges) if date_ranges else list()
         )
         self._epsilon = epsilon
+        self._kwargs = copy.deepcopy(kwargs)
         self._model: pm.Model | None = None
         self._season_ranges: list[SeasonRange] = (
             copy.deepcopy(season_ranges) if season_ranges else list()
@@ -254,10 +256,13 @@ class SeasonalUptakeModel:
             params: dict[int, tuple[pm.Distribution, tuple[str, ...]]] = {}
             for covariate in self._covariates:
                 name = _pm_name(covariate.parameter, covariate.covariate or "Season")
-                params[hash((covariate.parameter, covariate.covariate))] = (
-                    covariate.pymc_distribution(name, coords)
+                dist, dims = covariate.pymc_distribution(name, coords)
+                params[hash((covariate.parameter, covariate.covariate))] = (dist, dims)
+                logger.info(
+                    "Added covariate %s to the model with shape %s.",
+                    name,
+                    dist.shape.eval(),
                 )
-                logger.info("Added covariate %s to the model.", name)
 
             # Create the summed parameters
             summed_params: dict[str, pm.Distribution] = {}
@@ -312,9 +317,14 @@ class SeasonalUptakeModel:
                         logger.info("Added summed parameter %s to the model.", name)
 
             # Sample noise shape for each time series from exponential hyperprior
-            epsilon = pm.Exponential(
-                "epsilon", lam=1.0 / self._epsilon, dims=("season_by_category",)
-            )
+            if self._kwargs.get("pooled_epsilon", False):
+                # If pooled epsilon is used, use a single epsilon for all time series
+                epsilon = pm.Exponential("epsilon", lam=1.0 / self._epsilon, shape=1)
+            else:
+                # If not pooled, use a different epsilon for each time series
+                epsilon = pm.Exponential(
+                    "epsilon", lam=1.0 / self._epsilon, dims=("season_by_category",)
+                )
 
             # Generate the incidence time series at a daily level
             incidence = {}
@@ -334,31 +344,55 @@ class SeasonalUptakeModel:
                         for param in coords["parameters"]
                     }
                     name_args = ["incidence", season_range.season, *pm_cov_names]
-                    incidence[_coord_name(*name_args)] = pm.Gamma(
-                        _pm_name(*name_args),
-                        mu=self.curve.prevalence_difference(
-                            date_indexes[season_range.season],
-                            date_indexes[season_range.season] + 1.0,
-                            **kwargs,
-                        ),
-                        sigma=epsilon[
+                    eps = (
+                        epsilon
+                        if self._kwargs.get("pooled_epsilon", False)
+                        else epsilon[
                             coords["season_by_category"].index(
                                 _coord_name(
                                     "season", season_range.season, *pm_cov_names
                                 )
                             )
-                        ],
-                        dims=(_coord_name("season", season_range.season, "dates"),),
+                        ]
                     )
+                    if self._kwargs.get("use_modified_gamma", False):
+                        incidence[_coord_name(*name_args)] = pm.Deterministic(
+                            _pm_name(*name_args),
+                            self.curve.prevalence_difference(
+                                date_indexes[season_range.season],
+                                date_indexes[season_range.season] + 1.0,
+                                **kwargs,
+                            ),
+                            dims=(_coord_name("season", season_range.season, "dates"),),
+                        )
+                    else:
+                        incidence[_coord_name(*name_args)] = pm.Gamma(
+                            _pm_name(*name_args),
+                            mu=self.curve.prevalence_difference(
+                                date_indexes[season_range.season],
+                                date_indexes[season_range.season] + 1.0,
+                                **kwargs,
+                            ),
+                            sigma=eps,
+                            dims=(_coord_name("season", season_range.season, "dates"),),
+                        )
                     # Use custom potential to ensure prevalence is constrained to [0, 1]
-                    prevalence = pt.cumsum(incidence[_coord_name(*name_args)])
-                    constraint = (
-                        pm.math.ge(prevalence, 0.0) * pm.math.le(prevalence, 1.0)
-                    ).all()
-                    pm.Potential(
-                        _pm_name(*name_args, "prevalence", "constraint"),
-                        pm.math.log(pm.math.switch(constraint, 1.0, 0.0)),
-                    )
+                    if self._kwargs.get("constrain_prevalence", True):
+                        prevalence = pt.cumsum(incidence[_coord_name(*name_args)])
+                        constraint = (
+                            pm.math.ge(prevalence, 0.0) * pm.math.le(prevalence, 1.0)
+                        ).all()
+                        prevalence_constraint_name = _pm_name(
+                            *name_args, "prevalence", "constraint"
+                        )
+                        pm.Potential(
+                            prevalence_constraint_name,
+                            pm.math.log(pm.math.switch(constraint, 1.0, 0.0)),
+                        )
+                        logger.info(
+                            "Added prevalence constraint %s.",
+                            prevalence_constraint_name,
+                        )
 
             # If observations are provided, add likelihoods
             if self.observations is not None:
@@ -370,27 +404,52 @@ class SeasonalUptakeModel:
                         _coord_name("season", row["season"], "dates")
                     ].index(row["end_date"].strftime("%Y-%m-%d"))
                     if row["type"] == "incidence":
-                        incidence_name = [
-                            "incidence",
-                            row["season"],
-                            *[
-                                item
-                                for cov_name in coords["covariate_names"]
-                                for item in [cov_name, row[cov_name]]
-                            ],
+                        pm_cov_names = [
+                            item
+                            for cov_name in coords["covariate_names"]
+                            for item in [cov_name, row[cov_name]]
                         ]
+                        incidence_name = ["incidence", row["season"], *pm_cov_names]
                         incidence_series = incidence[_coord_name(*incidence_name)]
-                        # PyMC does not allow for directly observing the sum of random
-                        # vars, see
-                        # https://discourse.pymc.io/t/sum-of-random-variables/1652.
-                        # Instead, use a normal distribution with a very small standard
-                        # deviation to approximate the sum.
-                        pm.Normal(
-                            name=_pm_name("observation", str(obs_idx)),
-                            mu=incidence_series[start_index:end_index].sum(),
-                            sigma=self._observation_sigma,
-                            observed=row["value"],
-                        )
+                        if self._kwargs.get("use_modified_gamma", False):
+                            eps = (
+                                epsilon
+                                if self._kwargs.get("pooled_epsilon", False)
+                                else epsilon[
+                                    coords["season_by_category"].index(
+                                        _coord_name(
+                                            "season", row["season"], *pm_cov_names
+                                        )
+                                    )
+                                ]
+                            )
+                            logger.info(
+                                "Observation index %u is %u in length.",
+                                obs_idx,
+                                end_index - start_index,
+                            )
+                            pm.Potential(
+                                _pm_name("observation", str(obs_idx)),
+                                _modified_gamma_logp(
+                                    incidence_series[start_index:end_index].sum(),
+                                    row["value"],
+                                    pt.extra_ops.repeat(
+                                        eps, repeats=end_index - start_index
+                                    ),
+                                ),
+                            )
+                        else:
+                            # PyMC does not allow for directly observing the sum of
+                            # random vars, see
+                            # https://discourse.pymc.io/t/sum-of-random-variables/1652.
+                            # Instead, use a normal distribution with a very small
+                            # standard deviation to approximate the sum.
+                            pm.Normal(
+                                name=_pm_name("observation", str(obs_idx)),
+                                mu=incidence_series[start_index:end_index].sum(),
+                                sigma=self._kwargs.get("observation_sigma", 1.0e-9),
+                                observed=row["value"],
+                            )
 
         return self
 
@@ -483,4 +542,72 @@ class SeasonalUptakeModel:
             date_ranges=self._date_ranges,
             epsilon=self._epsilon,
             name=self.name,
+            **self._kwargs,
         )
+
+    def dataframe(self) -> pd.DataFrame:
+        """
+        Get the posterior incidence data as a pandas DataFrame.
+
+        Returns:
+            A pandas DataFrame with the posterior incidence data, contains the columns
+            'draw', 'chain', 'season', 'date', 'type', 'value, and the covariate names.
+
+        Raises:
+            AttributeError: If the `sample` method has not been called before this
+                method.
+
+        """
+        if self._trace is None:
+            raise AttributeError(
+                "The `sample` method must be called before `dataframe`."
+            )
+        coords = self.coordinates()
+        incidence_dataframes: list[pd.DataFrame] = []
+        category_combinations = list(
+            itertools.product(
+                *[
+                    coords[_coord_name("covariate", covariate_name, "categories")]
+                    for covariate_name in coords["covariate_names"]
+                ]
+            )
+        )
+        for category_combo in category_combinations:
+            pm_cov_names = [
+                item
+                for pair in zip(coords["covariate_names"], category_combo)
+                for item in pair
+            ]
+            for season_range in self._season_ranges:
+                name_args = ["incidence", season_range.season, *pm_cov_names]
+                incidence_name = _pm_name(*name_args)
+                tmp_df = (
+                    self._trace.posterior[incidence_name]  # type: ignore[attr-defined]
+                    .to_dataframe()
+                    .reset_index()
+                )
+                tmp_df = tmp_df.rename(
+                    columns={
+                        _coord_name("season", season_range.season, "dates"): "date",
+                        incidence_name: "value",
+                    }
+                )
+                tmp_df["season"] = pd.Series(
+                    len(tmp_df) * [season_range.season], dtype="string"
+                )
+                tmp_df["type"] = pd.Series(len(tmp_df) * ["incidence"], dtype="string")
+                for cov_name, cov_value in zip(
+                    coords["covariate_names"], category_combo
+                ):
+                    tmp_df[cov_name] = pd.Series(
+                        len(tmp_df) * [cov_value], dtype="string"
+                    )
+                tmp_df["date"] = pd.to_datetime(tmp_df["date"])
+                tmp_df = tmp_df[
+                    ["draw", "chain", "season", "date"]
+                    + coords["covariate_names"]
+                    + ["type", "value"]
+                ]
+                incidence_dataframes.append(tmp_df)
+        incidence_df = pd.concat(incidence_dataframes)
+        return incidence_df

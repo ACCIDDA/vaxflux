@@ -358,3 +358,39 @@ def _validate_and_format_observations(
             "nowcasting is not currently supported but planned."
         )
     return observations
+
+
+def _rename_keys(
+    x: dict[str, Any], keys: dict[str, str], skip_absent: bool = False
+) -> dict[str, Any]:
+    """
+    Rename keys in a dictionary.
+
+    Args:
+        x: The dictionary to rename keys in.
+        keys: The mapping of old keys to new keys.
+        skip_absent: If `True`, skip renaming if the old key is not found in the
+            dictionary. If `False`, raise a KeyError if the old key is not found.
+
+    Returns:
+        The dictionary with renamed keys.
+
+    Raises:
+        KeyError: If any of the old keys are not found in the dictionary and
+            `skip_absent` is `False`.
+
+    Notes:
+        The renaming of keys does not preserve the order of the dictionary.
+
+    Examples:
+        >>> from vaxflux._util import _rename_keys
+        >>> _rename_keys({"a": 1, "b": 2, "c": 3}, {"a": "A", "b": "B"})
+        {'c': 3, 'A': 1, 'B': 2}
+
+    """
+    for k, v in keys.items():
+        if not skip_absent and k not in x:
+            raise KeyError(f"Key '{k}' not found in dictionary.")
+        if k in x:
+            x[v] = x.pop(k)
+    return x

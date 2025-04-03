@@ -9,6 +9,7 @@ __all__ = (
 
 
 from abc import ABC, abstractmethod
+from itertools import product
 from typing import Annotated, Any
 
 import pandas as pd
@@ -41,6 +42,78 @@ class CovariateCategories(BaseModel):
                 raise ValueError(f"Category '{category}' is not unique.")
             unique_categories.add(category)
         return categories
+
+
+def _covariate_categories_product(
+    covariate_categories: list[CovariateCategories],
+) -> list[dict[str, str]]:
+    """
+    Create a product of the covariate categories.
+
+    Args:
+        covariate_categories: The covariate categories to use.
+
+    Returns:
+        A list of dictionaries with the product of the covariate categories.
+
+    Examples:
+        >>> from pprint import pprint
+        >>> from vaxflux.covariates import (
+        ...     CovariateCategories,
+        ...     _covariate_categories_product,
+        ... )
+        >>> sex_cov = CovariateCategories(
+        ...     covariate="sex", categories=("male", "female")
+        ... )
+        >>> age_cov = CovariateCategories(
+        ...     covariate="age", categories=("youth", "adult", "senior")
+        ... )
+        >>> pop_density_cov = CovariateCategories(
+        ...     covariate="population_density",
+        ...     categories=("urban", "suburban", "rural")
+        ... )
+        >>> pprint(_covariate_categories_product([sex_cov, age_cov, pop_density_cov]))
+        [{'age': 'youth', 'population_density': 'urban', 'sex': 'male'},
+        {'age': 'youth', 'population_density': 'suburban', 'sex': 'male'},
+        {'age': 'youth', 'population_density': 'rural', 'sex': 'male'},
+        {'age': 'adult', 'population_density': 'urban', 'sex': 'male'},
+        {'age': 'adult', 'population_density': 'suburban', 'sex': 'male'},
+        {'age': 'adult', 'population_density': 'rural', 'sex': 'male'},
+        {'age': 'senior', 'population_density': 'urban', 'sex': 'male'},
+        {'age': 'senior', 'population_density': 'suburban', 'sex': 'male'},
+        {'age': 'senior', 'population_density': 'rural', 'sex': 'male'},
+        {'age': 'youth', 'population_density': 'urban', 'sex': 'female'},
+        {'age': 'youth', 'population_density': 'suburban', 'sex': 'female'},
+        {'age': 'youth', 'population_density': 'rural', 'sex': 'female'},
+        {'age': 'adult', 'population_density': 'urban', 'sex': 'female'},
+        {'age': 'adult', 'population_density': 'suburban', 'sex': 'female'},
+        {'age': 'adult', 'population_density': 'rural', 'sex': 'female'},
+        {'age': 'senior', 'population_density': 'urban', 'sex': 'female'},
+        {'age': 'senior', 'population_density': 'suburban', 'sex': 'female'},
+        {'age': 'senior', 'population_density': 'rural', 'sex': 'female'}]
+        >>> pprint(_covariate_categories_product([sex_cov, age_cov]))
+        [{'age': 'youth', 'sex': 'male'},
+        {'age': 'adult', 'sex': 'male'},
+        {'age': 'senior', 'sex': 'male'},
+        {'age': 'youth', 'sex': 'female'},
+        {'age': 'adult', 'sex': 'female'},
+        {'age': 'senior', 'sex': 'female'}]
+        >>> pprint(_covariate_categories_product([sex_cov]))
+        [{'sex': 'male'}, {'sex': 'female'}]
+        >>> pprint(_covariate_categories_product([age_cov]))
+        [{'age': 'youth'}, {'age': 'adult'}, {'age': 'senior'}]
+        >>> pprint(_covariate_categories_product([]))
+        []
+
+    """
+    if not covariate_categories:
+        return []
+    names = []
+    categories = []
+    for covariate_category in covariate_categories:
+        names.append(covariate_category.covariate)
+        categories.append(covariate_category.categories)
+    return [dict(zip(names, category)) for category in list(product(*categories))]
 
 
 class Covariate(ABC, BaseModel):
@@ -184,13 +257,14 @@ class GaussianRandomWalkCovariate(Covariate):
         init_dist = pm.MvNormal.dist(
             mu=self.init_mu, chol=chol, shape=(len_categories_limited,)
         )
+        dims = ("season", categories_limited_coord_name)
         return pm.MvGaussianRandomWalk(
             name=name,
             mu=self.mu,
             chol=chol,
             init_dist=init_dist,
-            dims=(categories_limited_coord_name, "season"),
-        ), (categories_limited_coord_name, "season")
+            dims=dims,
+        ), dims
 
 
 def _infer_covariate_categories_from_observations(
