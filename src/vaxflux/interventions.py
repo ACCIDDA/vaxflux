@@ -1,12 +1,12 @@
 """Functionality for applying interventions to the uptake of a vaccine."""
 
-__all__ = ("Intervention",)
+__all__ = ("Implementation", "Intervention")
 
-
+from datetime import date
 from typing import Any
 
 import pymc as pm
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class Intervention(BaseModel):
@@ -26,7 +26,7 @@ class Intervention(BaseModel):
         ...     name="tv_ads",
         ...     parameter="m",
         ...     distribution="HalfNormal",
-        ...     distribution_kwargs={"sigma": 0.1}
+        ...     distribution_kwargs={"sigma": 0.1},
         ... )
         >>> tv_ads.name
         'tv_ads'
@@ -38,6 +38,8 @@ class Intervention(BaseModel):
         {'sigma': 0.1}
 
     """
+
+    model_config = ConfigDict(frozen=True)
 
     name: str = Field(pattern=r"^[a-z0-9_]+$")
     parameter: str
@@ -57,3 +59,48 @@ class Intervention(BaseModel):
             **self.distribution_kwargs,
             dims=f"intervention_{name}_implementations",
         )
+
+
+class Implementation(BaseModel):
+    """
+    A representation of an implementation of an intervention.
+
+    Attributes:
+        intervention: The name of the intervention being implemented.
+        season: The season this implementation applies to.
+        start_date: The start date of the implementation or `None` if to apply from the
+            start of the season.
+        end_date: The end date of the implementation or `None` if to apply to the end of
+            the season.
+        covariate_categories: The covariate categories this implementation applies to in
+            the format {covariate: category}. If `None`, applies to all covariate
+            categories.
+
+    Examples:
+        >>> from vaxflux.interventions import Implementation
+        >>> tv_ads_targeted_at_males_2022_23 = Implementation(
+        ...     intervention="tv_ads",
+        ...     season="2022/23",
+        ...     start_date=None,
+        ...     end_date=None,
+        ...     covariate_categories={"sex": "male"},
+        ... )
+        >>> tv_ads_targeted_at_males_2022_23.intervention
+        'tv_ads'
+        >>> tv_ads_targeted_at_males_2022_23.season
+        '2022/23'
+        >>> tv_ads_targeted_at_males_2022_23.start_date is None
+        True
+        >>> tv_ads_targeted_at_males_2022_23.end_date is None
+        True
+        >>> tv_ads_targeted_at_males_2022_23.covariate_categories
+        {'sex': 'male'}
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    intervention: str
+    season: str
+    start_date: date | None
+    end_date: date | None
+    covariate_categories: dict[str, str] | None
