@@ -565,6 +565,7 @@ class SeasonalUptakeModel:
                     tmp_df[cov_name] = pd.Series(
                         len(tmp_df) * [cov_value], dtype="string"
                     )
+                tmp_df["date"] = pd.to_datetime(tmp_df["date"])
                 tmp_df = tmp_df[
                     ["draw", "chain", "season", "date"]
                     + coords["covariate_names"]
