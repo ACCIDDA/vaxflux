@@ -14,7 +14,28 @@ class Intervention(BaseModel):
     A representation for the affect of an intervention on the uptake of a vaccine.
 
     Attributes:
-        name: The name of the intervention.
+        name: The name of the intervention, must be a lowercase alphanumeric string.
+        parameter: The name of the parameter this intervention affects.
+        distribution: The name of the distribution to use for the intervention.
+        distribution_kwargs: The keyword arguments to pass to the distribution.
+            Must be a dictionary of strings to values.
+
+    Examples:
+        >>> from vaxflux.interventions import Intervention
+        >>> tv_ads = Intervention(
+        ...     name="tv_ads",
+        ...     parameter="m",
+        ...     distribution="HalfNormal",
+        ...     distribution_kwargs={"sigma": 0.1}
+        ... )
+        >>> tv_ads.name
+        'tv_ads'
+        >>> tv_ads.parameter
+        'm'
+        >>> tv_ads.distribution
+        'HalfNormal'
+        >>> tv_ads.distribution_kwargs
+        {'sigma': 0.1}
 
     """
 
