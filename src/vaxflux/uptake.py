@@ -287,6 +287,14 @@ class SeasonalUptakeModel:
                                 )
                             ) is not None:
                                 param_components.append(dist[idx])
+                                logger.info(
+                                    "Added season component to parameter %s "
+                                    "for season %s from index %s of %s.",
+                                    param,
+                                    season_range.season,
+                                    str(idx),
+                                    str(dist),
+                                )
                         for i, covariate_name in enumerate(coords["covariate_names"]):
                             result = params.get(hash((param, covariate_name)))
                             if result is None:
@@ -302,6 +310,18 @@ class SeasonalUptakeModel:
                                 )
                             ) is not None:
                                 param_components.append(dist[idx])
+                                logger.info(
+                                    "Added %s, %s covariate component to parameter "
+                                    "%s for season %s from index %s of %s with "
+                                    "dimensions %s.",
+                                    covariate_name,
+                                    category_combo[i],
+                                    param,
+                                    season_range.season,
+                                    str(idx),
+                                    str(dist),
+                                    str(dims),
+                                )
                         name_args = [param, "season", season_range.season] + [
                             item
                             for pair in zip(coords["covariate_names"], category_combo)
@@ -312,9 +332,19 @@ class SeasonalUptakeModel:
                             summed_params[name] = pm.Deterministic(
                                 name, sum(param_components)
                             )
+                            logger.info(
+                                "Added summed parameter %s to "
+                                "the model with %u components.",
+                                name,
+                                len(param_components),
+                            )
                         else:
                             summed_params[name] = pm.Data(name, 0.0)
-                        logger.info("Added summed parameter %s to the model.", name)
+                            logger.info(
+                                "Added summed parameter %s to the "
+                                "model with no components.",
+                                name,
+                            )
 
             # Sample noise shape for each time series from exponential hyperprior
             if self._kwargs.get("pooled_epsilon", False):
@@ -325,6 +355,9 @@ class SeasonalUptakeModel:
                 epsilon = pm.Exponential(
                     "epsilon", lam=1.0 / self._epsilon, dims=("season_by_category",)
                 )
+            logger.info(
+                "Added epsilon to the model with shape %s.", epsilon.shape.eval()
+            )
 
             # Generate the incidence time series at a daily level
             incidence = {}
@@ -365,6 +398,12 @@ class SeasonalUptakeModel:
                             ),
                             dims=(_coord_name("season", season_range.season, "dates"),),
                         )
+                        logger.info(
+                            "Added deterministic incidence %s "
+                            "to the model with shape %s.",
+                            _pm_name(*name_args),
+                            str(incidence[_coord_name(*name_args)].shape.eval()),
+                        )
                     else:
                         incidence[_coord_name(*name_args)] = pm.Gamma(
                             _pm_name(*name_args),
@@ -375,6 +414,12 @@ class SeasonalUptakeModel:
                             ),
                             sigma=eps,
                             dims=(_coord_name("season", season_range.season, "dates"),),
+                        )
+                        logger.info(
+                            "Added gamma distributed incidence %s "
+                            "to the model with shape %s.",
+                            _pm_name(*name_args),
+                            str(incidence[_coord_name(*name_args)].shape.eval()),
                         )
                     # Use custom potential to ensure prevalence is constrained to [0, 1]
                     if self._kwargs.get("constrain_prevalence", True):
@@ -403,6 +448,11 @@ class SeasonalUptakeModel:
                     end_index = coords[
                         _coord_name("season", row["season"], "dates")
                     ].index(row["end_date"].strftime("%Y-%m-%d"))
+                    logger.info(
+                        "Observation index %u is %u in length.",
+                        obs_idx,
+                        end_index - start_index,
+                    )
                     if row["type"] == "incidence":
                         pm_cov_names = [
                             item
@@ -423,20 +473,26 @@ class SeasonalUptakeModel:
                                     )
                                 ]
                             )
-                            logger.info(
-                                "Observation index %u is %u in length.",
-                                obs_idx,
-                                end_index - start_index,
-                            )
                             pm.Potential(
                                 _pm_name("observation", str(obs_idx)),
                                 _modified_gamma_logp(
-                                    incidence_series[start_index:end_index].sum(),
+                                    incidence_series[
+                                        start_index : (end_index + 1)
+                                    ].sum(),
                                     row["value"],
                                     pt.extra_ops.repeat(
                                         eps, repeats=end_index - start_index
                                     ),
                                 ),
+                            )
+                            logger.info(
+                                "Added observation %u to the model with modified gamma"
+                                "logp potential %s from %u and %u of %s time series.",
+                                obs_idx,
+                                _pm_name("observation", str(obs_idx)),
+                                start_index,
+                                end_index,
+                                _pm_name(*incidence_name),
                             )
                         else:
                             # PyMC does not allow for directly observing the sum of
@@ -446,9 +502,20 @@ class SeasonalUptakeModel:
                             # standard deviation to approximate the sum.
                             pm.Normal(
                                 name=_pm_name("observation", str(obs_idx)),
-                                mu=incidence_series[start_index:end_index].sum(),
+                                mu=incidence_series[
+                                    start_index : (end_index + 1)
+                                ].sum(),
                                 sigma=self._kwargs.get("observation_sigma", 1.0e-9),
                                 observed=row["value"],
+                            )
+                            logger.info(
+                                "Added observation %u to the model with approx normal "
+                                "likelihood %s from %u and %u of %s time series.",
+                                obs_idx,
+                                _pm_name("observation", str(obs_idx)),
+                                start_index,
+                                end_index,
+                                _pm_name(*incidence_name),
                             )
 
         return self
