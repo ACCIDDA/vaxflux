@@ -355,6 +355,9 @@ class SeasonalUptakeModel:
                 epsilon = pm.Exponential(
                     "epsilon", lam=1.0 / self._epsilon, dims=("season_by_category",)
                 )
+            logger.info(
+                "Added epsilon to the model with shape %s.", epsilon.shape.eval()
+            )
 
             # Generate the incidence time series at a daily level
             incidence = {}
@@ -395,6 +398,12 @@ class SeasonalUptakeModel:
                             ),
                             dims=(_coord_name("season", season_range.season, "dates"),),
                         )
+                        logger.info(
+                            "Added deterministic incidence %s "
+                            "to the model with shape %s.",
+                            _pm_name(*name_args),
+                            str(incidence[_coord_name(*name_args)].shape.eval()),
+                        )
                     else:
                         incidence[_coord_name(*name_args)] = pm.Gamma(
                             _pm_name(*name_args),
@@ -405,6 +414,12 @@ class SeasonalUptakeModel:
                             ),
                             sigma=eps,
                             dims=(_coord_name("season", season_range.season, "dates"),),
+                        )
+                        logger.info(
+                            "Added gamma distributed incidence %s "
+                            "to the model with shape %s.",
+                            _pm_name(*name_args),
+                            str(incidence[_coord_name(*name_args)].shape.eval()),
                         )
                     # Use custom potential to ensure prevalence is constrained to [0, 1]
                     if self._kwargs.get("constrain_prevalence", True):
@@ -433,6 +448,11 @@ class SeasonalUptakeModel:
                     end_index = coords[
                         _coord_name("season", row["season"], "dates")
                     ].index(row["end_date"].strftime("%Y-%m-%d"))
+                    logger.info(
+                        "Observation index %u is %u in length.",
+                        obs_idx,
+                        end_index - start_index,
+                    )
                     if row["type"] == "incidence":
                         pm_cov_names = [
                             item
@@ -453,11 +473,6 @@ class SeasonalUptakeModel:
                                     )
                                 ]
                             )
-                            logger.info(
-                                "Observation index %u is %u in length.",
-                                obs_idx,
-                                end_index - start_index,
-                            )
                             pm.Potential(
                                 _pm_name("observation", str(obs_idx)),
                                 _modified_gamma_logp(
@@ -467,6 +482,15 @@ class SeasonalUptakeModel:
                                         eps, repeats=end_index - start_index
                                     ),
                                 ),
+                            )
+                            logger.info(
+                                "Added observation %u to the model with modified gamma"
+                                "logp potential %s from %u and %u of %s time series.",
+                                obs_idx,
+                                _pm_name("observation", str(obs_idx)),
+                                start_index,
+                                end_index,
+                                _pm_name(*incidence_name),
                             )
                         else:
                             # PyMC does not allow for directly observing the sum of
@@ -479,6 +503,15 @@ class SeasonalUptakeModel:
                                 mu=incidence_series[start_index:end_index].sum(),
                                 sigma=self._kwargs.get("observation_sigma", 1.0e-9),
                                 observed=row["value"],
+                            )
+                            logger.info(
+                                "Added observation %u to the model with approx normal "
+                                "likelihood %s from %u and %u of %s time series.",
+                                obs_idx,
+                                _pm_name("observation", str(obs_idx)),
+                                start_index,
+                                end_index,
+                                _pm_name(*incidence_name),
                             )
 
         return self
