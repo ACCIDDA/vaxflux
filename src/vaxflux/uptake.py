@@ -31,6 +31,7 @@ from vaxflux.covariates import (
 )
 from vaxflux.curves import IncidenceCurve
 from vaxflux.dates import DateRange, SeasonRange, _infer_ranges_from_observations
+from vaxflux.interventions import Implementation, Intervention
 
 if sys.version_info[:2] >= (3, 11):
     from typing import Self
@@ -49,12 +50,14 @@ class SeasonalUptakeModel:
 
     """
 
-    def __init__(
+    def __init__(  # noqa: PLR0913
         self,
         curve: IncidenceCurve,
         covariates: list[Covariate],
         observations: pd.DataFrame | None = None,
         covariate_categories: list[CovariateCategories] | None = None,
+        interventions: list[Intervention] | None = None,
+        implementations: list[Implementation] | None = None,
         season_ranges: list[SeasonRange] | None = None,
         date_ranges: list[DateRange] | None = None,
         epsilon: float = 5e-4,
@@ -70,6 +73,10 @@ class SeasonalUptakeModel:
             observations: The uptake dataset to use.
             covariate_categories: The covariate categories for the uptake scenarios or
                 `None` to derive them from the observations.
+            interventions: A list of intervention modifiers to apply to the model or
+                `None` to not apply interventions.
+            implementations: A list of implementation modifiers to apply to the model
+                or `None` to not apply implementations.
             date_ranges: The date ranges for the uptake scenarios or `None` to derive
                 them from the observations.
             season_ranges: The season ranges for the uptake scenarios or `None` to
@@ -100,6 +107,10 @@ class SeasonalUptakeModel:
             copy.deepcopy(date_ranges) if date_ranges else list()
         )
         self._epsilon = epsilon
+        self._implementations = (
+            copy.deepcopy(implementations) if implementations else list()
+        )
+        self._interventions = copy.deepcopy(interventions) if interventions else list()
         self._kwargs = copy.deepcopy(kwargs)
         self._model: pm.Model | None = None
         self._season_ranges: list[SeasonRange] = (
