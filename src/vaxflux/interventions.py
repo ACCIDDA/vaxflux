@@ -3,10 +3,12 @@
 __all__ = ("Implementation", "Intervention")
 
 from datetime import date
-from typing import Any
+from typing import Annotated, Any
 
 import pymc as pm
 from pydantic import BaseModel, ConfigDict, Field
+
+InterventionName = Annotated[str, Field(pattern=r"^[a-z0-9_]+$")]
 
 
 class Intervention(BaseModel):
@@ -41,7 +43,7 @@ class Intervention(BaseModel):
 
     model_config = ConfigDict(frozen=True)
 
-    name: str = Field(pattern=r"^[a-z0-9_]+$")
+    name: InterventionName
     parameter: str
     distribution: str
     distribution_kwargs: dict[str, Any]
@@ -99,7 +101,7 @@ class Implementation(BaseModel):
 
     model_config = ConfigDict(frozen=True)
 
-    intervention: str
+    intervention: InterventionName
     season: str
     start_date: date | None
     end_date: date | None
