@@ -2,6 +2,7 @@
 
 __all__ = ("Implementation", "Intervention")
 
+import warnings
 from datetime import date
 from typing import Annotated, Any
 
@@ -106,3 +107,47 @@ class Implementation(BaseModel):
     start_date: date | None
     end_date: date | None
     covariate_categories: dict[str, str] | None
+
+
+def _check_interventions_and_implementations(
+    interventions: list[Intervention], implementations: list[Implementation]
+):
+    """
+    Check that the interventions and implementations are valid.
+
+    Args:
+        interventions: The list of interventions.
+        implementations: The list of implementations.
+
+    Raises:
+        ValueError: If an implementation does not match an intervention.
+
+    Warnings:
+        Warning: If an intervention does not have a corresponding implementation.
+    """
+    intervention_names = {i.name for i in interventions}
+    implementation_intervention_names = {i.intervention for i in implementations}
+
+    if (
+        len(
+            missing_intervention_names := implementation_intervention_names
+            - intervention_names
+        )
+        > 0
+    ):
+        raise ValueError(
+            "The following implementation intervention names do not match "
+            f"any interventions: {', '.join(missing_intervention_names)}."
+        )
+    if (
+        len(
+            missing_implementation_names := intervention_names
+            - implementation_intervention_names
+        )
+        > 0
+    ):
+        warnings.warn(
+            f"The following interventions do not have a corresponding implementation, "
+            f"affect will be unknown: {', '.join(missing_implementation_names)}.",
+            RuntimeWarning,
+        )
