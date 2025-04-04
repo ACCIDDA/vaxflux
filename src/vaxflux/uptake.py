@@ -287,6 +287,14 @@ class SeasonalUptakeModel:
                                 )
                             ) is not None:
                                 param_components.append(dist[idx])
+                                logger.info(
+                                    "Added season component to parameter %s "
+                                    "for season %s from index %s of %s.",
+                                    param,
+                                    season_range.season,
+                                    str(idx),
+                                    str(dist),
+                                )
                         for i, covariate_name in enumerate(coords["covariate_names"]):
                             result = params.get(hash((param, covariate_name)))
                             if result is None:
@@ -302,6 +310,18 @@ class SeasonalUptakeModel:
                                 )
                             ) is not None:
                                 param_components.append(dist[idx])
+                                logger.info(
+                                    "Added %s, %s covariate component to parameter "
+                                    "%s for season %s from index %s of %s with "
+                                    "dimensions %s.",
+                                    covariate_name,
+                                    category_combo[i],
+                                    param,
+                                    season_range.season,
+                                    str(idx),
+                                    str(dist),
+                                    str(dims),
+                                )
                         name_args = [param, "season", season_range.season] + [
                             item
                             for pair in zip(coords["covariate_names"], category_combo)
@@ -312,9 +332,19 @@ class SeasonalUptakeModel:
                             summed_params[name] = pm.Deterministic(
                                 name, sum(param_components)
                             )
+                            logger.info(
+                                "Added summed parameter %s to "
+                                "the model with %u components.",
+                                name,
+                                len(param_components),
+                            )
                         else:
                             summed_params[name] = pm.Data(name, 0.0)
-                        logger.info("Added summed parameter %s to the model.", name)
+                            logger.info(
+                                "Added summed parameter %s to the "
+                                "model with no components.",
+                                name,
+                            )
 
             # Sample noise shape for each time series from exponential hyperprior
             if self._kwargs.get("pooled_epsilon", False):
