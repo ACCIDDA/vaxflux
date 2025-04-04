@@ -476,7 +476,9 @@ class SeasonalUptakeModel:
                             pm.Potential(
                                 _pm_name("observation", str(obs_idx)),
                                 _modified_gamma_logp(
-                                    incidence_series[start_index:end_index].sum(),
+                                    incidence_series[
+                                        start_index : (end_index + 1)
+                                    ].sum(),
                                     row["value"],
                                     pt.extra_ops.repeat(
                                         eps, repeats=end_index - start_index
@@ -500,7 +502,9 @@ class SeasonalUptakeModel:
                             # standard deviation to approximate the sum.
                             pm.Normal(
                                 name=_pm_name("observation", str(obs_idx)),
-                                mu=incidence_series[start_index:end_index].sum(),
+                                mu=incidence_series[
+                                    start_index : (end_index + 1)
+                                ].sum(),
                                 sigma=self._kwargs.get("observation_sigma", 1.0e-9),
                                 observed=row["value"],
                             )
