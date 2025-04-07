@@ -9,6 +9,7 @@ from typing import Annotated, Any
 import pymc as pm
 from pydantic import BaseModel, ConfigDict, Field
 
+from vaxflux.covariates import CovariateCategories, _covariate_categories_to_dict
 from vaxflux.dates import SeasonRange
 
 InterventionName = Annotated[str, Field(pattern=r"^[a-z0-9_]+$")]
@@ -115,6 +116,7 @@ def _check_interventions_and_implementations(
     interventions: list[Intervention],
     implementations: list[Implementation],
     season_ranges: list[SeasonRange],
+    covariate_categories: list[CovariateCategories],
 ):
     """
     Check that the interventions and implementations are valid.
@@ -123,12 +125,15 @@ def _check_interventions_and_implementations(
         interventions: The list of interventions.
         implementations: The list of implementations.
         season_ranges: The list of season ranges.
+        covariate_categories: The list of covariate categories.
 
     Raises:
         ValueError: If an implementation does not match an intervention.
         ValueError: If an implementation does not match a season.
         ValueError: If an implementation start date is before the season start date.
         ValueError: If an implementation end date is after the season end date.
+        ValueError: If an implementation covariate is not a valid covariate.
+        ValueError: If an implementation covariate category is not a valid category.
 
     Warnings:
         Warning: If an intervention does not have a corresponding implementation.
@@ -182,3 +187,17 @@ def _check_interventions_and_implementations(
                 f"The end date of the implementation {implementation} is after "
                 f"the end date of the season {implementation.season}."
             )
+    covariate_categories_map = _covariate_categories_to_dict(covariate_categories)
+    for implementation in implementations:
+        if implementation.covariate_categories is not None:
+            for covariate, category in implementation.covariate_categories.items():
+                if covariate not in covariate_categories_map:
+                    raise ValueError(
+                        f"The covariate '{covariate}' is not a valid covariate "
+                        f"category."
+                    )
+                if category not in covariate_categories_map[covariate]:
+                    raise ValueError(
+                        f"The category '{category}' is not a valid category for "
+                        f"covariate '{covariate}'."
+                    )

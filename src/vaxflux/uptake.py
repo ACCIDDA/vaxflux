@@ -160,7 +160,10 @@ class SeasonalUptakeModel:
             self.observations, self._season_ranges, "season"
         )
         _check_interventions_and_implementations(
-            self._interventions, self._implementations, self._season_ranges
+            self._interventions,
+            self._implementations,
+            self._season_ranges,
+            self._covariate_categories,
         )
 
     def coordinates(self) -> dict[str, list[str]]:
