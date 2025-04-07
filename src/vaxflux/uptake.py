@@ -441,6 +441,10 @@ class SeasonalUptakeModel:
                     for item in pair
                 ]
                 for season_range in self._season_ranges:
+                    season_dates_coord_name = _coord_name(
+                        "season", season_range.season, "dates"
+                    )
+                    season_dates = coords[season_dates_coord_name]
                     kwargs = {
                         param: summed_params[
                             _pm_name(
@@ -449,6 +453,87 @@ class SeasonalUptakeModel:
                         ]
                         for param in coords["parameters"]
                     }
+
+                    # Determine modifiers to the curve kwargs due to interventions
+                    modified_kwargs: dict[str, list[pt.TensorVariable]] = {}
+                    for param in coords["parameters"]:
+                        for intervention in self._interventions:
+                            if intervention.parameter == param:
+                                for implementation in self._implementations:
+                                    if (
+                                        implementation.intervention == intervention.name
+                                        and all(
+                                            (
+                                                implementation.covariate_categories
+                                                or {}
+                                            ).get(covariate, category)
+                                            == category
+                                            for covariate, category in zip(
+                                                coords["covariate_names"],
+                                                category_combo,
+                                            )
+                                        )
+                                    ):
+                                        if param not in modified_kwargs:
+                                            modified_kwargs[param] = []
+                                        implementation_coord_name = _coord_name(
+                                            *(
+                                                [
+                                                    "implementation",
+                                                    intervention.name,
+                                                    "season",
+                                                    season_range.season,
+                                                    *[
+                                                        item
+                                                        for pair in zip(
+                                                            coords["covariate_names"],
+                                                            category_combo,
+                                                        )
+                                                        for item in pair
+                                                    ],
+                                                ]
+                                            )
+                                        )
+                                        implementation_idx = coords[
+                                            _coord_name(
+                                                "intervention",
+                                                intervention.name,
+                                                "implementations",
+                                            )
+                                        ].index(implementation_coord_name)
+                                        var = interventions[intervention.name][
+                                            implementation_idx
+                                        ]
+                                        modified_kwargs[param].append(
+                                            pm.math.switch(
+                                                [
+                                                    (
+                                                        implementation.start_date
+                                                        is None
+                                                        or i
+                                                        >= season_dates.index(
+                                                            season_range.start_date.strftime(
+                                                                "%Y-%m-%d"
+                                                            )
+                                                        )
+                                                    )
+                                                    and (
+                                                        implementation.start_date
+                                                        is None
+                                                        or i
+                                                        <= season_dates.index(
+                                                            season_range.start_date.strftime(
+                                                                "%Y-%m-%d"
+                                                            )
+                                                        )
+                                                    )
+                                                    for i in range(len(season_dates))
+                                                ],
+                                                0.0,
+                                                var,
+                                            )
+                                        )
+
                     name_args = ["incidence", season_range.season, *pm_cov_names]
                     eps = (
                         epsilon
@@ -461,13 +546,17 @@ class SeasonalUptakeModel:
                             )
                         ]
                     )
+                    evaled_kwargs = {
+                        param: sum(modified_kwargs.get(param, [])) + kwargs[param]
+                        for param in kwargs
+                    }
                     if self._kwargs.get("use_modified_gamma", False):
                         incidence[_coord_name(*name_args)] = pm.Deterministic(
                             _pm_name(*name_args),
                             self.curve.prevalence_difference(
                                 date_indexes[season_range.season],
                                 date_indexes[season_range.season] + 1.0,
-                                **kwargs,
+                                **evaled_kwargs,
                             ),
                             dims=(_coord_name("season", season_range.season, "dates"),),
                         )
@@ -483,7 +572,7 @@ class SeasonalUptakeModel:
                             mu=self.curve.prevalence_difference(
                                 date_indexes[season_range.season],
                                 date_indexes[season_range.season] + 1.0,
-                                **kwargs,
+                                **evaled_kwargs,
                             ),
                             sigma=eps,
                             dims=(_coord_name("season", season_range.season, "dates"),),
