@@ -53,7 +53,7 @@ class Intervention(BaseModel):
     distribution: str
     distribution_kwargs: dict[str, Any]
 
-    def pymc_distribution(self, name: str) -> tuple[pm.Distribution, tuple[str, ...]]:
+    def pymc_distribution(self, name: str) -> pm.Distribution:
         """
         Return a PyMC3 distribution for the intervention.
 

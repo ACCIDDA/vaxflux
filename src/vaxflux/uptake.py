@@ -407,6 +407,18 @@ class SeasonalUptakeModel:
                                 name,
                             )
 
+            # Add intervention implementations to the model
+            interventions: dict[str, pm.Distribution] = {}
+            for intervention in self._interventions:
+                name = _pm_name("intervention", intervention.name, "implementations")
+                dist, dims = intervention.pymc_distribution(name)
+                interventions[intervention.name] = dist
+                logger.info(
+                    "Added intervention %s to the model with shape %s.",
+                    name,
+                    str(dist.shape.eval()),
+                )
+
             # Sample noise shape for each time series from exponential hyperprior
             if self._kwargs.get("pooled_epsilon", False):
                 # If pooled epsilon is used, use a single epsilon for all time series
