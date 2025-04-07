@@ -127,6 +127,8 @@ def _check_interventions_and_implementations(
     Raises:
         ValueError: If an implementation does not match an intervention.
         ValueError: If an implementation does not match a season.
+        ValueError: If an implementation start date is before the season start date.
+        ValueError: If an implementation end date is after the season end date.
 
     Warnings:
         Warning: If an intervention does not have a corresponding implementation.
@@ -163,3 +165,20 @@ def _check_interventions_and_implementations(
             "The following implementation seasons do not match "
             f"any seasons: {', '.join(missing_season_names)}."
         )
+    for implementation in implementations:
+        if (
+            implementation.start_date is not None
+            and implementation.start_date < season_map[implementation.season].start_date
+        ):
+            raise ValueError(
+                f"The start date of the implementation {implementation} is before "
+                f"the start date of the season {implementation.season}."
+            )
+        if (
+            implementation.end_date is not None
+            and implementation.end_date > season_map[implementation.season].end_date
+        ):
+            raise ValueError(
+                f"The end date of the implementation {implementation} is after "
+                f"the end date of the season {implementation.season}."
+            )
