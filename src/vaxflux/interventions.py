@@ -7,8 +7,9 @@ from datetime import date
 from typing import Annotated, Any
 
 import pymc as pm
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, computed_field
 
+from vaxflux._util import _coord_name
 from vaxflux.covariates import CovariateCategories, _covariate_categories_to_dict
 from vaxflux.dates import SeasonRange
 
@@ -101,6 +102,9 @@ class Implementation(BaseModel):
         True
         >>> tv_ads_targeted_at_males_2022_23.covariate_categories
         {'sex': 'male'}
+        >>> tv_ads_targeted_at_males_2022_23.name
+        'tv_ads_2022_23_sex_male'
+
     """
 
     model_config = ConfigDict(frozen=True)
@@ -110,6 +114,27 @@ class Implementation(BaseModel):
     start_date: date | None
     end_date: date | None
     covariate_categories: dict[str, str] | None
+
+    @computed_field  # type: ignore[misc]
+    @property
+    def name(self) -> str:
+        """
+        Get the name of the implementation.
+
+        Returns:
+            The name of the implementation, formatted as a string.
+        """
+        return _coord_name(
+            *[
+                self.intervention,
+                self.season,
+                *[
+                    str(item)
+                    for k in sorted((self.covariate_categories or {}).keys())
+                    for item in [k, self.covariate_categories[k]]  # type: ignore
+                ],
+            ]
+        )
 
 
 def _check_interventions_and_implementations(
