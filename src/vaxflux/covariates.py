@@ -44,6 +44,55 @@ class CovariateCategories(BaseModel):
         return categories
 
 
+def _covariate_categories_to_dict(
+    covariate_categories: list[CovariateCategories],
+) -> dict[str, list[str]]:
+    """
+    Convert the covariate categories to a dictionary.
+
+    Args:
+        covariate_categories: The covariate categories to convert.
+
+    Returns:
+        A dictionary with the covariate categories, where the keys are the covariate
+        names and the values are the categories.
+
+    Raises:
+        ValueError: If the covariate names are not unique.
+
+    Examples:
+        >>> from pprint import pprint
+        >>> from vaxflux.covariates import (
+        ...     CovariateCategories,
+        ...     _covariate_categories_to_dict,
+        ... )
+        >>> sex_cov = CovariateCategories(
+        ...     covariate="sex", categories=("male", "female")
+        ... )
+        >>> age_cov = CovariateCategories(
+        ...     covariate="age", categories=("youth", "adult", "senior")
+        ... )
+        >>> pop_density_cov = CovariateCategories(
+        ...     covariate="population_density",
+        ...     categories=("urban", "suburban", "rural")
+        ... )
+        >>> pprint(_covariate_categories_to_dict([sex_cov, age_cov, pop_density_cov]))
+        {'age': ['youth', 'adult', 'senior'],
+        'population_density': ['urban', 'suburban', 'rural'],
+        'sex': ['female', 'male']}
+
+    """
+    covariate_categories_dict = {
+        covariate_category.covariate: list(covariate_category.categories)
+        for covariate_category in covariate_categories
+    }
+    if len(covariate_categories_dict) != len(covariate_categories):
+        raise ValueError(
+            "Covariate category `covariate` names must be unique to collapse to a dict."
+        )
+    return covariate_categories_dict
+
+
 def _covariate_categories_product(
     covariate_categories: list[CovariateCategories],
 ) -> list[dict[str, str]]:
