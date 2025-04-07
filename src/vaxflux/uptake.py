@@ -31,7 +31,11 @@ from vaxflux.covariates import (
 )
 from vaxflux.curves import IncidenceCurve
 from vaxflux.dates import DateRange, SeasonRange, _infer_ranges_from_observations
-from vaxflux.interventions import Implementation, Intervention
+from vaxflux.interventions import (
+    Implementation,
+    Intervention,
+    _check_interventions_and_implementations,
+)
 
 if sys.version_info[:2] >= (3, 11):
     from typing import Self
@@ -154,6 +158,9 @@ class SeasonalUptakeModel:
         )
         self._season_ranges = _infer_ranges_from_observations(
             self.observations, self._season_ranges, "season"
+        )
+        _check_interventions_and_implementations(
+            self._interventions, self._implementations, self._season_ranges
         )
 
     def coordinates(self) -> dict[str, list[str]]:

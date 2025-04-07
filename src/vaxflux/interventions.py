@@ -9,6 +9,8 @@ from typing import Annotated, Any
 import pymc as pm
 from pydantic import BaseModel, ConfigDict, Field
 
+from vaxflux.dates import SeasonRange
+
 InterventionName = Annotated[str, Field(pattern=r"^[a-z0-9_]+$")]
 
 
@@ -110,7 +112,9 @@ class Implementation(BaseModel):
 
 
 def _check_interventions_and_implementations(
-    interventions: list[Intervention], implementations: list[Implementation]
+    interventions: list[Intervention],
+    implementations: list[Implementation],
+    season_ranges: list[SeasonRange],
 ):
     """
     Check that the interventions and implementations are valid.
@@ -118,16 +122,17 @@ def _check_interventions_and_implementations(
     Args:
         interventions: The list of interventions.
         implementations: The list of implementations.
+        season_ranges: The list of season ranges.
 
     Raises:
         ValueError: If an implementation does not match an intervention.
+        ValueError: If an implementation does not match a season.
 
     Warnings:
         Warning: If an intervention does not have a corresponding implementation.
     """
     intervention_names = {i.name for i in interventions}
     implementation_intervention_names = {i.intervention for i in implementations}
-
     if (
         len(
             missing_intervention_names := implementation_intervention_names
@@ -150,4 +155,11 @@ def _check_interventions_and_implementations(
             f"The following interventions do not have a corresponding implementation, "
             f"affect will be unknown: {', '.join(missing_implementation_names)}.",
             RuntimeWarning,
+        )
+    season_map = {season.season: season for season in season_ranges}
+    implementation_seasons = {i.season for i in implementations}
+    if len(missing_season_names := implementation_seasons - season_map.keys()) > 0:
+        raise ValueError(
+            "The following implementation seasons do not match "
+            f"any seasons: {', '.join(missing_season_names)}."
         )
