@@ -64,7 +64,7 @@ class Intervention(BaseModel):
         return getattr(pm, self.distribution)(
             name=name,
             **self.distribution_kwargs,
-            dims=f"intervention_{name}_implementations",
+            dims=_coord_name("intervention", self.name, "implementations"),
         )
 
 
