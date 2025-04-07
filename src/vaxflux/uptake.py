@@ -221,6 +221,46 @@ class SeasonalUptakeModel:
                         )
                     )
                 )
+        coords["intervention_names"] = [
+            intervention.name for intervention in self._interventions
+        ]
+        for intervention in self._interventions:
+            implementation_coord_name = _coord_name(
+                "intervention", intervention.name, "implementations"
+            )
+            coords[implementation_coord_name] = []
+            for category_combo in category_combinations:
+                for season_range in self._season_ranges:
+                    for implementation in self._implementations:
+                        if implementation.season == season_range.season and all(
+                            (implementation.covariate_categories or {}).get(
+                                covariate, category
+                            )
+                            == category
+                            for covariate, category in zip(
+                                covariate_names, category_combo
+                            )
+                        ):
+                            coords[implementation_coord_name].append(
+                                _coord_name(
+                                    *(
+                                        [
+                                            "implementation",
+                                            intervention.name,
+                                            "season",
+                                            season_range.season,
+                                            *[
+                                                item
+                                                for pair in zip(
+                                                    coords["covariate_names"],
+                                                    category_combo,
+                                                )
+                                                for item in pair
+                                            ],
+                                        ]
+                                    )
+                                )
+                            )
         return coords
 
     def build(self, debug: bool = False) -> Self:  # noqa: PLR0912, PLR0915
