@@ -3,6 +3,7 @@
 __all__ = (
     "Covariate",
     "CovariateCategories",
+    "GaussianCovariate",
     "GaussianRandomWalkCovariate",
     "PooledCovariate",
 )
@@ -312,6 +313,83 @@ class GaussianRandomWalkCovariate(Covariate):
             mu=self.mu,
             chol=chol,
             init_dist=init_dist,
+            dims=dims,
+        ), dims
+
+
+class GaussianCovariate(Covariate):
+    """
+    A gaussian random variable covariate for uptake models.
+
+    Attributes:
+        mu: Prior mean for the gaussian random variables.
+        sigma: The standard deviation for the gaussian random variables.
+        eta: The shape parameter for the LKJ distribution for the covariance matrix of
+            a multivariate gaussian random walk.
+
+    Returns:
+        A PyMC3 distribution describing the effect of the covariate along with the
+        dims of the distribution.
+    """
+
+    mu: ListOfFloats
+    sigma: ListOfFloats
+    eta: Annotated[float, Field(gt=0.0)] = 1.0
+
+    def pymc_distribution(self, name, coords):
+        """
+        Return a PyMC3 distribution for the pooled covariate.
+
+        Args:
+            name: The name of the distribution already formatted.
+            coords: The coordinates for the uptake model.
+
+        Returns:
+            A PyMC3 distribution describing the effect of the covariate along with the
+            dims of the distribution.
+        """
+        if self.covariate is None:
+            raise ValueError(
+                "A covariate name is required for a gaussian random walk covariate."
+            )
+        categories_limited_coord_name = _coord_name(
+            "covariate", self.covariate, "categories", "limited"
+        )
+        categories_limited = coords.get(categories_limited_coord_name)
+        if not categories_limited:
+            raise ValueError(
+                f"Missing limited categories for '{self.covariate}' in the coordinates."
+            )
+        len_categories_limited = len(categories_limited)
+        for param in ("mu", "sigma"):
+            attr = getattr(self, param)
+            if (len_attr := len(attr)) != len_categories_limited:
+                raise ValueError(
+                    f"The number of values for the '{param}' parameter, "
+                    f"{len_attr}, must match the number of limited "
+                    f"categories, {len_categories_limited}."
+                )
+        if len_categories_limited == 1:
+            return pm.Normal(
+                name=name,
+                mu=self.mu[0],
+                sigma=self.sigma[0],
+                dims="season",
+            ), ("season",)
+        packed_chol = pm.LKJCholeskyCov(
+            name=f"{name}PackedChol",
+            eta=self.eta,
+            n=len_categories_limited,
+            sd_dist=pm.Exponential.dist(lam=[1.0 / sigma for sigma in self.sigma]),
+            compute_corr=False,
+            store_in_trace=False,
+        )
+        chol = pm.expand_packed_triangular(len_categories_limited, packed_chol)
+        dims = ("season", categories_limited_coord_name)
+        return pm.MvNormal(
+            name=name,
+            mu=self.mu,
+            chol=chol,
             dims=dims,
         ), dims
 
