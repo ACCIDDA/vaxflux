@@ -1,7 +1,7 @@
 [project]
 name = "vaxflux"
 version = "0.1.0"
-description = "Add your description here"
+description = "Flexible bayesian models for seasonal vaccine uptake."
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [

@@ -1,7 +1,6 @@
 # `vaxflux` - Seasonal Vaccine Uptake Modeling
 
-`vaxflux` is a python package for constructing flexible vaccine uptake models.
-
+`vaxflux` is a python package for constructing flexible seasonal vaccine uptake models.
 
 ## Getting Started
 
@@ -19,7 +18,6 @@ cd vaxflux
 uv sync
 uv pip install --editable .
 ```
-
 
 # Contributing
 
