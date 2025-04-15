@@ -31,6 +31,11 @@ from vaxflux.covariates import (
 )
 from vaxflux.curves import IncidenceCurve
 from vaxflux.dates import DateRange, SeasonRange, _infer_ranges_from_observations
+from vaxflux.interventions import (
+    Implementation,
+    Intervention,
+    _check_interventions_and_implementations,
+)
 
 if sys.version_info[:2] >= (3, 11):
     from typing import Self
@@ -49,12 +54,14 @@ class SeasonalUptakeModel:
 
     """
 
-    def __init__(
+    def __init__(  # noqa: PLR0913
         self,
         curve: IncidenceCurve,
         covariates: list[Covariate],
         observations: pd.DataFrame | None = None,
         covariate_categories: list[CovariateCategories] | None = None,
+        interventions: list[Intervention] | None = None,
+        implementations: list[Implementation] | None = None,
         season_ranges: list[SeasonRange] | None = None,
         date_ranges: list[DateRange] | None = None,
         epsilon: float = 5e-4,
@@ -70,6 +77,10 @@ class SeasonalUptakeModel:
             observations: The uptake dataset to use.
             covariate_categories: The covariate categories for the uptake scenarios or
                 `None` to derive them from the observations.
+            interventions: A list of intervention modifiers to apply to the model or
+                `None` to not apply interventions.
+            implementations: A list of implementation modifiers to apply to the model
+                or `None` to not apply implementations.
             date_ranges: The date ranges for the uptake scenarios or `None` to derive
                 them from the observations.
             season_ranges: The season ranges for the uptake scenarios or `None` to
@@ -100,6 +111,10 @@ class SeasonalUptakeModel:
             copy.deepcopy(date_ranges) if date_ranges else list()
         )
         self._epsilon = epsilon
+        self._implementations = (
+            copy.deepcopy(implementations) if implementations else list()
+        )
+        self._interventions = copy.deepcopy(interventions) if interventions else list()
         self._kwargs = copy.deepcopy(kwargs)
         self._model: pm.Model | None = None
         self._season_ranges: list[SeasonRange] = (
@@ -143,6 +158,12 @@ class SeasonalUptakeModel:
         )
         self._season_ranges = _infer_ranges_from_observations(
             self.observations, self._season_ranges, "season"
+        )
+        _check_interventions_and_implementations(
+            self._interventions,
+            self._implementations,
+            self._season_ranges,
+            self._covariate_categories,
         )
 
     def coordinates(self) -> dict[str, list[str]]:
@@ -200,6 +221,46 @@ class SeasonalUptakeModel:
                         )
                     )
                 )
+        coords["intervention_names"] = [
+            intervention.name for intervention in self._interventions
+        ]
+        for intervention in self._interventions:
+            implementation_coord_name = _coord_name(
+                "intervention", intervention.name, "implementations"
+            )
+            coords[implementation_coord_name] = []
+            for category_combo in category_combinations:
+                for season_range in self._season_ranges:
+                    for implementation in self._implementations:
+                        if implementation.season == season_range.season and all(
+                            (implementation.covariate_categories or {}).get(
+                                covariate, category
+                            )
+                            == category
+                            for covariate, category in zip(
+                                covariate_names, category_combo
+                            )
+                        ):
+                            coords[implementation_coord_name].append(
+                                _coord_name(
+                                    *(
+                                        [
+                                            "implementation",
+                                            intervention.name,
+                                            "season",
+                                            season_range.season,
+                                            *[
+                                                item
+                                                for pair in zip(
+                                                    coords["covariate_names"],
+                                                    category_combo,
+                                                )
+                                                for item in pair
+                                            ],
+                                        ]
+                                    )
+                                )
+                            )
         return coords
 
     def build(self, debug: bool = False) -> Self:  # noqa: PLR0912, PLR0915
@@ -346,6 +407,18 @@ class SeasonalUptakeModel:
                                 name,
                             )
 
+            # Add intervention implementations to the model
+            interventions: dict[str, pm.Distribution] = {}
+            for intervention in self._interventions:
+                name = _pm_name("intervention", intervention.name, "implementations")
+                dist, dims = intervention.pymc_distribution(name)
+                interventions[intervention.name] = dist
+                logger.info(
+                    "Added intervention %s to the model with shape %s.",
+                    name,
+                    str(dist.shape.eval()),
+                )
+
             # Sample noise shape for each time series from exponential hyperprior
             if self._kwargs.get("pooled_epsilon", False):
                 # If pooled epsilon is used, use a single epsilon for all time series
@@ -368,6 +441,10 @@ class SeasonalUptakeModel:
                     for item in pair
                 ]
                 for season_range in self._season_ranges:
+                    season_dates_coord_name = _coord_name(
+                        "season", season_range.season, "dates"
+                    )
+                    season_dates = coords[season_dates_coord_name]
                     kwargs = {
                         param: summed_params[
                             _pm_name(
@@ -376,6 +453,87 @@ class SeasonalUptakeModel:
                         ]
                         for param in coords["parameters"]
                     }
+
+                    # Determine modifiers to the curve kwargs due to interventions
+                    modified_kwargs: dict[str, list[pt.TensorVariable]] = {}
+                    for param in coords["parameters"]:
+                        for intervention in self._interventions:
+                            if intervention.parameter == param:
+                                for implementation in self._implementations:
+                                    if (
+                                        implementation.intervention == intervention.name
+                                        and all(
+                                            (
+                                                implementation.covariate_categories
+                                                or {}
+                                            ).get(covariate, category)
+                                            == category
+                                            for covariate, category in zip(
+                                                coords["covariate_names"],
+                                                category_combo,
+                                            )
+                                        )
+                                    ):
+                                        if param not in modified_kwargs:
+                                            modified_kwargs[param] = []
+                                        implementation_coord_name = _coord_name(
+                                            *(
+                                                [
+                                                    "implementation",
+                                                    intervention.name,
+                                                    "season",
+                                                    season_range.season,
+                                                    *[
+                                                        item
+                                                        for pair in zip(
+                                                            coords["covariate_names"],
+                                                            category_combo,
+                                                        )
+                                                        for item in pair
+                                                    ],
+                                                ]
+                                            )
+                                        )
+                                        implementation_idx = coords[
+                                            _coord_name(
+                                                "intervention",
+                                                intervention.name,
+                                                "implementations",
+                                            )
+                                        ].index(implementation_coord_name)
+                                        var = interventions[intervention.name][
+                                            implementation_idx
+                                        ]
+                                        modified_kwargs[param].append(
+                                            pm.math.switch(
+                                                [
+                                                    (
+                                                        implementation.start_date
+                                                        is None
+                                                        or i
+                                                        >= season_dates.index(
+                                                            season_range.start_date.strftime(
+                                                                "%Y-%m-%d"
+                                                            )
+                                                        )
+                                                    )
+                                                    and (
+                                                        implementation.start_date
+                                                        is None
+                                                        or i
+                                                        <= season_dates.index(
+                                                            season_range.start_date.strftime(
+                                                                "%Y-%m-%d"
+                                                            )
+                                                        )
+                                                    )
+                                                    for i in range(len(season_dates))
+                                                ],
+                                                0.0,
+                                                var,
+                                            )
+                                        )
+
                     name_args = ["incidence", season_range.season, *pm_cov_names]
                     eps = (
                         epsilon
@@ -388,13 +546,17 @@ class SeasonalUptakeModel:
                             )
                         ]
                     )
+                    evaled_kwargs = {
+                        param: sum(modified_kwargs.get(param, [])) + kwargs[param]
+                        for param in kwargs
+                    }
                     if self._kwargs.get("use_modified_gamma", False):
                         incidence[_coord_name(*name_args)] = pm.Deterministic(
                             _pm_name(*name_args),
                             self.curve.prevalence_difference(
                                 date_indexes[season_range.season],
                                 date_indexes[season_range.season] + 1.0,
-                                **kwargs,
+                                **evaled_kwargs,
                             ),
                             dims=(_coord_name("season", season_range.season, "dates"),),
                         )
@@ -410,7 +572,7 @@ class SeasonalUptakeModel:
                             mu=self.curve.prevalence_difference(
                                 date_indexes[season_range.season],
                                 date_indexes[season_range.season] + 1.0,
-                                **kwargs,
+                                **evaled_kwargs,
                             ),
                             sigma=eps,
                             dims=(_coord_name("season", season_range.season, "dates"),),
