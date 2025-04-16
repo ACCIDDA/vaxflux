@@ -1,18 +1,17 @@
 """
-Generic incidence curve for vaccine uptake.
+Generic curve for vaccine uptake.
 
-This module provides a generic interface for incidence curves used in the context of
-vaccine uptake. The module provides an abstract base class `IncidenceCurve` which
-defines the interface for incidence curve models. The module also provides a number of
-concrete implementations of incidence curve models, including `LogisticIncidenceCurve`
-which is most commonly used in the context of vaccine uptake.
-
+This module provides a generic interface for curves used in the context of vaccine
+uptake. The module provides an abstract base class `Curve` which defines the interface
+for curve models. The module also provides a number of concrete implementations of curve
+models, including `LogisticCurve` which is most commonly used in the context of vaccine
+uptake.
 """
 
 __all__ = (
-    "IncidenceCurve",
-    "LogisticIncidenceCurve",
-    "TanhIncidenceCurve",
+    "Curve",
+    "LogisticCurve",
+    "TanhCurve",
 )
 
 
@@ -22,18 +21,17 @@ from abc import ABC, abstractmethod
 import numpy as np
 import numpy.typing as npt
 import pymc as pm
-import pytensor
 import pytensor.tensor as pt
 
 
-class IncidenceCurve(ABC):
-    """Abstract class for implementations of incidence curves."""
+class Curve(ABC):
+    """Abstract class for implementations of uptake curves."""
 
     @property
     @abstractmethod
     def parameters(self) -> tuple[str, ...]:
         """
-        Return the set of parameters used by this incidence curve model.
+        Return the set of parameters used by this curve model.
 
         Returns:
             The set of parameter names as strings.
@@ -43,7 +41,7 @@ class IncidenceCurve(ABC):
                parameters in the `evaluate` method.
             2) By convention the parameters should be named in lower case and preferably
                a single letter.
-            3) When implementing a new incidence curve model, the `parameters` property
+            3) When implementing a new curve model, the `parameters` property
                can be specified as a tuple of strings.
 
         """
@@ -57,6 +55,7 @@ class IncidenceCurve(ABC):
         )
         return self.incidence(*args, **kwargs)
 
+    @abstractmethod
     def incidence(
         self,
         t: npt.NDArray[np.number] | pt.variable.TensorVariable,
@@ -74,10 +73,7 @@ class IncidenceCurve(ABC):
             The incidence curve at the time steps provided.
 
         """
-        scalar_t = pt.dscalar("t")
-        func = self.prevalence(t, **kwargs)
-        deriv = pytensor.function([scalar_t], pt.grad(func, scalar_t))
-        return deriv(t)
+        raise NotImplementedError
 
     @abstractmethod
     def prevalence(
@@ -121,12 +117,12 @@ class IncidenceCurve(ABC):
         return self.prevalence(t1, **kwargs) - self.prevalence(t0, **kwargs)
 
 
-class LogisticIncidenceCurve(IncidenceCurve):
+class LogisticCurve(Curve):
     r"""
-    Logistic incidence curve.
+    Logistic uptake curve.
 
-    This class implements a logistic incidence curve with parameters $m$, $r$, and $s$
-    which is given by:
+    This class implements a logistic curve with parameters $m$, $r$, and $s$ which is
+    given by:
 
     $$ f(t \vert m, r, s)
         = \mathrm{expit}(m) r e^{-r(t-s)} \left( 1 + e^{-r(t-s)} \right)^{-2}. $$
@@ -159,15 +155,40 @@ class LogisticIncidenceCurve(IncidenceCurve):
             pm.math.exp(kwargs["r"]) * (t - kwargs["s"])
         )
 
+    def incidence(
+        self,
+        t: npt.NDArray[np.number] | pt.variable.TensorVariable,
+        **kwargs: npt.NDArray[np.number] | pt.variable.TensorVariable,
+    ) -> pt.variable.TensorVariable:
+        """
+        Evaluate the incidence curve at given set of time steps.
 
-class TanhIncidenceCurve(IncidenceCurve):
+        Args:
+            t: The time steps to evaluate the incidence curve at.
+            kwargs: Further keyword arguments, must be the parameters for this model as
+                described by the `parameters` attribute.
+
+        Returns:
+            The incidence curve at the time steps provided.
+
+        """
+        u = pm.math.exp(kwargs["r"]) * (t - kwargs["s"])
+        return (
+            pm.math.invlogit(kwargs["m"])
+            * pm.math.exp(kwargs["r"])
+            * pm.math.exp(u)
+            * ((1 + pm.math.exp(u)) ** -2.0)
+        )
+
+
+class TanhCurve(Curve):
     r"""
-    Tanh incidence curve.
+    Tanh uptake curve.
 
-    This class implements a tanh incidence curve with parameters $m$, $r$, and $s$.
+    This class implements a tanh curve with parameters $m$, $r$, and $s$.
 
     Attributes:
-        parameters: The names of parameters used by this incidence curve model.
+        parameters: The names of parameters used by this curve model.
 
     """
 
@@ -192,4 +213,27 @@ class TanhIncidenceCurve(IncidenceCurve):
         """
         return pm.math.invlogit(kwargs["m"]) * pm.math.tanh(
             pm.math.exp(kwargs["r"]) * (t - kwargs["s"])
+        )
+
+    def incidence(
+        self,
+        t: npt.NDArray[np.number] | pt.variable.TensorVariable,
+        **kwargs: npt.NDArray[np.number] | pt.variable.TensorVariable,
+    ) -> pt.variable.TensorVariable:
+        """
+        Evaluate the incidence curve at given set of time steps.
+
+        Args:
+            t: The time steps to evaluate the incidence curve at.
+            kwargs: Further keyword arguments, must be the parameters for this model as
+                described by the `parameters` attribute.
+
+        Returns:
+            The incidence curve at the time steps provided.
+
+        """
+        return (
+            pm.math.invlogit(kwargs["m"])
+            * pm.math.exp(kwargs["r"])
+            * (pm.math.cosh(pm.math.exp(kwargs["r"]) * (t - kwargs["s"])) ** -2.0)
         )
