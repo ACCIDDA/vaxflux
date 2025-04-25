@@ -44,24 +44,19 @@ def read_flu_vacc_data():
         "sort_order", and "doses".
 
     Examples:
+        >>> from vaxflux.data import read_flu_vacc_data
         >>> data = read_flu_vacc_data()
         >>> data[:5]
         array([(b'2018-2019', b'8/4/18', 30, 1,  0.52),
-            (b'2018-2019', b'8/11/18', 31, 2,  3.23),
-            (b'2018-2019', b'8/18/18', 32, 3, 10.18),
-            (b'2018-2019', b'8/25/18', 33, 4, 19.99),
-            (b'2018-2019', b'9/1/18', 34, 5, 37.38)],
-            dtype=[
-                ('season', 'S9'),
-                ('end_date', 'S8'),
-                ('week', '<u8'),
-                ('sort_order', '<u8'),
-                ('doses', '<f8')
-            ])
+               (b'2018-2019', b'8/11/18', 31, 2,  3.23),
+               (b'2018-2019', b'8/18/18', 32, 3, 10.18),
+               (b'2018-2019', b'8/25/18', 33, 4, 19.99),
+               (b'2018-2019', b'9/1/18', 34, 5, 37.38)],
+              dtype=[('season', 'S9'), ('end_date', 'S8'), ('week', '<u8'), ('sort_order', '<u8'), ('doses', '<f8')])
         >>> data["doses"][:5]
         array([ 0.52,  3.23, 10.18, 19.99, 37.38])
 
-    """
+    """  # noqa: E501
     csv_file = resources.files(sample_data) / "Flu_Vacc_Data.csv"
     with csv_file.open() as f:
         data = np.genfromtxt(
@@ -201,7 +196,7 @@ def format_incidence_dataframe(incidence: pd.DataFrame) -> pd.DataFrame:
         ...     }
         ... )
         >>> df
-        time  incidence
+           time  incidence
         0   1.0      0.010
         1   1.5      0.020
         2   2.0      0.015
@@ -297,31 +292,37 @@ def create_logistic_sample_dataset(
     Examples:
         >>> import numpy as np
         >>> import pandas as pd
-        >>> parameters = pd.DataFrame(data={
-        ...     "season": ["2023/24"],
-        ...     "strata": ["All stratas"],
-        ...     "region": ["All regions"],
-        ...     "m": [0.5],
-        ...     "r": [0.3],
-        ...     "s": [20.0],
-        ... })
+        >>> from vaxflux.data import create_logistic_sample_dataset
+        >>> parameters = pd.DataFrame(
+        ...     data={
+        ...             "season": ["2023/24"],
+        ...             "strata": ["All stratas"],
+        ...             "region": ["All regions"],
+        ...             "m": [0.5],
+        ...             "r": [0.3],
+        ...             "s": [20.0],
+        ...     },
+        ... )
+        >>> parameters
+            season       strata       region    m    r     s
+        0  2023/24  All stratas  All regions  0.5  0.3  20.0
         >>> time = np.arange(40, step=3)
         >>> create_logistic_sample_dataset(parameters, time, 0.001)
-            season       strata       region  time  incidence
-        0   2023/24  All stratas  All regions   0.0   0.000034
-        1   2023/24  All stratas  All regions   3.0   0.000806
-        2   2023/24  All stratas  All regions   6.0   0.004417
-        3   2023/24  All stratas  All regions   9.0   0.004171
-        4   2023/24  All stratas  All regions  12.0   0.011306
-        5   2023/24  All stratas  All regions  15.0   0.022770
-        6   2023/24  All stratas  All regions  18.0   0.035074
-        7   2023/24  All stratas  All regions  21.0   0.036781
-        8   2023/24  All stratas  All regions  24.0   0.027118
-        9   2023/24  All stratas  All regions  27.0   0.014892
-        10  2023/24  All stratas  All regions  30.0   0.008328
-        11  2023/24  All stratas  All regions  33.0   0.002606
-        12  2023/24  All stratas  All regions  36.0   0.000008
-        13  2023/24  All stratas  All regions  39.0   0.000721
+             season       strata       region  time     value
+        0   2023/24  All stratas  All regions   0.0  0.000128
+        1   2023/24  All stratas  All regions   3.0  0.001984
+        2   2023/24  All stratas  All regions   6.0  0.005459
+        3   2023/24  All stratas  All regions   9.0  0.007348
+        4   2023/24  All stratas  All regions  12.0  0.014066
+        5   2023/24  All stratas  All regions  15.0  0.027984
+        6   2023/24  All stratas  All regions  18.0  0.044186
+        7   2023/24  All stratas  All regions  21.0  0.046088
+        8   2023/24  All stratas  All regions  24.0  0.033544
+        9   2023/24  All stratas  All regions  27.0  0.019666
+        10  2023/24  All stratas  All regions  30.0  0.008194
+        11  2023/24  All stratas  All regions  33.0  0.001570
+        12  2023/24  All stratas  All regions  36.0  0.001995
+        13  2023/24  All stratas  All regions  39.0  0.000210
 
     """
     # TODO: Input validation for parameters

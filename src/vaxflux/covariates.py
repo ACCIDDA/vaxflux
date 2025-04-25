@@ -68,7 +68,7 @@ def _covariate_categories_to_dict(
         ...     _covariate_categories_to_dict,
         ... )
         >>> sex_cov = CovariateCategories(
-        ...     covariate="sex", categories=("male", "female")
+        ...     covariate="sex", categories=("female", "male")
         ... )
         >>> age_cov = CovariateCategories(
         ...     covariate="age", categories=("youth", "adult", "senior")
@@ -79,8 +79,8 @@ def _covariate_categories_to_dict(
         ... )
         >>> pprint(_covariate_categories_to_dict([sex_cov, age_cov, pop_density_cov]))
         {'age': ['youth', 'adult', 'senior'],
-        'population_density': ['urban', 'suburban', 'rural'],
-        'sex': ['female', 'male']}
+         'population_density': ['urban', 'suburban', 'rural'],
+         'sex': ['female', 'male']}
 
     """
     covariate_categories_dict = {
@@ -110,7 +110,7 @@ def _covariate_categories_product(
         >>> from pprint import pprint
         >>> from vaxflux.covariates import (
         ...     CovariateCategories,
-        ...     _covariate_categories_product,
+        ...     _covariate_categories_product
         ... )
         >>> sex_cov = CovariateCategories(
         ...     covariate="sex", categories=("male", "female")
@@ -120,34 +120,34 @@ def _covariate_categories_product(
         ... )
         >>> pop_density_cov = CovariateCategories(
         ...     covariate="population_density",
-        ...     categories=("urban", "suburban", "rural")
+        ...     categories=("urban", "suburban", "rural"),
         ... )
         >>> pprint(_covariate_categories_product([sex_cov, age_cov, pop_density_cov]))
         [{'age': 'youth', 'population_density': 'urban', 'sex': 'male'},
-        {'age': 'youth', 'population_density': 'suburban', 'sex': 'male'},
-        {'age': 'youth', 'population_density': 'rural', 'sex': 'male'},
-        {'age': 'adult', 'population_density': 'urban', 'sex': 'male'},
-        {'age': 'adult', 'population_density': 'suburban', 'sex': 'male'},
-        {'age': 'adult', 'population_density': 'rural', 'sex': 'male'},
-        {'age': 'senior', 'population_density': 'urban', 'sex': 'male'},
-        {'age': 'senior', 'population_density': 'suburban', 'sex': 'male'},
-        {'age': 'senior', 'population_density': 'rural', 'sex': 'male'},
-        {'age': 'youth', 'population_density': 'urban', 'sex': 'female'},
-        {'age': 'youth', 'population_density': 'suburban', 'sex': 'female'},
-        {'age': 'youth', 'population_density': 'rural', 'sex': 'female'},
-        {'age': 'adult', 'population_density': 'urban', 'sex': 'female'},
-        {'age': 'adult', 'population_density': 'suburban', 'sex': 'female'},
-        {'age': 'adult', 'population_density': 'rural', 'sex': 'female'},
-        {'age': 'senior', 'population_density': 'urban', 'sex': 'female'},
-        {'age': 'senior', 'population_density': 'suburban', 'sex': 'female'},
-        {'age': 'senior', 'population_density': 'rural', 'sex': 'female'}]
+         {'age': 'youth', 'population_density': 'suburban', 'sex': 'male'},
+         {'age': 'youth', 'population_density': 'rural', 'sex': 'male'},
+         {'age': 'adult', 'population_density': 'urban', 'sex': 'male'},
+         {'age': 'adult', 'population_density': 'suburban', 'sex': 'male'},
+         {'age': 'adult', 'population_density': 'rural', 'sex': 'male'},
+         {'age': 'senior', 'population_density': 'urban', 'sex': 'male'},
+         {'age': 'senior', 'population_density': 'suburban', 'sex': 'male'},
+         {'age': 'senior', 'population_density': 'rural', 'sex': 'male'},
+         {'age': 'youth', 'population_density': 'urban', 'sex': 'female'},
+         {'age': 'youth', 'population_density': 'suburban', 'sex': 'female'},
+         {'age': 'youth', 'population_density': 'rural', 'sex': 'female'},
+         {'age': 'adult', 'population_density': 'urban', 'sex': 'female'},
+         {'age': 'adult', 'population_density': 'suburban', 'sex': 'female'},
+         {'age': 'adult', 'population_density': 'rural', 'sex': 'female'},
+         {'age': 'senior', 'population_density': 'urban', 'sex': 'female'},
+         {'age': 'senior', 'population_density': 'suburban', 'sex': 'female'},
+         {'age': 'senior', 'population_density': 'rural', 'sex': 'female'}]
         >>> pprint(_covariate_categories_product([sex_cov, age_cov]))
         [{'age': 'youth', 'sex': 'male'},
-        {'age': 'adult', 'sex': 'male'},
-        {'age': 'senior', 'sex': 'male'},
-        {'age': 'youth', 'sex': 'female'},
-        {'age': 'adult', 'sex': 'female'},
-        {'age': 'senior', 'sex': 'female'}]
+         {'age': 'adult', 'sex': 'male'},
+         {'age': 'senior', 'sex': 'male'},
+         {'age': 'youth', 'sex': 'female'},
+         {'age': 'adult', 'sex': 'female'},
+         {'age': 'senior', 'sex': 'female'}]
         >>> pprint(_covariate_categories_product([sex_cov]))
         [{'sex': 'male'}, {'sex': 'female'}]
         >>> pprint(_covariate_categories_product([age_cov]))
