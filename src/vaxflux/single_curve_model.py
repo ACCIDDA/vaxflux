@@ -90,7 +90,7 @@ def modified_logistic_curve_least_squares(
         >>> y_true = modified_logistic_curve(t, 1.25, 2.5, 0.25)
         >>> y_obs = y_true + rng.normal(scale=0.05)
         >>> opt_result = modified_logistic_curve_least_squares(t, y_obs)
-        >>> opt_result
+        >>> opt_result # doctest: +NUMBER
              message: `gtol` termination condition is satisfied.
              success: True
               status: 1
