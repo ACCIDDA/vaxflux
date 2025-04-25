@@ -29,10 +29,10 @@ mypy: .venv
 	$(UV_PROJECT_ENVIRONMENT)/bin/mypy .
 
 pytest: .venv
-	$(UV_PROJECT_ENVIRONMENT)/bin/pytest
+	$(UV_PROJECT_ENVIRONMENT)/bin/pytest --doctest-modules
 
 ci: .venv
 	$(UV_PROJECT_ENVIRONMENT)/bin/ruff format --check
 	$(UV_PROJECT_ENVIRONMENT)/bin/ruff check --no-fix
 	$(UV_PROJECT_ENVIRONMENT)/bin/mypy .
-	$(UV_PROJECT_ENVIRONMENT)/bin/pytest --exitfirst
+	$(UV_PROJECT_ENVIRONMENT)/bin/pytest --doctest-modules --exitfirst
