@@ -3,13 +3,13 @@
 import pytest
 
 from vaxflux.covariates import PooledCovariate
-from vaxflux.curves import LogisticIncidenceCurve
+from vaxflux.curves import LogisticCurve
 from vaxflux.uptake import SeasonalUptakeModel
 
 
 def test_covariate_parameters_missing_value_error() -> None:
     """Covariate parameter not present in curve parameters raises a value error."""
-    curve = LogisticIncidenceCurve()
+    curve = LogisticCurve()
     assert "a" not in curve.parameters
     with pytest.raises(ValueError):
         SeasonalUptakeModel(

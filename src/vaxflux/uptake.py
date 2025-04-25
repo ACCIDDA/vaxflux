@@ -29,7 +29,7 @@ from vaxflux.covariates import (
     CovariateCategories,
     _infer_covariate_categories_from_observations,
 )
-from vaxflux.curves import IncidenceCurve
+from vaxflux.curves import Curve
 from vaxflux.dates import DateRange, SeasonRange, _infer_ranges_from_observations
 from vaxflux.interventions import (
     Implementation,
@@ -48,7 +48,7 @@ class SeasonalUptakeModel:
     A generic class for uptake models.
 
     Attributes:
-        curve: The incidence curve family to use.
+        curve: The curve family to use.
         name: The name of the model, optional and only used for display.
         observations: The uptake dataset to use.
 
@@ -56,7 +56,7 @@ class SeasonalUptakeModel:
 
     def __init__(  # noqa: PLR0913
         self,
-        curve: IncidenceCurve,
+        curve: Curve,
         covariates: list[Covariate],
         observations: pd.DataFrame | None = None,
         covariate_categories: list[CovariateCategories] | None = None,
@@ -72,7 +72,7 @@ class SeasonalUptakeModel:
         Initialize an uptake model.
 
         Args:
-            curve: The incidence curve family to use.
+            curve: The curve family to use.
             covariates: The covariates to use.
             observations: The uptake dataset to use.
             covariate_categories: The covariate categories for the uptake scenarios or

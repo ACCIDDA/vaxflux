@@ -31,7 +31,7 @@ from scipy.special import expit
 
 from vaxflux import sample_data
 from vaxflux.covariates import CovariateCategories, _covariate_categories_product
-from vaxflux.curves import IncidenceCurve
+from vaxflux.curves import Curve
 from vaxflux.dates import DateRange, SeasonRange
 
 
@@ -354,7 +354,7 @@ def create_logistic_sample_dataset(
 
 
 def sample_dataset(
-    curve: IncidenceCurve,
+    curve: Curve,
     season_ranges: list[SeasonRange],
     date_ranges: list[DateRange],
     covariate_categories: list[CovariateCategories],

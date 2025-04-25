@@ -13,7 +13,7 @@ import pytensor.tensor as pt
 from arviz import InferenceData
 
 from vaxflux._util import _clean_text
-from vaxflux.curves import IncidenceCurve
+from vaxflux.curves import Curve
 from vaxflux.data import coordinates_from_incidence
 
 
@@ -21,7 +21,7 @@ def build_model(  # noqa: PLR0913
     data: pd.DataFrame,
     observation_type: Literal["incidence", "prevalence"],
     value_type: Literal["rate", "count"],
-    incidence_curve: IncidenceCurve,
+    incidence_curve: Curve,
     observational_dist: pm.Distribution,
     epsilon_prior: tuple[pm.Distribution, dict[str, Any]],
     parameter_priors: dict[str, tuple[pm.Distribution, dict[str, Any]]],
@@ -35,7 +35,7 @@ def build_model(  # noqa: PLR0913
         data: DataFrame with columns "time", "season", "region", "strata", and "value".
         observation_type: The type of observation, either "incidence" or "prevalence".
         value_type: The type of value, either "rate" or "count".
-        incidence_curve: An `IncidenceCurve` to fit the uptake with.
+        incidence_curve: A `Curve` to fit the uptake with.
         observational_dist: A PyMC distribution for the observational model.
         epsilon_prior: A tuple with the PyMC distribution for the epsilon parameter and
             its parameters.
@@ -286,7 +286,7 @@ def change_detection(
 def posterior_forecast(
     times,
     trace: InferenceData,
-    curve: IncidenceCurve,
+    curve: Curve,
 ) -> pd.DataFrame:
     """
     Produce a posterior forecast.
@@ -359,9 +359,7 @@ def posterior_forecast(
     return simulated
 
 
-def model_parameter_summary(
-    trace: InferenceData, curve: IncidenceCurve
-) -> pd.DataFrame:
+def model_parameter_summary(trace: InferenceData, curve: Curve) -> pd.DataFrame:
     """
     Produce a summary of the fitted model parameters.
 
