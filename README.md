@@ -23,9 +23,13 @@ uv pip install --editable .
 
 To contribute install the package from source (as described above). `vaxflux` uses several tools to maintain code quality which can be run as follows:
 
-* `uv run ruff format` to auto-format python and jupyter notebook files,
-* `uv run ruff check` to lint python and jupyter notebook files,
-* `uv run mypy .` to type check the package, and
-* `uv run pytest` to run the unit tests.
+* `ruff`: To auto-format and lint python and jupyter notebook files,
+* `mypy`: to type check the package, and
+* `pytest` to run the unit tests.
 
-Or (on MacOS/Linux) you can use the `./bin/lint` utility script which will run all of these commands in one go. There is also a GitHub action that will run these same set of checks for pull requests against `main`.
+The source for this package also includes a `Makefile` with these commands built in to make it easier for contributors to quality check their code before opening a PR. Importantly:
+
+* `make` or `make all`: Will create the virtual environment if need be and run the tools above, and
+* `make ci`: Will replicate the steps that the GitHub CI workflow will do to make it easier for contributors to debug CI failures locally.
+
+The `Makefile` has only been tested with MacOS/Linux so it may not work as expected on Windows.
