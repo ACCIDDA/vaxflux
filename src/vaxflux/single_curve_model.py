@@ -46,14 +46,14 @@ def modified_logistic_curve(
         of `t`.
 
     Examples:
-        >>> from vaxflux.single_curve_model import modified_logistic_curve
         >>> import numpy as np
+        >>> from vaxflux.single_curve_model import modified_logistic_curve
         >>> modified_logistic_curve(1., 2., 0.5, 0.25)
-        0.4259764009841553
+        0.4087872380968218
         >>> t = np.linspace(-2.5, 2.5, 6)
         >>> modified_logistic_curve(t, 2., 0.5, 0.25)
-        array([0.00261006, 0.01866344, 0.11135007, 0.33958935, 0.46995667,
-               0.49571126])
+        array([0.00203507, 0.01465612, 0.09121276, 0.31122967, 0.46207091,
+               0.49450653])
 
     """
     return k * expit(r * (t - c0))
@@ -80,30 +80,20 @@ def modified_logistic_curve_least_squares(
         The `OptimizeResult` returned from fitting.
 
     Examples:
-        >>> from vaxflux.single_curve_model import *
         >>> import numpy as np
+        >>> from vaxflux.single_curve_model import (
+        ...     modified_logistic_curve,
+        ...     modified_logistic_curve_least_squares,
+        ... )
         >>> rng = np.random.default_rng(seed=123)
         >>> t = np.linspace(-2.0, 2.0, 35)
         >>> y_true = modified_logistic_curve(t, 1.25, 2.5, 0.25)
         >>> y_obs = y_true + rng.normal(scale=0.05)
         >>> opt_result = modified_logistic_curve_least_squares(t, y_obs)
-        >>> opt_result
-            message: `gtol` termination condition is satisfied.
-            success: True
-            status: 1
-                fun: [-2.178e-02 -1.907e-02 ...  7.354e-03  1.028e-02]
-                x: [ 1.332e+00  2.401e+00  2.511e-01]
-                cost: 0.0011988388941303575
-                jac: [[ 2.443e-01 -4.746e-02  1.446e-01]
-                    [ 2.666e-01 -5.507e-02  1.665e-01]
-                    ...
-                    [-3.593e-01 -8.978e-01  2.934e-01]
-                    [-3.393e-01 -9.113e-01  2.585e-01]]
-                grad: [-4.267e-09 -6.515e-11 -2.714e-09]
-        optimality: 4.2671116235695705e-09
-        active_mask: [ 0.000e+00  0.000e+00  0.000e+00]
-                nfev: 6
-                njev: 6
+        >>> opt_result.success
+        True
+        >>> opt_result.x
+        array([1.33230644, 2.40095517, 0.25113914])
 
     """
     # First make educated guesses for the least squares fit
