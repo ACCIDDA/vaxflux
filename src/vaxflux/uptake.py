@@ -17,7 +17,6 @@ import pandas as pd
 import pymc as pm
 import pytensor.tensor as pt
 
-from vaxflux._pymc import _modified_gamma_logp
 from vaxflux._util import (
     _coord_index,
     _coord_name,
@@ -550,39 +549,22 @@ class SeasonalUptakeModel:
                         param: sum(modified_kwargs.get(param, [])) + kwargs[param]
                         for param in kwargs
                     }
-                    if self._kwargs.get("use_modified_gamma", False):
-                        incidence[_coord_name(*name_args)] = pm.Deterministic(
-                            _pm_name(*name_args),
-                            self.curve.prevalence_difference(
-                                date_indexes[season_range.season],
-                                date_indexes[season_range.season] + 1.0,
-                                **evaled_kwargs,
-                            ),
-                            dims=(_coord_name("season", season_range.season, "dates"),),
-                        )
-                        logger.info(
-                            "Added deterministic incidence %s "
-                            "to the model with shape %s.",
-                            _pm_name(*name_args),
-                            str(incidence[_coord_name(*name_args)].shape.eval()),
-                        )
-                    else:
-                        incidence[_coord_name(*name_args)] = pm.Gamma(
-                            _pm_name(*name_args),
-                            mu=self.curve.prevalence_difference(
-                                date_indexes[season_range.season],
-                                date_indexes[season_range.season] + 1.0,
-                                **evaled_kwargs,
-                            ),
-                            sigma=eps,
-                            dims=(_coord_name("season", season_range.season, "dates"),),
-                        )
-                        logger.info(
-                            "Added gamma distributed incidence %s "
-                            "to the model with shape %s.",
-                            _pm_name(*name_args),
-                            str(incidence[_coord_name(*name_args)].shape.eval()),
-                        )
+                    incidence[_coord_name(*name_args)] = pm.Gamma(
+                        _pm_name(*name_args),
+                        mu=self.curve.prevalence_difference(
+                            date_indexes[season_range.season],
+                            date_indexes[season_range.season] + 1.0,
+                            **evaled_kwargs,
+                        ),
+                        sigma=eps,
+                        dims=(_coord_name("season", season_range.season, "dates"),),
+                    )
+                    logger.info(
+                        "Added gamma distributed incidence %s "
+                        "to the model with shape %s.",
+                        _pm_name(*name_args),
+                        str(incidence[_coord_name(*name_args)].shape.eval()),
+                    )
                     # Use custom potential to ensure prevalence is constrained to [0, 1]
                     if self._kwargs.get("constrain_prevalence", True):
                         prevalence = pt.cumsum(incidence[_coord_name(*name_args)])
@@ -623,62 +605,26 @@ class SeasonalUptakeModel:
                         ]
                         incidence_name = ["incidence", row["season"], *pm_cov_names]
                         incidence_series = incidence[_coord_name(*incidence_name)]
-                        if self._kwargs.get("use_modified_gamma", False):
-                            eps = (
-                                epsilon
-                                if self._kwargs.get("pooled_epsilon", False)
-                                else epsilon[
-                                    coords["season_by_category"].index(
-                                        _coord_name(
-                                            "season", row["season"], *pm_cov_names
-                                        )
-                                    )
-                                ]
-                            )
-                            pm.Potential(
-                                _pm_name("observation", str(obs_idx)),
-                                _modified_gamma_logp(
-                                    incidence_series[
-                                        start_index : (end_index + 1)
-                                    ].sum(),
-                                    row["value"],
-                                    pt.extra_ops.repeat(
-                                        eps, repeats=end_index - start_index
-                                    ),
-                                ),
-                            )
-                            logger.info(
-                                "Added observation %u to the model with modified gamma"
-                                "logp potential %s from %u and %u of %s time series.",
-                                obs_idx,
-                                _pm_name("observation", str(obs_idx)),
-                                start_index,
-                                end_index,
-                                _pm_name(*incidence_name),
-                            )
-                        else:
-                            # PyMC does not allow for directly observing the sum of
-                            # random vars, see
-                            # https://discourse.pymc.io/t/sum-of-random-variables/1652.
-                            # Instead, use a normal distribution with a very small
-                            # standard deviation to approximate the sum.
-                            pm.Normal(
-                                name=_pm_name("observation", str(obs_idx)),
-                                mu=incidence_series[
-                                    start_index : (end_index + 1)
-                                ].sum(),
-                                sigma=self._kwargs.get("observation_sigma", 1.0e-9),
-                                observed=row["value"],
-                            )
-                            logger.info(
-                                "Added observation %u to the model with approx normal "
-                                "likelihood %s from %u and %u of %s time series.",
-                                obs_idx,
-                                _pm_name("observation", str(obs_idx)),
-                                start_index,
-                                end_index,
-                                _pm_name(*incidence_name),
-                            )
+                        # PyMC does not allow for directly observing the sum of
+                        # random vars, see
+                        # https://discourse.pymc.io/t/sum-of-random-variables/1652.
+                        # Instead, use a normal distribution with a very small
+                        # standard deviation to approximate the sum.
+                        pm.Normal(
+                            name=_pm_name("observation", str(obs_idx)),
+                            mu=incidence_series[start_index : (end_index + 1)].sum(),
+                            sigma=self._kwargs.get("observation_sigma", 1.0e-9),
+                            observed=row["value"],
+                        )
+                        logger.info(
+                            "Added observation %u to the model with approx normal "
+                            "likelihood %s from %u and %u of %s time series.",
+                            obs_idx,
+                            _pm_name("observation", str(obs_idx)),
+                            start_index,
+                            end_index,
+                            _pm_name(*incidence_name),
+                        )
 
         return self
 
