@@ -190,7 +190,7 @@ class UptakeModelConfig:
         return {k: len(v) for k, v in self.coords.items()}
 
     @property
-    def season_index(self):  # noqa: D102
+    def season_index(self) -> npt.NDArray[np.int64]:  # noqa: D102
         return (
             self.data["season"]
             .apply(lambda x: self.coords["season"].index(x))
@@ -198,7 +198,7 @@ class UptakeModelConfig:
         )
 
     @property
-    def region_index(self):  # noqa: D102
+    def region_index(self) -> npt.NDArray[np.int64]:  # noqa: D102
         return (
             self.data["region"]
             .apply(lambda x: self.coords["region"].index(x))
@@ -206,7 +206,7 @@ class UptakeModelConfig:
         )
 
     @property
-    def strata_index(self):  # noqa: D102
+    def strata_index(self) -> npt.NDArray[np.int64]:  # noqa: D102
         return (
             self.data["strata"]
             .apply(lambda x: self.coords["strata"].index(x))
@@ -214,15 +214,15 @@ class UptakeModelConfig:
         )
 
     @property
-    def k_season_index(self):  # noqa: D102
+    def k_season_index(self) -> npt.NDArray[np.int64]:  # noqa: D102
         return self.season_index if self.k_season_stratified else np.array([0])
 
     @property
-    def r_season_index(self):  # noqa: D102
+    def r_season_index(self) -> npt.NDArray[np.int64]:  # noqa: D102
         return self.season_index if self.r_season_stratified else np.array([0])
 
     @property
-    def s_season_index(self):  # noqa: D102
+    def s_season_index(self) -> npt.NDArray[np.int64]:  # noqa: D102
         return self.season_index if self.s_season_stratified else np.array([0])
 
 
@@ -355,8 +355,8 @@ def create_multilevel_model(config: UptakeModelConfig) -> pm.Model:
 
 
 def generate_model_outputs(
-    trace: pm.backends.base.MultiTrace | az.InferenceData,
-    t: npt.NDArray[np.number],
+    trace: az.InferenceData,
+    t: npt.NDArray[np.float64],
 ) -> xr.DataArray:
     """
     Generate a distribution of model outputs for a multilevel model.
@@ -374,7 +374,7 @@ def generate_model_outputs(
     # Formatting and extraction
     if isinstance(trace, pm.backends.base.MultiTrace):
         raise NotImplementedError
-    stacked = az.extract(getattr(trace, "posterior"))
+    stacked = az.extract(getattr(trace, "posterior"))  # type: ignore[no-untyped-call]
 
     # Determine the output shape and helpers
     seasons_shape = max([stacked.sizes[f"{x}_season"] for x in ["k", "r", "s"]])

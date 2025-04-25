@@ -115,7 +115,7 @@ class Implementation(BaseModel):
     end_date: date | None
     covariate_categories: dict[str, str] | None
 
-    @computed_field  # type: ignore[misc]
+    @computed_field  # type: ignore[prop-decorator]
     @property
     def name(self) -> str:
         """
@@ -131,7 +131,7 @@ class Implementation(BaseModel):
                 *[
                     str(item)
                     for k in sorted((self.covariate_categories or {}).keys())
-                    for item in [k, self.covariate_categories[k]]  # type: ignore
+                    for item in [k, self.covariate_categories[k]]  # type: ignore[index]
                 ],
             ]
         )
@@ -142,7 +142,7 @@ def _check_interventions_and_implementations(
     implementations: list[Implementation],
     season_ranges: list[SeasonRange],
     covariate_categories: list[CovariateCategories],
-):
+) -> None:
     """
     Check that the interventions and implementations are valid.
 

@@ -35,7 +35,7 @@ from vaxflux.curves import Curve
 from vaxflux.dates import DateRange, SeasonRange
 
 
-def read_flu_vacc_data():
+def read_flu_vacc_data() -> npt.NDArray[np.float64]:
     """
     Read a sample dataset of flu vaccination data from 2018 to 2024.
 

@@ -4,9 +4,10 @@ __all__ = ("build_model", "change_detection", "posterior_forecast")
 
 
 from collections.abc import Callable, Iterable
-from typing import Any, Literal, cast
+from typing import Any, Literal, Protocol, cast
 
 import numpy as np
+import numpy.typing as npt
 import pandas as pd
 import pymc as pm
 import pytensor.tensor as pt
@@ -144,7 +145,7 @@ def build_model(  # noqa: PLR0913
         y_model = pm.Deterministic(
             "yModel",
             (
-                incidence_curve.evaluate(time, **evaluate_params)
+                incidence_curve.evaluate(time, **evaluate_params)  # type: ignore[no-untyped-call]
                 if observation_type == "incidence"
                 else incidence_curve.prevalence(time, **evaluate_params)
             ),
@@ -214,10 +215,20 @@ def _strata_region_factors(
         params[p_kind] = pm.Data(p_kind, np.repeat(0.0, len(coords[kind])), dims=kind)
 
 
+class TestResult(Protocol):
+    statistic: float
+    pvalue: float
+
+
 def change_detection(
     trace_before: InferenceData,
     trace_after: InferenceData,
-    test_and_metrics: Iterable[dict[str, Callable]],
+    test_and_metrics: Iterable[
+        dict[
+            str,
+            Callable[[npt.NDArray[np.float64], npt.NDArray[np.float64]], TestResult],
+        ]
+    ],
     param: str | Iterable[str],
     kind: Literal["strata", "region"] | Iterable[Literal["strata", "region"]],
 ) -> pd.DataFrame:
@@ -284,7 +295,7 @@ def change_detection(
 
 
 def posterior_forecast(
-    times,
+    times: npt.NDArray[np.float64],
     trace: InferenceData,
     curve: Curve,
 ) -> pd.DataFrame:
@@ -333,7 +344,7 @@ def posterior_forecast(
             )
             kwargs = {"m": m, "r": r, "s": s}
             # shape: (times, chains, draws)
-            y = curve.evaluate(times_array, **kwargs).eval()
+            y = curve.evaluate(times_array, **kwargs).eval()  # type: ignore[no-untyped-call]
             # z = cumulative_trapezoid(y, x=times_array, initial=0.0, axis=0)
             z = curve.prevalence(times_array, **kwargs).eval()
 

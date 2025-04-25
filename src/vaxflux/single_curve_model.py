@@ -113,7 +113,7 @@ def modified_logistic_curve_least_squares(
 
     # Now fit and return
     opt_result = least_squares(_residuals, x0, **kwargs)  # type: ignore[operator]
-    return opt_result
+    return cast(OptimizeResult, opt_result)
 
 
 def modified_logistic_curve_bayes_model(
@@ -138,15 +138,17 @@ def modified_logistic_curve_bayes_model(
     """
     # Least squares fit for initial guesses
     opt_result = modified_logistic_curve_least_squares(t, y)
-    r_init, k_init, c0_init = cast(npt.NDArray[np.number], opt_result.x)
+    r_init, k_init, c0_init = cast(npt.NDArray[np.float64], opt_result.x)
 
     # Local helpers
     sigma_r, sigma_k, sigma_c0, sigma_sigma = sigma
     t_local = np.copy(t)
     y_local = np.copy(y)
 
-    @as_op(itypes=[pt.dvector], otypes=[pt.dvector])
-    def _modified_logistic_curve(theta):
+    @as_op(itypes=[pt.dvector], otypes=[pt.dvector])  # type: ignore[no-untyped-call,misc]
+    def _modified_logistic_curve(
+        theta: tuple[float, ...],
+    ) -> np.float64 | npt.NDArray[np.float64]:
         return modified_logistic_curve(t_local, *theta)
 
     # Construct model

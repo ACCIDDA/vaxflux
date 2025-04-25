@@ -10,7 +10,7 @@ import math
 import sys
 from collections.abc import Iterable
 from datetime import timedelta
-from typing import Any
+from typing import Any, cast
 
 import arviz as az
 import pandas as pd
@@ -454,7 +454,7 @@ class SeasonalUptakeModel:
                     }
 
                     # Determine modifiers to the curve kwargs due to interventions
-                    modified_kwargs: dict[str, list[pt.TensorVariable]] = {}
+                    modified_kwargs: dict[str, list[pt.variable.TensorVariable]] = {}
                     for param in coords["parameters"]:
                         for intervention in self._interventions:
                             if intervention.parameter == param:
@@ -567,7 +567,7 @@ class SeasonalUptakeModel:
                     )
                     # Use custom potential to ensure prevalence is constrained to [0, 1]
                     if self._kwargs.get("constrain_prevalence", True):
-                        prevalence = pt.cumsum(incidence[_coord_name(*name_args)])
+                        prevalence = pt.cumsum(incidence[_coord_name(*name_args)])  # type: ignore[no-untyped-call]
                         constraint = (
                             pm.math.ge(prevalence, 0.0) * pm.math.le(prevalence, 1.0)
                         ).all()
@@ -656,7 +656,7 @@ class SeasonalUptakeModel:
                 idata_kwargs=idata_kwargs,
                 compile_kwargs=compile_kwargs,
             )
-        return prior
+        return cast(az.InferenceData, prior)
 
     def sample(
         self, random_seed: Any = 1, nuts_sampler: str = "blackjax", **kwargs: Any

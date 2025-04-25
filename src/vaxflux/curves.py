@@ -58,8 +58,8 @@ class Curve(ABC):
     @abstractmethod
     def incidence(
         self,
-        t: npt.NDArray[np.number] | pt.variable.TensorVariable,
-        **kwargs: npt.NDArray[np.number] | pt.variable.TensorVariable,
+        t: npt.NDArray[np.float64] | pt.variable.TensorVariable,
+        **kwargs: npt.NDArray[np.float64] | pt.variable.TensorVariable,
     ) -> pt.variable.TensorVariable:
         """
         Evaluate the incidence curve at given set of time steps.
@@ -78,8 +78,8 @@ class Curve(ABC):
     @abstractmethod
     def prevalence(
         self,
-        t: npt.NDArray[np.number] | pt.variable.TensorVariable,
-        **kwargs: npt.NDArray[np.number] | pt.variable.TensorVariable,
+        t: npt.NDArray[np.float64] | pt.variable.TensorVariable,
+        **kwargs: npt.NDArray[np.float64] | pt.variable.TensorVariable,
     ) -> pt.variable.TensorVariable:
         """
         Evaluate the prevalence curve at given set of time steps.
@@ -97,9 +97,9 @@ class Curve(ABC):
 
     def prevalence_difference(
         self,
-        t0: npt.NDArray[np.number] | pt.variable.TensorVariable,
-        t1: npt.NDArray[np.number] | pt.variable.TensorVariable,
-        **kwargs: npt.NDArray[np.number] | pt.variable.TensorVariable,
+        t0: npt.NDArray[np.float64] | pt.variable.TensorVariable,
+        t1: npt.NDArray[np.float64] | pt.variable.TensorVariable,
+        **kwargs: npt.NDArray[np.float64] | pt.variable.TensorVariable,
     ) -> pt.variable.TensorVariable:
         """
         Evaluate the difference in prevalence between two time steps.
@@ -136,8 +136,8 @@ class LogisticCurve(Curve):
 
     def prevalence(
         self,
-        t: npt.NDArray[np.number] | pt.variable.TensorVariable,
-        **kwargs: npt.NDArray[np.number] | pt.variable.TensorVariable,
+        t: npt.NDArray[np.float64] | pt.variable.TensorVariable,
+        **kwargs: npt.NDArray[np.float64] | pt.variable.TensorVariable,
     ) -> pt.variable.TensorVariable:
         """
         Evaluate the prevalence curve at given set of time steps.
@@ -157,8 +157,8 @@ class LogisticCurve(Curve):
 
     def incidence(
         self,
-        t: npt.NDArray[np.number] | pt.variable.TensorVariable,
-        **kwargs: npt.NDArray[np.number] | pt.variable.TensorVariable,
+        t: npt.NDArray[np.float64] | pt.variable.TensorVariable,
+        **kwargs: npt.NDArray[np.float64] | pt.variable.TensorVariable,
     ) -> pt.variable.TensorVariable:
         """
         Evaluate the incidence curve at given set of time steps.
@@ -196,8 +196,8 @@ class TanhCurve(Curve):
 
     def prevalence(
         self,
-        t: npt.NDArray[np.number] | pt.variable.TensorVariable,
-        **kwargs: npt.NDArray[np.number] | pt.variable.TensorVariable,
+        t: npt.NDArray[np.float64] | pt.variable.TensorVariable,
+        **kwargs: npt.NDArray[np.float64] | pt.variable.TensorVariable,
     ) -> pt.variable.TensorVariable:
         """
         Evaluate the prevalence curve at given set of time steps.
@@ -217,8 +217,8 @@ class TanhCurve(Curve):
 
     def incidence(
         self,
-        t: npt.NDArray[np.number] | pt.variable.TensorVariable,
-        **kwargs: npt.NDArray[np.number] | pt.variable.TensorVariable,
+        t: npt.NDArray[np.float64] | pt.variable.TensorVariable,
+        **kwargs: npt.NDArray[np.float64] | pt.variable.TensorVariable,
     ) -> pt.variable.TensorVariable:
         """
         Evaluate the incidence curve at given set of time steps.

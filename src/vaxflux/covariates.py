@@ -336,7 +336,9 @@ class GaussianCovariate(Covariate):
     sigma: ListOfFloats
     eta: Annotated[float, Field(gt=0.0)] = 1.0
 
-    def pymc_distribution(self, name, coords):
+    def pymc_distribution(
+        self, name: str, coords: dict[str, list[str]]
+    ) -> tuple[pm.Distribution, tuple[str, ...]]:
         """
         Return a PyMC3 distribution for the pooled covariate.
 
