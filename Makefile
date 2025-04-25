@@ -1,6 +1,9 @@
+RM := rm -f
 RMDIR := rm -rf
 
-.PHONY: clean format check mypy pytest all
+.PHONY: all clean format check mypy pytest ci
+
+all: clean .venv format check mypy pytest
 
 clean:
 	$(RMDIR) .mypy_cache
@@ -9,6 +12,7 @@ clean:
 	$(RMDIR) .venv
 	$(RMDIR) src/vaxflux/__pycache__
 	$(RMDIR) src/vaxflux.egg-info
+	$(RM) uv.lock
 
 .venv:
 	uv sync --all-extras
@@ -26,4 +30,8 @@ mypy: .venv
 pytest: .venv
 	./.venv/bin/pytest
 
-all: clean .venv format check mypy pytest
+ci: .venv
+	./.venv/bin/ruff format --check
+	./.venv/bin/ruff check --no-fix
+	./.venv/bin/mypy .
+	./.venv/bin/pytest --exitfirst
