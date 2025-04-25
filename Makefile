@@ -1,3 +1,4 @@
+UV_PROJECT_ENVIRONMENT ?= .venv
 RM := rm -f
 RMDIR := rm -rf
 
@@ -19,19 +20,19 @@ clean:
 	uv pip install --editable .
 
 format: .venv
-	./.venv/bin/ruff format
+	$(UV_PROJECT_ENVIRONMENT)/bin/ruff format
 
 check: .venv
-	./.venv/bin/ruff check --fix
+	$(UV_PROJECT_ENVIRONMENT)/bin/ruff check --fix
 
 mypy: .venv
-	./.venv/bin/mypy .
+	$(UV_PROJECT_ENVIRONMENT)/bin/mypy .
 
 pytest: .venv
-	./.venv/bin/pytest
+	$(UV_PROJECT_ENVIRONMENT)/bin/pytest
 
 ci: .venv
-	./.venv/bin/ruff format --check
-	./.venv/bin/ruff check --no-fix
-	./.venv/bin/mypy .
-	./.venv/bin/pytest --exitfirst
+	$(UV_PROJECT_ENVIRONMENT)/bin/ruff format --check
+	$(UV_PROJECT_ENVIRONMENT)/bin/ruff check --no-fix
+	$(UV_PROJECT_ENVIRONMENT)/bin/mypy .
+	$(UV_PROJECT_ENVIRONMENT)/bin/pytest --exitfirst
