@@ -454,7 +454,9 @@ class SeasonalUptakeModel:
                     }
 
                     # Determine modifiers to the curve kwargs due to interventions
-                    modified_kwargs: dict[str, list[pt.variable.TensorVariable]] = {}
+                    modified_kwargs: dict[
+                        str, list[pt.variable.TensorVariable[Any, Any]]
+                    ] = {}
                     for param in coords["parameters"]:
                         for intervention in self._interventions:
                             if intervention.parameter == param:
