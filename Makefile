@@ -26,7 +26,7 @@ check: .venv
 	$(UV_PROJECT_ENVIRONMENT)/bin/ruff check --fix
 
 mypy: .venv
-	$(UV_PROJECT_ENVIRONMENT)/bin/mypy .
+	$(UV_PROJECT_ENVIRONMENT)/bin/mypy --strict .
 
 pytest: .venv
 	$(UV_PROJECT_ENVIRONMENT)/bin/pytest --doctest-modules
