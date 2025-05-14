@@ -189,12 +189,12 @@ def _coord_index_dim(
     Examples:
         >>> from vaxflux._util import _coord_index_dim
         >>> coords = {
-        ...     'covariate_age_categories': ['youth', 'adult', 'senior'],
-        ...     'covariate_age_categories_limited': ['adult', 'senior'],
-        ...     'covariate_names': ['sex', 'age'],
-        ...     'covariate_sex_categories': ['female', 'male'],
-        ...     'covariate_sex_categories_limited': ['male'],
-        ...     'season': ['2022/2023', '2023/2024'],
+        ...     "covariate_age_categories": ["youth", "adult", "senior"],
+        ...     "covariate_age_categories_limited": ["adult", "senior"],
+        ...     "covariate_names": ["sex", "age"],
+        ...     "covariate_sex_categories": ["female", "male"],
+        ...     "covariate_sex_categories_limited": ["male"],
+        ...     "season": ["2022/2023", "2023/2024"],
         ... }
         >>> _coord_index_dim("season", "2023/2024", "sex", "male", coords)
         1
@@ -214,11 +214,10 @@ def _coord_index_dim(
         ...         "2023/2024",
         ...         "sex",
         ...         "female",
-        ...         coords
+        ...         coords,
         ...     )
         ... except Exception as e:
         ...     print(e)
-        ...
         'female' is not in list
 
     Raises:

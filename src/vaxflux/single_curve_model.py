@@ -48,10 +48,10 @@ def modified_logistic_curve(
     Examples:
         >>> import numpy as np
         >>> from vaxflux.single_curve_model import modified_logistic_curve
-        >>> modified_logistic_curve(1., 2., 0.5, 0.25)
+        >>> modified_logistic_curve(1.0, 2.0, 0.5, 0.25)
         0.4087872380968218
         >>> t = np.linspace(-2.5, 2.5, 6)
-        >>> modified_logistic_curve(t, 2., 0.5, 0.25)
+        >>> modified_logistic_curve(t, 2.0, 0.5, 0.25)
         array([0.00203507, 0.01465612, 0.09121276, 0.31122967, 0.46207091,
                0.49450653])
 

@@ -75,7 +75,7 @@ def _covariate_categories_to_dict(
         ... )
         >>> pop_density_cov = CovariateCategories(
         ...     covariate="population_density",
-        ...     categories=("urban", "suburban", "rural")
+        ...     categories=("urban", "suburban", "rural"),
         ... )
         >>> pprint(_covariate_categories_to_dict([sex_cov, age_cov, pop_density_cov]))
         {'age': ['youth', 'adult', 'senior'],
@@ -110,7 +110,7 @@ def _covariate_categories_product(
         >>> from pprint import pprint
         >>> from vaxflux.covariates import (
         ...     CovariateCategories,
-        ...     _covariate_categories_product
+        ...     _covariate_categories_product,
         ... )
         >>> sex_cov = CovariateCategories(
         ...     covariate="sex", categories=("male", "female")
