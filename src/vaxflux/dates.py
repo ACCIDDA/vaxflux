@@ -9,11 +9,9 @@ from typing import Final, Literal, NamedTuple, TypeVar, cast
 import pandas as pd
 from pydantic import BaseModel, ConfigDict
 
-from vaxflux._util import _rename_keys
-
 _INFER_RANGES_REQUIRED_COLUMNS: Final[dict[Literal["date", "season"], set[str]]] = {
     "date": {"season", "start_date", "end_date", "report_date"},
-    "season": {"season", "season_start_date", "season_end_date"},
+    "season": {"season", "start_date", "end_date"},
 }
 
 
@@ -171,17 +169,14 @@ def _infer_ranges_from_observations(
                 .drop_duplicates(ignore_index=True)
                 .sort_values(list(columns), ignore_index=True)
             )
-            return [
-                cls.model_validate(  # type: ignore[misc]
-                    _rename_keys(
-                        row._asdict(),  # type: ignore[operator]
-                        {
-                            "season_start_date": "start_date",
-                            "season_end_date": "end_date",
-                        },
-                        skip_absent=True,
-                    )
+            if mode == "season":
+                observations_ranges = (
+                    observations_ranges.groupby("season")
+                    .agg({"start_date": "min", "end_date": "max"})
+                    .reset_index()
                 )
+            return [
+                cls.model_validate(row._asdict())  # type: ignore[misc,operator]
                 for row in observations_ranges.itertuples(
                     index=False, name=f"Observation{mode.capitalize()}Row"
                 )
