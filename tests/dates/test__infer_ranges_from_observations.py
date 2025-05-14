@@ -181,7 +181,7 @@ def test_observation_season_ranges_inconsistent_with_explicit_ranges_value_error
                     season="2024/25",
                     start_date="2024-12-01",
                     end_date="2024-12-31",
-                    report_date="2024-01-01",
+                    report_date="2025-01-01",
                 ),
                 DateRange(
                     season="2024/25",
