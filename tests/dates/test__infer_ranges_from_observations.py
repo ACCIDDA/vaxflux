@@ -51,6 +51,73 @@ def test_infer_ranges_from_observations_missing_columns_value_error(
 
 
 @pytest.mark.parametrize(
+    ["observations", "ranges"],
+    [
+        (
+            pd.DataFrame(
+                data={
+                    "season": ["2023"],
+                    "season_start_date": ["2023-01-01"],
+                    "season_end_date": ["2023-12-31"],
+                }
+            ),
+            [
+                SeasonRange(
+                    season="2024", start_date="2024-01-01", end_date="2024-12-31"
+                ),
+            ],
+        ),
+        (
+            pd.DataFrame(
+                data={
+                    "season": ["2023", "2024"],
+                    "season_start_date": ["2023-01-01", "2024-01-01"],
+                    "season_end_date": ["2023-12-31", "2024-12-31"],
+                }
+            ),
+            [
+                SeasonRange(
+                    season="2024", start_date="2024-01-01", end_date="2024-12-31"
+                ),
+            ],
+        ),
+        (
+            pd.DataFrame(
+                data={
+                    "season": ["2023", "2024"],
+                    "season_start_date": ["2023-01-01", "2024-01-01"],
+                    "season_end_date": ["2023-12-31", "2024-12-31"],
+                }
+            ),
+            [
+                SeasonRange(
+                    season="2025", start_date="2025-01-01", end_date="2025-12-31"
+                ),
+                SeasonRange(
+                    season="2026", start_date="2026-01-01", end_date="2026-12-31"
+                ),
+            ],
+        ),
+    ],
+)
+def test_observation_season_ranges_inconsistent_with_explicit_ranges_value_error(
+    observations: pd.DataFrame, ranges: list[SeasonRange]
+) -> None:
+    """Test that the observed season ranges are consistent with the explicit ranges."""
+    season_names = ", ".join(
+        sorted(set(observations["season"].unique()) - {r.season for r in ranges})
+    )
+    with pytest.raises(
+        ValueError,
+        match=(
+            "^The observed season ranges are not consistent with the "
+            f"explicit season ranges, not accounting for: {season_names}.$"
+        ),
+    ):
+        _infer_ranges_from_observations(observations, ranges, "season")
+
+
+@pytest.mark.parametrize(
     ("observations", "ranges", "mode"),
     [
         (

@@ -195,7 +195,9 @@ def _infer_ranges_from_observations(
                 return list(set(ranges) | set(observation_ranges))
             if non_explicit_ranges := set(observation_ranges) - set(ranges):
                 non_explicit_season_ranges = cast(set[SeasonRange], non_explicit_ranges)
-                season_names = {season.season for season in non_explicit_season_ranges}
+                season_names = ", ".join(
+                    sorted({season.season for season in non_explicit_season_ranges})
+                )
                 raise ValueError(
                     "The observed season ranges are not consistent with the "
                     f"explicit season ranges, not accounting for: {season_names}."
