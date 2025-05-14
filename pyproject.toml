@@ -36,6 +36,10 @@ dev-dependencies = [
     "types-requests>=2.32.0.20241016",
 ]
 
+[tool.ruff.format]
+docstring-code-format = true
+docstring-code-line-length = 72
+
 [tool.ruff.lint]
 select = [
     "FLY",  # Flynt

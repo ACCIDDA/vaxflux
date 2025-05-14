@@ -191,8 +191,8 @@ def format_incidence_dataframe(incidence: pd.DataFrame) -> pd.DataFrame:
         >>> import pandas as pd
         >>> df = pd.DataFrame(
         ...     data={
-        ...             "time": [1.0, 1.5, 2.0],
-        ...             "incidence": [0.01, 0.02, 0.015],
+        ...         "time": [1.0, 1.5, 2.0],
+        ...         "incidence": [0.01, 0.02, 0.015],
         ...     }
         ... )
         >>> df
@@ -295,12 +295,12 @@ def create_logistic_sample_dataset(
         >>> from vaxflux.data import create_logistic_sample_dataset
         >>> parameters = pd.DataFrame(
         ...     data={
-        ...             "season": ["2023/24"],
-        ...             "strata": ["All stratas"],
-        ...             "region": ["All regions"],
-        ...             "m": [0.5],
-        ...             "r": [0.3],
-        ...             "s": [20.0],
+        ...         "season": ["2023/24"],
+        ...         "strata": ["All stratas"],
+        ...         "region": ["All regions"],
+        ...         "m": [0.5],
+        ...         "r": [0.3],
+        ...         "s": [20.0],
         ...     },
         ... )
         >>> parameters

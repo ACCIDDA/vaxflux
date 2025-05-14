@@ -2,9 +2,9 @@ UV_PROJECT_ENVIRONMENT ?= .venv
 RM := rm -f
 RMDIR := rm -rf
 
-.PHONY: all clean format check mypy pytest ci
+.PHONY: all clean format check lint mypy pytest ci
 
-all: clean .venv format check mypy pytest
+all: clean .venv lint mypy pytest
 
 clean:
 	$(RMDIR) .mypy_cache
@@ -24,6 +24,8 @@ format: .venv
 
 check: .venv
 	$(UV_PROJECT_ENVIRONMENT)/bin/ruff check --fix
+
+lint: format check
 
 mypy: .venv
 	$(UV_PROJECT_ENVIRONMENT)/bin/mypy --strict .

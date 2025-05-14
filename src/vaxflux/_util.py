@@ -60,11 +60,17 @@ def _clean_name(
         'Abc_Def_GHI'
         >>> _clean_name("Abc", "Def", "GHI", joiner="")
         'AbcDefGHI'
-        >>> _clean_name("Abc", "Def", "GHI", joiner="_", transform=lambda x: x.lower())
+        >>> _clean_name(
+        ...     "Abc", "Def", "GHI", joiner="_", transform=lambda x: x.lower()
+        ... )
         'abc_def_ghi'
-        >>> _clean_name("Abc", "Def", "GHI", joiner="_", transform=lambda x: x.upper())
+        >>> _clean_name(
+        ...     "Abc", "Def", "GHI", joiner="_", transform=lambda x: x.upper()
+        ... )
         'ABC_DEF_GHI'
-        >>> _clean_name("Abc", "Def", "GHI", joiner="_", transform=lambda x: x.title())
+        >>> _clean_name(
+        ...     "Abc", "Def", "GHI", joiner="_", transform=lambda x: x.title()
+        ... )
         'Abc_Def_Ghi'
         >>> _clean_name("a$b", "c#d", "e99", joiner="_")
         'a_b_c_d_e99'
@@ -189,12 +195,12 @@ def _coord_index_dim(
     Examples:
         >>> from vaxflux._util import _coord_index_dim
         >>> coords = {
-        ...     'covariate_age_categories': ['youth', 'adult', 'senior'],
-        ...     'covariate_age_categories_limited': ['adult', 'senior'],
-        ...     'covariate_names': ['sex', 'age'],
-        ...     'covariate_sex_categories': ['female', 'male'],
-        ...     'covariate_sex_categories_limited': ['male'],
-        ...     'season': ['2022/2023', '2023/2024'],
+        ...     "covariate_age_categories": ["youth", "adult", "senior"],
+        ...     "covariate_age_categories_limited": ["adult", "senior"],
+        ...     "covariate_names": ["sex", "age"],
+        ...     "covariate_sex_categories": ["female", "male"],
+        ...     "covariate_sex_categories_limited": ["male"],
+        ...     "season": ["2022/2023", "2023/2024"],
         ... }
         >>> _coord_index_dim("season", "2023/2024", "sex", "male", coords)
         1
@@ -203,7 +209,11 @@ def _coord_index_dim(
         ... )
         1
         >>> _coord_index_dim(
-        ...     "covariate_sex_categories_limited", "2023/2024", "sex", "male", coords
+        ...     "covariate_sex_categories_limited",
+        ...     "2023/2024",
+        ...     "sex",
+        ...     "male",
+        ...     coords,
         ... )
         0
         >>> _coord_index_dim("covariate_names", "2023/2024", "sex", "male", coords)
@@ -214,11 +224,10 @@ def _coord_index_dim(
         ...         "2023/2024",
         ...         "sex",
         ...         "female",
-        ...         coords
+        ...         coords,
         ...     )
         ... except Exception as e:
         ...     print(e)
-        ...
         'female' is not in list
 
     Raises:
