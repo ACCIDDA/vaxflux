@@ -60,11 +60,17 @@ def _clean_name(
         'Abc_Def_GHI'
         >>> _clean_name("Abc", "Def", "GHI", joiner="")
         'AbcDefGHI'
-        >>> _clean_name("Abc", "Def", "GHI", joiner="_", transform=lambda x: x.lower())
+        >>> _clean_name(
+        ...     "Abc", "Def", "GHI", joiner="_", transform=lambda x: x.lower()
+        ... )
         'abc_def_ghi'
-        >>> _clean_name("Abc", "Def", "GHI", joiner="_", transform=lambda x: x.upper())
+        >>> _clean_name(
+        ...     "Abc", "Def", "GHI", joiner="_", transform=lambda x: x.upper()
+        ... )
         'ABC_DEF_GHI'
-        >>> _clean_name("Abc", "Def", "GHI", joiner="_", transform=lambda x: x.title())
+        >>> _clean_name(
+        ...     "Abc", "Def", "GHI", joiner="_", transform=lambda x: x.title()
+        ... )
         'Abc_Def_Ghi'
         >>> _clean_name("a$b", "c#d", "e99", joiner="_")
         'a_b_c_d_e99'
@@ -203,7 +209,11 @@ def _coord_index_dim(
         ... )
         1
         >>> _coord_index_dim(
-        ...     "covariate_sex_categories_limited", "2023/2024", "sex", "male", coords
+        ...     "covariate_sex_categories_limited",
+        ...     "2023/2024",
+        ...     "sex",
+        ...     "male",
+        ...     coords,
         ... )
         0
         >>> _coord_index_dim("covariate_names", "2023/2024", "sex", "male", coords)

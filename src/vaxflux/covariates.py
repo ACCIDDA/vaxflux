@@ -77,7 +77,9 @@ def _covariate_categories_to_dict(
         ...     covariate="population_density",
         ...     categories=("urban", "suburban", "rural"),
         ... )
-        >>> pprint(_covariate_categories_to_dict([sex_cov, age_cov, pop_density_cov]))
+        >>> pprint(
+        ...     _covariate_categories_to_dict([sex_cov, age_cov, pop_density_cov])
+        ... )
         {'age': ['youth', 'adult', 'senior'],
          'population_density': ['urban', 'suburban', 'rural'],
          'sex': ['female', 'male']}
@@ -122,7 +124,9 @@ def _covariate_categories_product(
         ...     covariate="population_density",
         ...     categories=("urban", "suburban", "rural"),
         ... )
-        >>> pprint(_covariate_categories_product([sex_cov, age_cov, pop_density_cov]))
+        >>> pprint(
+        ...     _covariate_categories_product([sex_cov, age_cov, pop_density_cov])
+        ... )
         [{'age': 'youth', 'population_density': 'urban', 'sex': 'male'},
          {'age': 'youth', 'population_density': 'suburban', 'sex': 'male'},
          {'age': 'youth', 'population_density': 'rural', 'sex': 'male'},

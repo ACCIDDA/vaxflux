@@ -38,6 +38,7 @@ dev-dependencies = [
 
 [tool.ruff.format]
 docstring-code-format = true
+docstring-code-line-length = 72
 
 [tool.ruff.lint]
 select = [
