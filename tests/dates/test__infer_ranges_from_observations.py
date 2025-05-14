@@ -7,6 +7,9 @@ import pytest
 
 from vaxflux.dates import (
     _INFER_RANGES_REQUIRED_COLUMNS,
+    DateOrSeasonRange,
+    DateRange,
+    SeasonRange,
     _infer_ranges_from_observations,
 )
 
@@ -45,3 +48,121 @@ def test_infer_ranges_from_observations_missing_columns_value_error(
         match=f"^Missing required columns in the observations: {missing_columns}.$",
     ):
         _infer_ranges_from_observations(observations, [], mode)
+
+
+@pytest.mark.parametrize(
+    ("ranges", "mode"),
+    [
+        (
+            [
+                DateRange(
+                    season="2023",
+                    start_date="2023-01-01",
+                    end_date="2023-12-31",
+                    report_date="2023-12-31",
+                )
+            ],
+            "date",
+        ),
+        (
+            [
+                DateRange(
+                    season="2023",
+                    start_date="2023-01-01",
+                    end_date="2023-12-31",
+                    report_date="2023-12-31",
+                ),
+                DateRange(
+                    season="2024",
+                    start_date="2024-01-01",
+                    end_date="2024-12-31",
+                    report_date="2024-12-31",
+                ),
+            ],
+            "date",
+        ),
+        (
+            [
+                DateRange(
+                    season="2023/24",
+                    start_date="2023-11-01",
+                    end_date="2023-11-30",
+                    report_date="2023-12-01",
+                ),
+                DateRange(
+                    season="2023/24",
+                    start_date="2023-12-01",
+                    end_date="2023-12-31",
+                    report_date="2024-01-01",
+                ),
+                DateRange(
+                    season="2023/24",
+                    start_date="2024-01-01",
+                    end_date="2024-01-31",
+                    report_date="2024-02-01",
+                ),
+                DateRange(
+                    season="2024/25",
+                    start_date="2024-11-01",
+                    end_date="2024-11-30",
+                    report_date="2024-12-01",
+                ),
+                DateRange(
+                    season="2024/25",
+                    start_date="2024-12-01",
+                    end_date="2024-12-31",
+                    report_date="2024-01-01",
+                ),
+                DateRange(
+                    season="2024/25",
+                    start_date="2025-01-01",
+                    end_date="2025-01-31",
+                    report_date="2025-02-01",
+                ),
+            ],
+            "date",
+        ),
+        (
+            [
+                SeasonRange(
+                    season="2023", start_date="2023-01-01", end_date="2023-12-31"
+                )
+            ],
+            "season",
+        ),
+        (
+            [
+                SeasonRange(
+                    season="2023",
+                    start_date="2023-01-01",
+                    end_date="2023-12-31",
+                ),
+                SeasonRange(
+                    season="2024",
+                    start_date="2024-01-01",
+                    end_date="2024-12-31",
+                ),
+            ],
+            "season",
+        ),
+        (
+            [
+                SeasonRange(
+                    season="2023/24", start_date="2023-11-01", end_date="2024-01-31"
+                ),
+                SeasonRange(
+                    season="2024/25", start_date="2024-11-01", end_date="2025-01-31"
+                ),
+                SeasonRange(
+                    season="2025/26", start_date="2025-11-01", end_date="2026-01-31"
+                ),
+            ],
+            "season",
+        ),
+    ],
+)
+def test_if_only_ranges_are_provided_input_matches_output(
+    ranges: list[DateOrSeasonRange], mode: Literal["date", "season"]
+) -> None:
+    """Test that if only ranges are provided, the input matches the output."""
+    assert _infer_ranges_from_observations(None, ranges, mode) == ranges
