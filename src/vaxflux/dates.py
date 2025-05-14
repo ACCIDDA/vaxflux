@@ -4,12 +4,17 @@ __all__ = ("DateRange", "SeasonRange", "daily_date_ranges")
 
 
 from datetime import date, datetime, timedelta
-from typing import Literal, NamedTuple, TypeVar, cast
+from typing import Final, Literal, NamedTuple, TypeVar, cast
 
 import pandas as pd
 from pydantic import BaseModel, ConfigDict
 
 from vaxflux._util import _rename_keys
+
+_INFER_RANGES_REQUIRED_COLUMNS: Final[dict[Literal["date", "season"], set[str]]] = {
+    "date": {"season", "start_date", "end_date", "report_date"},
+    "season": {"season", "season_start_date", "season_end_date"},
+}
 
 
 class SeasonRange(BaseModel):
@@ -153,10 +158,7 @@ def _infer_ranges_from_observations(
     if observations is None and not ranges:
         raise ValueError("At least one of `observations` or `ranges` is required.")
     cls = DateRange if mode == "date" else SeasonRange
-    columns = {
-        "date": {"season", "start_date", "end_date", "report_date"},
-        "season": {"season", "season_start_date", "season_end_date"},
-    }[mode]
+    columns = _INFER_RANGES_REQUIRED_COLUMNS[mode]
     if observations is not None:
         # Only observations
         if not ranges:
