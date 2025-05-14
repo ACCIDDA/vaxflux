@@ -4,12 +4,15 @@ __all__ = ("DateRange", "SeasonRange", "daily_date_ranges")
 
 
 from datetime import date, datetime, timedelta
-from typing import Literal, NamedTuple, TypeVar, cast
+from typing import Final, Literal, NamedTuple, TypeVar, cast
 
 import pandas as pd
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, model_validator
 
-from vaxflux._util import _rename_keys
+_INFER_RANGES_REQUIRED_COLUMNS: Final[dict[Literal["date", "season"], set[str]]] = {
+    "date": {"season", "start_date", "end_date", "report_date"},
+    "season": {"season", "start_date", "end_date"},
+}
 
 
 class SeasonRange(BaseModel):
@@ -22,13 +25,56 @@ class SeasonRange(BaseModel):
             relative.
         end_date: The end date of the season range.
 
-    """
+    Examples:
+        >>> from vaxflux.dates import SeasonRange
+        >>> season_range = SeasonRange(
+        ...     season="2023/2024",
+        ...     start_date="2023-12-01",
+        ...     end_date="2024-03-31",
+        ... )
+        >>> season_range.season
+        '2023/2024'
+        >>> season_range.start_date
+        datetime.date(2023, 12, 1)
+        >>> season_range.end_date
+        datetime.date(2024, 3, 31)
+        >>> SeasonRange(
+        ...     season="2023/2024",
+        ...     start_date="2024-03-31",
+        ...     end_date="2023-12-01",
+        ... )
+        Traceback (most recent call last):
+            ...
+        pydantic_core._pydantic_core.ValidationError: 1 validation error for SeasonRange
+          Value error, The end date, 2023-12-01, must be after or the same as the start date 2024-03-31. [type=value_error, input_value={'season': '2023/2024', '...nd_date': '2023-12-01'}, input_type=dict]
+            For further information visit https://errors.pydantic.dev/2.11/v/value_error
+
+    """  # noqa: E501
 
     model_config = ConfigDict(frozen=True)
 
     season: str
     start_date: date
     end_date: date
+
+    @model_validator(mode="after")
+    def _validate_date_order(self) -> "SeasonRange":
+        """
+        Validate the order of the dates in the DateRange.
+
+        Returns:
+            The validated DateRange instance.
+
+        Raises:
+            ValueError: If the end date is before the start date.
+            ValueError: If the report date is before the end date.
+        """
+        if self.end_date < self.start_date:
+            raise ValueError(
+                f"The end date, {self.end_date}, must be after "
+                f"or the same as the start date {self.start_date}."
+            )
+        return self
 
 
 class DateRange(BaseModel):
@@ -41,7 +87,46 @@ class DateRange(BaseModel):
         end_date: The end date of the date range.
         report_date: The report date of the date range.
 
-    """
+    Examples:
+        >>> from vaxflux.dates import DateRange
+        >>> date_range = DateRange(
+        ...     season="2023/2024",
+        ...     start_date="2023-12-01",
+        ...     end_date="2023-12-31",
+        ...     report_date="2024-01-01",
+        ... )
+        >>> date_range.season
+        '2023/2024'
+        >>> date_range.start_date
+        datetime.date(2023, 12, 1)
+        >>> date_range.end_date
+        datetime.date(2023, 12, 31)
+        >>> date_range.report_date
+        datetime.date(2024, 1, 1)
+        >>> DateRange(
+        ...     season="2023/2024",
+        ...     start_date="2023-12-01",
+        ...     end_date="2023-11-30",
+        ...     report_date="2023-12-01",
+        ... )
+        Traceback (most recent call last):
+            ...
+        pydantic_core._pydantic_core.ValidationError: 1 validation error for DateRange
+          Value error, The end date, 2023-11-30, must be after or the same as the start date 2023-12-01. [type=value_error, input_value={'season': '2023/2024', '...ort_date': '2023-12-01'}, input_type=dict]
+            For further information visit https://errors.pydantic.dev/2.11/v/value_error
+        >>> DateRange(
+        ...     season="2023/2024",
+        ...     start_date="2023-12-01",
+        ...     end_date="2023-12-31",
+        ...     report_date="2023-12-30",
+        ... )
+        Traceback (most recent call last):
+            ...
+        pydantic_core._pydantic_core.ValidationError: 1 validation error for DateRange
+          Value error, The report date, 2023-12-30, must be after or the same as the end date 2023-12-31. [type=value_error, input_value={'season': '2023/2024', '...ort_date': '2023-12-30'}, input_type=dict]
+            For further information visit https://errors.pydantic.dev/2.11/v/value_error
+
+    """  # noqa: E501
 
     model_config = ConfigDict(frozen=True)
 
@@ -49,6 +134,30 @@ class DateRange(BaseModel):
     start_date: date
     end_date: date
     report_date: date
+
+    @model_validator(mode="after")
+    def _validate_date_order(self) -> "DateRange":
+        """
+        Validate the order of the dates in the DateRange.
+
+        Returns:
+            The validated DateRange instance.
+
+        Raises:
+            ValueError: If the end date is before the start date.
+            ValueError: If the report date is before the end date.
+        """
+        if self.end_date < self.start_date:
+            raise ValueError(
+                f"The end date, {self.end_date}, must be after "
+                f"or the same as the start date {self.start_date}."
+            )
+        if self.report_date < self.end_date:
+            raise ValueError(
+                f"The report date, {self.report_date}, must be after "
+                f"or the same as the end date {self.end_date}."
+            )
+        return self
 
 
 def daily_date_ranges(
@@ -153,10 +262,7 @@ def _infer_ranges_from_observations(
     if observations is None and not ranges:
         raise ValueError("At least one of `observations` or `ranges` is required.")
     cls = DateRange if mode == "date" else SeasonRange
-    columns = {
-        "date": {"season", "start_date", "end_date", "report_date"},
-        "season": {"season", "season_start_date", "season_end_date"},
-    }[mode]
+    columns = _INFER_RANGES_REQUIRED_COLUMNS[mode]
     if observations is not None:
         # Only observations
         if not ranges:
@@ -169,17 +275,14 @@ def _infer_ranges_from_observations(
                 .drop_duplicates(ignore_index=True)
                 .sort_values(list(columns), ignore_index=True)
             )
-            return [
-                cls.model_validate(  # type: ignore[misc]
-                    _rename_keys(
-                        row._asdict(),  # type: ignore[operator]
-                        {
-                            "season_start_date": "start_date",
-                            "season_end_date": "end_date",
-                        },
-                        skip_absent=True,
-                    )
+            if mode == "season":
+                observations_ranges = (
+                    observations_ranges.groupby("season")
+                    .agg({"start_date": "min", "end_date": "max"})
+                    .reset_index()
                 )
+            return [
+                cls.model_validate(row._asdict())  # type: ignore[misc,operator]
                 for row in observations_ranges.itertuples(
                     index=False, name=f"Observation{mode.capitalize()}Row"
                 )
@@ -193,7 +296,9 @@ def _infer_ranges_from_observations(
                 return list(set(ranges) | set(observation_ranges))
             if non_explicit_ranges := set(observation_ranges) - set(ranges):
                 non_explicit_season_ranges = cast(set[SeasonRange], non_explicit_ranges)
-                season_names = {season.season for season in non_explicit_season_ranges}
+                season_names = ", ".join(
+                    sorted({season.season for season in non_explicit_season_ranges})
+                )
                 raise ValueError(
                     "The observed season ranges are not consistent with the "
                     f"explicit season ranges, not accounting for: {season_names}."
