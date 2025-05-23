@@ -29,6 +29,6 @@ exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 html_theme = "pydata_sphinx_theme"
 html_static_path = ["_static"]
 
-
 # -- Options for autodoc -----------------------------------------------------
 autoclass_content = "both"
+autodoc_member_order = "bysource"
