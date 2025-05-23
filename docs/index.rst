@@ -3,15 +3,11 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-vaxflux documentation
+Vaxflux Documentation
 =====================
 
-Add your content using ``reStructuredText`` syntax. See the
-`reStructuredText <https://www.sphinx-doc.org/en/master/usage/restructuredtext/index.html>`_
-documentation for details.
-
+Vaxflux is a python package for modeling seasonal vaccine uptake like influenza vaccines. It is capable of incorporating arbitrary covariates and geographic regions, observations at multiple time scales, modeling the effects of interventions, and more.
 
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
-
