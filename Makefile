@@ -11,6 +11,7 @@ clean:
 	$(RMDIR) .pytest_cache
 	$(RMDIR) .ruff_cache
 	$(RMDIR) .venv
+	$(RMDIR) docs/_build
 	$(RMDIR) src/vaxflux/__pycache__
 	$(RMDIR) src/vaxflux.egg-info
 	$(RM) uv.lock
