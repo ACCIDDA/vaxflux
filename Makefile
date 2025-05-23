@@ -2,7 +2,7 @@ UV_PROJECT_ENVIRONMENT ?= .venv
 RM := rm -f
 RMDIR := rm -rf
 
-.PHONY: all clean format check lint mypy pytest ci
+.PHONY: all check ci clean docs format lint mypy pytest serve
 
 all: clean .venv lint mypy pytest
 
@@ -19,6 +19,16 @@ clean:
 .venv:
 	uv sync --all-extras
 	uv pip install --editable .
+
+docs/_build: .venv
+	$(UV_PROJECT_ENVIRONMENT)/bin/sphinx-build -b html docs docs/_build
+
+docs:
+	$(RMDIR) docs/_build
+	@$(MAKE) docs/_build
+
+serve: .venv docs/_build
+	$(UV_PROJECT_ENVIRONMENT)/bin/python -m http.server --directory docs/_build
 
 format: .venv
 	$(UV_PROJECT_ENVIRONMENT)/bin/ruff format
