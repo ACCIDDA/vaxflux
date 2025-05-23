@@ -2,7 +2,7 @@ UV_PROJECT_ENVIRONMENT ?= .venv
 RM := rm -f
 RMDIR := rm -rf
 
-.PHONY: all check ci clean docs format lint mypy pytest serve
+.PHONY: all check ci clean docs format lint mypy pytest rstcheck serve
 
 all: clean .venv lint mypy pytest
 
@@ -20,10 +20,14 @@ clean:
 	uv sync --all-extras
 	uv pip install --editable .
 
+rstcheck:
+	$(UV_PROJECT_ENVIRONMENT)/bin/rstcheck --warn-unknown-settings --recursive docs/
+
 docs/_build: .venv
 	$(UV_PROJECT_ENVIRONMENT)/bin/sphinx-build -b html docs docs/_build
 
 docs:
+	@$(MAKE) rstcheck
 	$(RMDIR) docs/_build
 	@$(MAKE) docs/_build
 
