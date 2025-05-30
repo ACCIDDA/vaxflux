@@ -4,7 +4,7 @@ RMDIR := rm -rf
 
 .PHONY: all check ci clean docs format lint mypy pytest rstcheck serve
 
-all: clean .venv lint mypy pytest
+all: clean .venv lint mypy pytest docs
 
 clean:
 	$(RMDIR) .mypy_cache
@@ -58,5 +58,6 @@ pytest: .venv
 ci: .venv
 	$(UV_PROJECT_ENVIRONMENT)/bin/ruff format --check
 	$(UV_PROJECT_ENVIRONMENT)/bin/ruff check --no-fix
-	$(UV_PROJECT_ENVIRONMENT)/bin/mypy .
+	$(UV_PROJECT_ENVIRONMENT)/bin/mypy --strict .
 	$(UV_PROJECT_ENVIRONMENT)/bin/pytest --doctest-modules --exitfirst
+	@$(MAKE) docs
