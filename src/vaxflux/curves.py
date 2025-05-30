@@ -125,14 +125,13 @@ class LogisticCurve(Curve):
     r"""
     Logistic uptake curve.
 
-    This class implements a logistic curve with parameters $m$, $r$, and $s$ which is
-    given by:
+    This class implements a logistic curve with parameters :math:`m`, :math:`r`, and
+    :math:`s` which is given by:
 
-    $$ f(t \vert m, r, s)
-        = \mathrm{expit}(m) r e^{-r(t-s)} \left( 1 + e^{-r(t-s)} \right)^{-2}. $$
+    .. math::
+        f(t \vert m, r, s) = \mathrm{invlogit}(m) r e^{-r(t-s)} \left( 1 + e^{-r(t-s)} \right)^{-2}
 
-
-    """
+    """  # noqa: E501
 
     #: The names of parameters used by this incidence curve model.
     parameters = ("m", "r", "s")
@@ -193,7 +192,11 @@ class TanhCurve(Curve):
     r"""
     Tanh uptake curve.
 
-    This class implements a tanh curve with parameters $m$, $r$, and $s$.
+    This class implements a :math:`\tanh` curve with parameters :math:`m`, :math:`r`,
+    and :math:`s` which is given by:
+
+    .. math::
+        f(t \vert m, r, s) = \mathrm{invlogit}(m) \tanh\left( e^r (t - s) \right)
 
     """
 
