@@ -1,6 +1,6 @@
 UV_PROJECT_ENVIRONMENT ?= .venv
-RM := rm -f
-RMDIR := rm -rf
+RM                     := rm -f
+RMDIR                  := rm -rf
 
 .PHONY: all check ci clean docs format lint mypy pytest rstcheck serve
 
@@ -31,6 +31,7 @@ docs/_build: .venv
 		--doc-project 'API Reference' \
 		--output-dir docs/api \
 		src/vaxflux
+	$(UV_PROJECT_ENVIRONMENT)/bin/python misc/edit_api_docs.py
 	$(UV_PROJECT_ENVIRONMENT)/bin/sphinx-build -b html docs docs/_build
 
 docs:
