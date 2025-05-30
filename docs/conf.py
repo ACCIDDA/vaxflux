@@ -34,3 +34,10 @@ html_static_path = ["_static"]
 # -- Options for autodoc -----------------------------------------------------
 autoclass_content = "both"
 autodoc_member_order = "bysource"
+
+# -- Options for pydata theme ------------------------------------------------
+html_sidebars: dict[str, list[str]] = {
+    "installation": [],
+    "getting_started": [],
+    "model_details": [],
+}
