@@ -24,7 +24,13 @@ rstcheck:
 	$(UV_PROJECT_ENVIRONMENT)/bin/rstcheck --warn-unknown-settings --recursive docs/
 
 docs/_build: .venv
-	$(UV_PROJECT_ENVIRONMENT)/bin/sphinx-apidoc --force --separate --output-dir docs/api src/vaxflux
+	$(UV_PROJECT_ENVIRONMENT)/bin/sphinx-apidoc \
+		--force \
+		--remove-old \
+		--separate \
+		--doc-project 'API Reference' \
+		--output-dir docs/api \
+		src/vaxflux
 	$(UV_PROJECT_ENVIRONMENT)/bin/sphinx-build -b html docs docs/_build
 
 docs:
