@@ -26,12 +26,6 @@ class UptakeModelConfig:
 
     This immutable class provides the configuration for describing and constructing a
     vaccine uptake model.
-
-    Attributes:
-        name: An optional name to give to this model config. Only used for pretty
-            printing.
-        TODO: Document the attributes of this config class
-
     """
 
     data: pd.DataFrame
@@ -54,6 +48,7 @@ class UptakeModelConfig:
     r_season_stratified: bool = False
     s_season_stratified: bool = False
 
+    #: An optional name to give to this model config. Only used for pretty printing.
     name: str | None = None
 
     def __post_init__(self) -> None:

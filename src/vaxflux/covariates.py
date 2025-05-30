@@ -21,17 +21,14 @@ from vaxflux._util import ListOfFloats, _coord_name
 
 
 class CovariateCategories(BaseModel):
-    """
-    A representation of the categories for a covariate.
-
-    Attributes:
-        covariate: The name of the covariate.
-        categories: The categories for the covariate.
-    """
+    """A representation of the categories for a covariate."""
 
     model_config = ConfigDict(frozen=True)
 
+    #: The name of the covariate.
     covariate: str
+
+    #: The categories for the covariate.
     categories: Annotated[tuple[str, ...], Field(min_length=2)]
 
     @field_validator("categories", mode="after")
@@ -171,17 +168,13 @@ def _covariate_categories_product(
 
 
 class Covariate(ABC, BaseModel):
-    """
-    Abstract class for the implementation of covariates in uptake models.
+    """Abstract class for the implementation of covariates in uptake models."""
 
-    Attributes:
-        parameter: The parameter from the incidence curve family this covariate applies
-            to.
-        covariate: The name of the covariate in the dataset or `None` if the covariate
-            is a seasonal effect.
-    """
-
+    #: The parameter from the incidence curve family this covariate applies to.
     parameter: str
+
+    #: The name of the covariate in the dataset or `None` if the covariate is a seasonal
+    #: effect.
     covariate: str | None
 
     @abstractmethod
@@ -206,16 +199,15 @@ class PooledCovariate(Covariate):
     """
     A pooled covariate for uptake models.
 
-    Attributes:
-        distribution: The PyMC3 distribution to use for the covariate.
-        distribution_kwargs: The keyword arguments to pass to the PyMC3 distribution.
-
     Returns:
         A PyMC3 distribution describing the effect of the covariate along with the
         dims of the distribution.
     """
 
+    #: The PyMC3 distribution to use for the covariate.
     distribution: str
+
+    #: The keyword arguments to pass to the PyMC3 distribution.
     distribution_kwargs: dict[str, Any]
 
     def pymc_distribution(
@@ -239,21 +231,22 @@ class GaussianRandomWalkCovariate(Covariate):
     """
     A gaussian random walk covariate for uptake models.
 
-    Attributes:
-        init_mu: The initial mean for the gaussian random walk.
-        mu: The drift for the gaussian random walk.
-        sigma: The standard deviation for the gaussian random walk.
-        eta: The shape parameter for the LKJ distribution for the covariance matrix of
-            a multivariate gaussian random walk.
-
     Returns:
         A PyMC3 distribution describing the effect of the covariate along with the
         dims of the distribution.
     """
 
+    #: The initial mean for the gaussian random walk.
     init_mu: ListOfFloats
+
+    #: The drift for the gaussian random walk.
     mu: ListOfFloats
+
+    #: The standard deviation for the gaussian random walk.
     sigma: ListOfFloats
+
+    #: The shape parameter for the LKJ distribution for the covariance matrix of a
+    #: multivariate gaussian random walk.
     eta: Annotated[float, Field(gt=0.0)] = 1.0
 
     def pymc_distribution(
@@ -325,19 +318,19 @@ class GaussianCovariate(Covariate):
     """
     A gaussian random variable covariate for uptake models.
 
-    Attributes:
-        mu: Prior mean for the gaussian random variables.
-        sigma: The standard deviation for the gaussian random variables.
-        eta: The shape parameter for the LKJ distribution for the covariance matrix of
-            a multivariate gaussian random walk.
-
     Returns:
         A PyMC3 distribution describing the effect of the covariate along with the
         dims of the distribution.
     """
 
+    #: Prior mean for the gaussian random variables.
     mu: ListOfFloats
+
+    #: The standard deviation for the gaussian random variables.
     sigma: ListOfFloats
+
+    #: The shape parameter for the LKJ distribution for the covariance matrix of a
+    #: multivariate gaussian random walk.
     eta: Annotated[float, Field(gt=0.0)] = 1.0
 
     def pymc_distribution(

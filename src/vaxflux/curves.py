@@ -131,11 +131,10 @@ class LogisticCurve(Curve):
     $$ f(t \vert m, r, s)
         = \mathrm{expit}(m) r e^{-r(t-s)} \left( 1 + e^{-r(t-s)} \right)^{-2}. $$
 
-    Attributes:
-        parameters: The names of parameters used by this incidence curve model.
 
     """
 
+    #: The names of parameters used by this incidence curve model.
     parameters = ("m", "r", "s")
 
     def prevalence(
@@ -196,11 +195,9 @@ class TanhCurve(Curve):
 
     This class implements a tanh curve with parameters $m$, $r$, and $s$.
 
-    Attributes:
-        parameters: The names of parameters used by this curve model.
-
     """
 
+    #: The names of parameters used by this incidence curve model.
     parameters = ("m", "r", "s")
 
     def prevalence(
