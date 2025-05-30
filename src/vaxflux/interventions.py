@@ -20,13 +20,6 @@ class Intervention(BaseModel):
     """
     A representation for the affect of an intervention on the uptake of a vaccine.
 
-    Attributes:
-        name: The name of the intervention, must be a lowercase alphanumeric string.
-        parameter: The name of the parameter this intervention affects.
-        distribution: The name of the distribution to use for the intervention.
-        distribution_kwargs: The keyword arguments to pass to the distribution.
-            Must be a dictionary of strings to values.
-
     Examples:
         >>> from vaxflux.interventions import Intervention
         >>> tv_ads = Intervention(
@@ -48,9 +41,17 @@ class Intervention(BaseModel):
 
     model_config = ConfigDict(frozen=True)
 
+    #: The name of the intervention, must be a lowercase alphanumeric string.
     name: InterventionName
+
+    #: The name of the parameter this intervention affects.
     parameter: str
+
+    #: The name of the distribution to use for the intervention.
     distribution: str
+
+    #: The keyword arguments to pass to the distribution. Must be a dictionary of
+    #: strings to values.
     distribution_kwargs: dict[str, Any]
 
     def pymc_distribution(self, name: str) -> pm.Distribution:
@@ -71,17 +72,6 @@ class Intervention(BaseModel):
 class Implementation(BaseModel):
     """
     A representation of an implementation of an intervention.
-
-    Attributes:
-        intervention: The name of the intervention being implemented.
-        season: The season this implementation applies to.
-        start_date: The start date of the implementation or `None` if to apply from the
-            start of the season.
-        end_date: The end date of the implementation or `None` if to apply to the end of
-            the season.
-        covariate_categories: The covariate categories this implementation applies to in
-            the format {covariate: category}. If `None`, applies to all covariate
-            categories.
 
     Examples:
         >>> from vaxflux.interventions import Implementation
@@ -109,10 +99,22 @@ class Implementation(BaseModel):
 
     model_config = ConfigDict(frozen=True)
 
+    #: The name of the intervention being implemented.
     intervention: InterventionName
+
+    #: The season this implementation applies to.
     season: str
+
+    #: The start date of the implementation or `None` if to apply from the start of the
+    #: season.
     start_date: date | None
+
+    #: The end date of the implementation or `None` if to apply to the end of the
+    #: season.
     end_date: date | None
+
+    #: The covariate categories this implementation applies to in the format
+    #: `{covariate: category}`. If `None`, applies to all covariate categories.
     covariate_categories: dict[str, str] | None
 
     @computed_field  # type: ignore[prop-decorator]

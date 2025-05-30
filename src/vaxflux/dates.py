@@ -19,12 +19,6 @@ class SeasonRange(BaseModel):
     """
     A representation of a season range for uptake scenarios.
 
-    Attributes:
-        season: The name of the season for the season range.
-        start_date: The start date of the season range, used to make seasonal dates
-            relative.
-        end_date: The end date of the season range.
-
     Examples:
         >>> from vaxflux.dates import SeasonRange
         >>> season_range = SeasonRange(
@@ -53,8 +47,13 @@ class SeasonRange(BaseModel):
 
     model_config = ConfigDict(frozen=True)
 
+    #: The name of the season for the season range.
     season: str
+
+    #: The start date of the season range, used to make seasonal dates relative.
     start_date: date
+
+    #: The end date of the season range.
     end_date: date
 
     @model_validator(mode="after")
@@ -80,12 +79,6 @@ class SeasonRange(BaseModel):
 class DateRange(BaseModel):
     """
     A representation of a date range for uptake scenarios.
-
-    Attributes:
-        season: The season for the date range.
-        start_date: The start date of the date range.
-        end_date: The end date of the date range.
-        report_date: The report date of the date range.
 
     Examples:
         >>> from vaxflux.dates import DateRange
@@ -130,9 +123,16 @@ class DateRange(BaseModel):
 
     model_config = ConfigDict(frozen=True)
 
+    #: The season for the date range.
     season: str
+
+    #: The start date of the date range.
     start_date: date
+
+    #: The end date of the date range.
     end_date: date
+
+    #: The report date of the date range.
     report_date: date
 
     @model_validator(mode="after")
