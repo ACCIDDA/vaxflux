@@ -122,8 +122,8 @@ In this example we will use a combination of pooled covariates and a Gaussian co
             covariate=None,
             distribution="Normal",
             distribution_kwargs={
-                "mu": -0.75,
-                "sigma": 1.0,
+                "mu": -0.5,
+                "sigma": 0.25,
             },
         ),
         PooledCovariate(
@@ -131,8 +131,8 @@ In this example we will use a combination of pooled covariates and a Gaussian co
             covariate=None,
             distribution="Normal",
             distribution_kwargs={
-                "mu": 0.0,
-                "sigma": 2.0,
+                "mu": -3.0,
+                "sigma": 0.5,
             },
         ),
         PooledCovariate(
@@ -140,15 +140,15 @@ In this example we will use a combination of pooled covariates and a Gaussian co
             covariate=None,
             distribution="Normal",
             distribution_kwargs={
-                "mu": 50.0,
+                "mu": 45.0,
                 "sigma": 10.0,
             },
         ),
         GaussianCovariate(
             parameter="m",
             covariate="age",
-            mu=[0.75, 1.5],
-            sigma=2 * [0.5],
+            mu=[0.8, 1.6],
+            sigma=2 * [0.25],
         ),
     ]
     model = SeasonalUptakeModel(
