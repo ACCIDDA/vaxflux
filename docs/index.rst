@@ -12,6 +12,7 @@ Vaxflux is a python package for modeling seasonal vaccine uptake like influenza 
    :maxdepth: 2
    :caption: Contents:
 
+   introduction
    installation
    getting_started
    model_details

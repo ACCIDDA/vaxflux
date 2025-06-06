@@ -38,6 +38,7 @@ autodoc_member_order = "bysource"
 # -- Options for pydata theme ------------------------------------------------
 html_sidebars: dict[str, list[str]] = {
     "installation": [],
+    "introduction": [],
     "getting_started": [],
     "model_details": [],
 }
