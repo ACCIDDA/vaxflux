@@ -28,3 +28,18 @@ The tanh curve is defined as:
     f(t \vert m, r, s) = \mathrm{invlogit}(m) \tanh\left( e^r (t - s) \right)
 
 where :math:`\mathrm{invlogit}(m)`, :math:`r`, and :math:`s` are defined the same as the logistic curve. The tanh curve is similar to the logistic curve but has a different steep-ness in it's S-shape, which can be useful for modeling different types of vaccination uptake patterns.
+
+Curve Parameters
+----------------
+
+While the same underlying curve family is used for all seasons and covariate combinations, the parameters of the curve can vary. The parameters of the curve are determined by summing the seasonal baseline and the covariate effects.
+
+Observational Model
+-------------------
+
+Up until now this documentation has been describing the underlying model that defines the shape of the vaccination uptake curve. However, in practice we do not observe the true vaccination uptake curve, but rather a noisy version of it. The observational model is used to define how the observed data is generated from the underlying model.
+
+The Model From The 'Getting Started' Example
+--------------------------------------------
+
+Recall from the :doc:`getting_started` guide that we defined a model with three age categories that affected the max uptake and a pooled rate of uptake and inflection point.
