@@ -34,8 +34,8 @@ def get_ncird_weekly_cumulative_vaccination_coverage() -> pd.DataFrame:
     """
     Get weekly cumulative vaccination coverage data provided by NCIRD.
 
-    More information about this data can be found on the data.cdc.gov page for this
-    dataset: https://tinyurl.com/yc33txdp.
+    More information about this data can be found on the CDC data page for this
+    dataset: `Weekly Cumulative Influenza Vaccination Coverage, Adults 18 and Older, United States <https://data.cdc.gov/Flu-Vaccinations/Weekly-Cumulative-Influenza-Vaccination-Coverage-A/2v3t-r3np/about_data>`_.
 
     Returns:
         A pandas DataFrame with the columns 'geographic_level', 'geographic_name',
@@ -47,9 +47,7 @@ def get_ncird_weekly_cumulative_vaccination_coverage() -> pd.DataFrame:
         'demographic_name_sort', 'geographic_sort', 'season_sort',
         'legend_sort', '95_ci_lower', and '95_ci_upper'.
 
-    """
-    # TODO: This should use the API provided by data.cdc.gov instead of direct download
-    # Format the correct url
+    """  # noqa: E501
     now = datetime.now()
     cache_bust = time.mktime(now.timetuple())
     date = now.strftime("%Y%m%d")
