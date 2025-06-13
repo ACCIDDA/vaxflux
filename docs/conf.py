@@ -39,6 +39,6 @@ autodoc_member_order = "bysource"
 html_sidebars: dict[str, list[str]] = {
     "installation": [],
     "introduction": [],
-    "getting_started": [],
-    "model_details": [],
+    "getting-started": [],
+    "model-details": [],
 }

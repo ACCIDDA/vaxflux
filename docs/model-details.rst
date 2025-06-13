@@ -42,4 +42,4 @@ Up until now this documentation has been describing the underlying model that de
 The Model From The 'Getting Started' Example
 --------------------------------------------
 
-Recall from the :doc:`getting_started` guide that we defined a model with three age categories that affected the max uptake and a pooled rate of uptake and inflection point.
+Recall from the :doc:`getting-started` guide that we defined a model with three age categories that affected the max uptake and a pooled rate of uptake and inflection point.
