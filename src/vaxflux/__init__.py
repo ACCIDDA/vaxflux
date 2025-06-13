@@ -6,9 +6,6 @@ __all__ = (
     "data",
     "dates",
     "interventions",
-    "model",
-    "multilevel_model",
-    "single_curve_model",
     "uptake",
 )
 __version__ = "0.1.0"
@@ -20,8 +17,5 @@ from vaxflux import (
     data,
     dates,
     interventions,
-    model,
-    multilevel_model,
-    single_curve_model,
     uptake,
 )
