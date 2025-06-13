@@ -129,7 +129,8 @@ class LogisticCurve(Curve):
     :math:`s` which is given by:
 
     .. math::
-        f(t \vert m, r, s) = \mathrm{invlogit}(m) r e^{-r(t-s)} \left( 1 + e^{-r(t-s)} \right)^{-2}
+
+        f(t\vert m,r,s)=\mathrm{invlogit}\left(m\right)\mathrm{logit}\left(e^r\left(t-s\right)\right)
 
     """  # noqa: E501
 
@@ -196,9 +197,10 @@ class TanhCurve(Curve):
     and :math:`s` which is given by:
 
     .. math::
-        f(t \vert m, r, s) = \mathrm{invlogit}(m) \tanh\left( e^r (t - s) \right)
 
-    """
+        f(t\vert m,r,s)=\frac{1}{2}\mathrm{invlogit}\left(m\right)\left(\tanh\left(e^r\left(t-s\right)\right)+1\right)
+
+    """  # noqa: E501
 
     #: The names of parameters used by this incidence curve model.
     parameters = ("m", "r", "s")
@@ -222,8 +224,9 @@ class TanhCurve(Curve):
         """
         return cast(
             pt.variable.TensorVariable[Any, Any],
-            pm.math.invlogit(kwargs["m"])
-            * pm.math.tanh(pm.math.exp(kwargs["r"]) * (t - kwargs["s"])),
+            0.5
+            * pm.math.invlogit(kwargs["m"])
+            * (pm.math.tanh(pm.math.exp(kwargs["r"]) * (t - kwargs["s"])) + 1.0),
         )
 
     def incidence(
@@ -245,9 +248,8 @@ class TanhCurve(Curve):
         """
         return cast(
             pt.variable.TensorVariable[Any, Any],
-            (
-                pm.math.invlogit(kwargs["m"])
-                * pm.math.exp(kwargs["r"])
-                * (pm.math.cosh(pm.math.exp(kwargs["r"]) * (t - kwargs["s"])) ** -2.0)
-            ),
+            0.5
+            * pm.math.invlogit(kwargs["m"])
+            * pm.math.exp(kwargs["r"])
+            * (pm.math.cosh(pm.math.exp(kwargs["r"]) * (t - kwargs["s"])) ** -2.0),
         )
