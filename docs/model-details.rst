@@ -57,7 +57,14 @@ Observational Model
 
 Up until now this documentation has been describing the underlying model that defines the shape of the vaccination uptake curve. However, in practice we do not observe the true vaccination uptake curve, but rather a noisy version of it. The observational model is used to define how the observed data is generated from the underlying model.
 
-The Model From The 'Getting Started' Example
---------------------------------------------
+For each day in a season, :math:`i`, we model the observed incidence of vaccinations on that day as:
 
-Recall from the :doc:`getting-started` guide that we defined a model with three age categories that affected the max uptake and a pooled rate of uptake and inflection point.
+.. math::
+
+    \varepsilon_i&\sim\mathrm{Exponential}\left(\epsilon^{-1}\right)
+
+    I_{t,i}&\sim\mathrm{Gamma}\left(f(t+1\vert\theta_1,\dots,\theta_n)-f(t\vert\theta_1,\dots,\theta_n),\varepsilon_i\right)
+
+Where the gamma distribution is mean-variance parameterized, :math:`I_{t,i}` is the observed incidence of vaccinations on day :math:`t` in season :math:`i`, :math:`\varepsilon_i` is the observational noise level for season :math:`i`, and :math:`\epsilon` is a user provided parameter that controls the scale of the observational noise prior.
+
+The likelihood of the observed data is then constructed by summing the appropriate values of :math:`I_{t,i}` for each day in the season. This means that the model is able to capture the variability in the observed data while still being able to fit the underlying vaccination uptake curve.
