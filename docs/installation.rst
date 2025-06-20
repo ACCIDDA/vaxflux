@@ -10,12 +10,6 @@ To install vaxflux using pip, run the following command in your terminal:
 
 .. code-block:: shell
 
-    pip install git+git://github.com/ACCIDDA/vaxflux.git
-
-Alternatively, if you would prefer to install the package of https you can use:
-
-.. code-block:: shell
-
     pip install git+https://github.com/ACCIDDA/vaxflux.git
 
 Using `conda`

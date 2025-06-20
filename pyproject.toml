@@ -4,7 +4,7 @@ version = "0.1.0"
 description = "Flexible bayesian models for seasonal vaccine uptake."
 readme = "README.md"
 license = { text = "MIT" }
-requires-python = ">=3.10"
+requires-python = ">=3.10,<3.13"
 dependencies = [
     "numpy>=1.17.0,<2",
     "pymc>5.16.2",
