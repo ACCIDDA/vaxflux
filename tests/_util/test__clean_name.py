@@ -10,7 +10,7 @@ from vaxflux._util import _clean_name
 
 @pytest.mark.parametrize(
     "args",
-    (
+    [
         ("a", "b", "c"),
         ("a",),
         (None, "a", None),
@@ -18,15 +18,17 @@ from vaxflux._util import _clean_name
         ("abc", "de", "f"),
         ("a01", "b02", "c@d", None, "!ef"),
         (None, "abCD", "ef", None, "gHiJkL"),
-    ),
+    ],
 )
-@pytest.mark.parametrize("joiner", ("", "_", "--"))
+@pytest.mark.parametrize("joiner", ["", "_", "--"])
 @pytest.mark.parametrize(
     "transform",
-    (lambda x: x, lambda x: x.lower(), lambda x: x.upper(), lambda x: x.title()),
+    [lambda x: x, lambda x: x.lower(), lambda x: x.upper(), lambda x: x.title()],
 )
 def test_output_validation(
-    args: tuple[str, ...], joiner: str, transform: Callable[[str], str]
+    args: tuple[str, ...],
+    joiner: str,
+    transform: Callable[[str], str],
 ) -> None:
     """Test that the output is a string."""
     cleaned_name = _clean_name(*args, joiner=joiner, transform=transform)

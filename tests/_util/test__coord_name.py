@@ -11,7 +11,7 @@ COORD_NAME_REGEX = re.compile(r"^(?:[a-z0-9]{1}([a-z0-9]+)?(_)?)+$")
 
 @pytest.mark.parametrize(
     "args",
-    (
+    [
         ("m", "age", "18-45yr"),
         ("nu", "county", "wake"),
         ("m", "age", "18-45yr", None),
@@ -19,7 +19,7 @@ COORD_NAME_REGEX = re.compile(r"^(?:[a-z0-9]{1}([a-z0-9]+)?(_)?)+$")
         ("season", "2022-2023", "dates"),
         ("season", "Winter 22'", "dates"),
         ("covariate", "age", "none"),
-    ),
+    ],
 )
 def test_output_validation(args: tuple[str | None, ...]) -> None:
     """Test that the output is a string of the expected format."""

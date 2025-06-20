@@ -69,9 +69,12 @@ class SeasonRange(BaseModel):
             ValueError: If the report date is before the end date.
         """
         if self.end_date < self.start_date:
-            raise ValueError(
+            msg = (
                 f"The end date, {self.end_date}, must be after "
                 f"or the same as the start date {self.start_date}."
+            )
+            raise ValueError(
+                msg,
             )
         return self
 
@@ -148,14 +151,20 @@ class DateRange(BaseModel):
             ValueError: If the report date is before the end date.
         """
         if self.end_date < self.start_date:
-            raise ValueError(
+            msg = (
                 f"The end date, {self.end_date}, must be after "
                 f"or the same as the start date {self.start_date}."
             )
-        if self.report_date < self.end_date:
             raise ValueError(
+                msg,
+            )
+        if self.report_date < self.end_date:
+            msg = (
                 f"The report date, {self.report_date}, must be after "
                 f"or the same as the end date {self.end_date}."
+            )
+            raise ValueError(
+                msg,
             )
         return self
 
@@ -189,8 +198,9 @@ def daily_date_ranges(
         [season_ranges] if isinstance(season_ranges, SeasonRange) else season_ranges
     )
     if range_days < 0:
+        msg = "The number of days for each daily date range must be at least 0."
         raise ValueError(
-            "The number of days for each daily date range must be at least 0."
+            msg,
         )
     date_ranges = []
     td = timedelta(days=range_days)
@@ -201,11 +211,14 @@ def daily_date_ranges(
             end_date = start_date + td
             if end_date > season_range.end_date:
                 if remainder == "raise":
-                    raise ValueError(
+                    msg = (
                         "The number of days for each daily date range does not divide "
                         f"evenly into the season range for {season_range.season}."
                     )
-                elif remainder == "fill":
+                    raise ValueError(
+                        msg,
+                    )
+                if remainder == "fill":
                     end_date = season_range.end_date
                 else:
                     break
@@ -215,7 +228,7 @@ def daily_date_ranges(
                     start_date=start_date,
                     end_date=end_date,
                     report_date=end_date,
-                )
+                ),
             )
             start_date = end_date + td_one_day
     return date_ranges
@@ -260,15 +273,19 @@ def _infer_ranges_from_observations(
             season ranges, only applicable for the season mode.
     """
     if observations is None and not ranges:
-        raise ValueError("At least one of `observations` or `ranges` is required.")
+        msg = "At least one of `observations` or `ranges` is required."
+        raise ValueError(msg)
     cls = DateRange if mode == "date" else SeasonRange
     columns = _INFER_RANGES_REQUIRED_COLUMNS[mode]
     if observations is not None:
         # Only observations
         if not ranges:
             if missing_columns := columns - set(observations.columns):
-                raise ValueError(
+                msg = (
                     f"Missing required columns in the observations: {missing_columns}."
+                )
+                raise ValueError(
+                    msg,
                 )
             observations_ranges = (
                 observations[list(columns)]
@@ -284,7 +301,8 @@ def _infer_ranges_from_observations(
             return [
                 cls.model_validate(row._asdict())  # type: ignore[misc,operator]
                 for row in observations_ranges.itertuples(
-                    index=False, name=f"Observation{mode.capitalize()}Row"
+                    index=False,
+                    name=f"Observation{mode.capitalize()}Row",
                 )
             ]
         # Both ranges and observations
@@ -295,13 +313,19 @@ def _infer_ranges_from_observations(
             if mode == "date":
                 return list(set(ranges) | set(observation_ranges))
             if non_explicit_ranges := set(observation_ranges) - set(ranges):
-                non_explicit_season_ranges = cast(set[SeasonRange], non_explicit_ranges)
-                season_names = ", ".join(
-                    sorted({season.season for season in non_explicit_season_ranges})
+                non_explicit_season_ranges = cast(
+                    "set[SeasonRange]",
+                    non_explicit_ranges,
                 )
-                raise ValueError(
+                season_names = ", ".join(
+                    sorted({season.season for season in non_explicit_season_ranges}),
+                )
+                msg = (
                     "The observed season ranges are not consistent with the "
                     f"explicit season ranges, not accounting for: {season_names}."
+                )
+                raise ValueError(
+                    msg,
                 )
     # Only ranges
     return ranges

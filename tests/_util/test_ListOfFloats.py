@@ -19,16 +19,17 @@ class ListOfFloatsTestModel(BaseModel):
 
 @pytest.mark.parametrize(
     ("values", "expected"),
-    (
+    [
         ([1.2, 3], [1.2, 3]),
         ([1.2, 3.0], [1.2, 3.0]),
         ([1, 3], [1.0, 3.0]),
         (3, [3.0]),
         (1.2, [1.2]),
-    ),
+    ],
 )
 def test_output_validation(
-    values: float | int | list[float | int], expected: list[float]
+    values: float | list[float | int],
+    expected: list[float],
 ) -> None:
     """Test that the output is a list of floats."""
     model = ListOfFloatsTestModel(values=values)  # type: ignore[arg-type]

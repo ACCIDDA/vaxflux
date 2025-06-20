@@ -104,20 +104,20 @@ class SeasonalUptakeModel:
         # Private attributes
         self._covariates = copy.deepcopy(covariates)
         self._covariate_categories: list[CovariateCategories] = (
-            copy.deepcopy(covariate_categories) if covariate_categories else list()
+            copy.deepcopy(covariate_categories) if covariate_categories else []
         )
         self._date_ranges: list[DateRange] = (
-            copy.deepcopy(date_ranges) if date_ranges else list()
+            copy.deepcopy(date_ranges) if date_ranges else []
         )
         self._epsilon = epsilon
         self._implementations = (
-            copy.deepcopy(implementations) if implementations else list()
+            copy.deepcopy(implementations) if implementations else []
         )
-        self._interventions = copy.deepcopy(interventions) if interventions else list()
+        self._interventions = copy.deepcopy(interventions) if interventions else []
         self._kwargs = copy.deepcopy(kwargs)
         self._model: pm.Model | None = None
         self._season_ranges: list[SeasonRange] = (
-            copy.deepcopy(season_ranges) if season_ranges else list()
+            copy.deepcopy(season_ranges) if season_ranges else []
         )
         self._trace: az.InferenceData | None = None
 
@@ -125,10 +125,13 @@ class SeasonalUptakeModel:
         if covariate_parameters_missing := {
             covariate.parameter for covariate in self._covariates
         } - set(self.curve.parameters):
-            raise ValueError(
+            msg = (
                 "The following parameters were given in the covariates, "
                 "but not present in the curve family parameters: "
                 f"{sorted(covariate_parameters_missing)}."
+            )
+            raise ValueError(
+                msg,
             )
         if self.observations is not None and (
             covariate_covariates_missing := {
@@ -138,25 +141,35 @@ class SeasonalUptakeModel:
             }
             - set(self.observations.columns)
         ):
-            raise ValueError(
+            msg = (
                 "The following covariates were given in the covariates, "
                 "but not present in the observation columns: "
                 f"{sorted(covariate_covariates_missing)}."
             )
-        if self._epsilon <= 0 or math.isclose(self._epsilon, 0.0):
             raise ValueError(
-                "The epsilon value must be greater than zero beyond floating point."
+                msg,
+            )
+        if self._epsilon <= 0 or math.isclose(self._epsilon, 0.0):
+            msg = "The epsilon value must be greater than zero beyond floating point."
+            raise ValueError(
+                msg,
             )
 
         # Infer parameters from the observations
         self._covariate_categories = _infer_covariate_categories_from_observations(
-            self.observations, self._covariates, self._covariate_categories
+            self.observations,
+            self._covariates,
+            self._covariate_categories,
         )
         self._date_ranges = _infer_ranges_from_observations(
-            self.observations, self._date_ranges, "date"
+            self.observations,
+            self._date_ranges,
+            "date",
         )
         self._season_ranges = _infer_ranges_from_observations(
-            self.observations, self._season_ranges, "season"
+            self.observations,
+            self._season_ranges,
+            "season",
         )
         _check_interventions_and_implementations(
             self._interventions,
@@ -190,7 +203,10 @@ class SeasonalUptakeModel:
             ] = categories
             coords[
                 _coord_name(
-                    "covariate", covariate_category.covariate, "categories", "limited"
+                    "covariate",
+                    covariate_category.covariate,
+                    "categories",
+                    "limited",
                 )
             ] = categories[1:]
         coords["covariate_names"] = covariate_names
@@ -200,8 +216,8 @@ class SeasonalUptakeModel:
                 *[
                     coords[_coord_name("covariate", covariate_name, "categories")]
                     for covariate_name in coords["covariate_names"]
-                ]
-            )
+                ],
+            ),
         )
         coords["season_by_category"] = []
         for season_range in self._season_ranges:
@@ -213,19 +229,23 @@ class SeasonalUptakeModel:
                             + [
                                 item
                                 for pair in zip(
-                                    coords["covariate_names"], category_combo
+                                    coords["covariate_names"],
+                                    category_combo,
+                                    strict=False,
                                 )
                                 for item in pair
                             ]
-                        )
-                    )
+                        ),
+                    ),
                 )
         coords["intervention_names"] = [
             intervention.name for intervention in self._interventions
         ]
         for intervention in self._interventions:
             implementation_coord_name = _coord_name(
-                "intervention", intervention.name, "implementations"
+                "intervention",
+                intervention.name,
+                "implementations",
             )
             coords[implementation_coord_name] = []
             for category_combo in category_combinations:
@@ -233,11 +253,14 @@ class SeasonalUptakeModel:
                     for implementation in self._implementations:
                         if implementation.season == season_range.season and all(
                             (implementation.covariate_categories or {}).get(
-                                covariate, category
+                                covariate,
+                                category,
                             )
                             == category
                             for covariate, category in zip(
-                                covariate_names, category_combo
+                                covariate_names,
+                                category_combo,
+                                strict=False,
                             )
                         ):
                             coords[implementation_coord_name].append(
@@ -253,16 +276,17 @@ class SeasonalUptakeModel:
                                                 for pair in zip(
                                                     coords["covariate_names"],
                                                     category_combo,
+                                                    strict=False,
                                                 )
                                                 for item in pair
                                             ],
                                         ]
-                                    )
-                                )
+                                    ),
+                                ),
                             )
         return coords
 
-    def build(self, debug: bool = False) -> Self:  # noqa: PLR0912, PLR0915
+    def build(self, *, debug: bool = False) -> Self:  # noqa: C901, PLR0912, PLR0915
         """
         Build the uptake model.
 
@@ -282,7 +306,8 @@ class SeasonalUptakeModel:
 
         # Preprocessing data
         logger.info(
-            "Using %u date ranges for the uptake model.", len(self._date_ranges)
+            "Using %u date ranges for the uptake model.",
+            len(self._date_ranges),
         )
         if self.observations is not None:
             logger.info(
@@ -292,7 +317,7 @@ class SeasonalUptakeModel:
         else:
             logger.error(
                 "No observations were provided, will not be able "
-                "to calibrate model only sample from prior."
+                "to calibrate model only sample from prior.",
             )
 
         # Build the model
@@ -304,7 +329,8 @@ class SeasonalUptakeModel:
             for season_range in self._season_ranges:
                 n_days = (season_range.end_date - season_range.start_date).days + 1
                 date_indexes[season_range.season] = pm.Data(
-                    _pm_name("season", season_range.season, "dates"), range(n_days)
+                    _pm_name("season", season_range.season, "dates"),
+                    range(n_days),
                 )
                 logger.info(
                     "Added season %s to the model with %u days.",
@@ -331,8 +357,8 @@ class SeasonalUptakeModel:
                     *[
                         coords[_coord_name("covariate", covariate_name, "categories")]
                         for covariate_name in coords["covariate_names"]
-                    ]
-                )
+                    ],
+                ),
             )
             for category_combo in category_combinations:
                 for season_range in self._season_ranges:
@@ -343,7 +369,11 @@ class SeasonalUptakeModel:
                             dist, dims = result
                             if (
                                 idx := _coord_index(
-                                    dims, season_range.season, None, None, coords
+                                    dims,
+                                    season_range.season,
+                                    None,
+                                    None,
+                                    coords,
                                 )
                             ) is not None:
                                 param_components.append(dist[idx])
@@ -384,13 +414,18 @@ class SeasonalUptakeModel:
                                 )
                         name_args = [param, "season", season_range.season] + [
                             item
-                            for pair in zip(coords["covariate_names"], category_combo)
+                            for pair in zip(
+                                coords["covariate_names"],
+                                category_combo,
+                                strict=False,
+                            )
                             for item in pair
                         ]
                         name = _pm_name(*name_args)
                         if param_components:
                             summed_params[name] = pm.Deterministic(
-                                name, sum(param_components)
+                                name,
+                                sum(param_components),
                             )
                             logger.info(
                                 "Added summed parameter %s to "
@@ -425,10 +460,13 @@ class SeasonalUptakeModel:
             else:
                 # If not pooled, use a different epsilon for each time series
                 epsilon = pm.Exponential(
-                    "epsilon", lam=1.0 / self._epsilon, dims=("season_by_category",)
+                    "epsilon",
+                    lam=1.0 / self._epsilon,
+                    dims=("season_by_category",),
                 )
             logger.info(
-                "Added epsilon to the model with shape %s.", epsilon.shape.eval()
+                "Added epsilon to the model with shape %s.",
+                epsilon.shape.eval(),
             )
 
             # Generate the incidence time series at a daily level
@@ -436,18 +474,24 @@ class SeasonalUptakeModel:
             for category_combo in category_combinations:
                 pm_cov_names = [
                     item
-                    for pair in zip(coords["covariate_names"], category_combo)
+                    for pair in zip(
+                        coords["covariate_names"],
+                        category_combo,
+                        strict=False,
+                    )
                     for item in pair
                 ]
                 for season_range in self._season_ranges:
                     season_dates_coord_name = _coord_name(
-                        "season", season_range.season, "dates"
+                        "season",
+                        season_range.season,
+                        "dates",
                     )
                     season_dates = coords[season_dates_coord_name]
                     kwargs = {
                         param: summed_params[
                             _pm_name(
-                                *[param, "season", season_range.season, *pm_cov_names]
+                                *[param, "season", season_range.season, *pm_cov_names],
                             )
                         ]
                         for param in coords["parameters"]
@@ -455,7 +499,8 @@ class SeasonalUptakeModel:
 
                     # Determine modifiers to the curve kwargs due to interventions
                     modified_kwargs: dict[
-                        str, list[pt.variable.TensorVariable[Any, Any]]
+                        str,
+                        list[pt.variable.TensorVariable[Any, Any]],
                     ] = {}
                     for param in coords["parameters"]:
                         for intervention in self._interventions:
@@ -472,6 +517,7 @@ class SeasonalUptakeModel:
                                             for covariate, category in zip(
                                                 coords["covariate_names"],
                                                 category_combo,
+                                                strict=False,
                                             )
                                         )
                                     ):
@@ -489,11 +535,12 @@ class SeasonalUptakeModel:
                                                         for pair in zip(
                                                             coords["covariate_names"],
                                                             category_combo,
+                                                            strict=False,
                                                         )
                                                         for item in pair
                                                     ],
                                                 ]
-                                            )
+                                            ),
                                         )
                                         implementation_idx = coords[
                                             _coord_name(
@@ -514,8 +561,8 @@ class SeasonalUptakeModel:
                                                         or i
                                                         >= season_dates.index(
                                                             season_range.start_date.strftime(
-                                                                "%Y-%m-%d"
-                                                            )
+                                                                "%Y-%m-%d",
+                                                            ),
                                                         )
                                                     )
                                                     and (
@@ -524,15 +571,15 @@ class SeasonalUptakeModel:
                                                         or i
                                                         <= season_dates.index(
                                                             season_range.start_date.strftime(
-                                                                "%Y-%m-%d"
-                                                            )
+                                                                "%Y-%m-%d",
+                                                            ),
                                                         )
                                                     )
                                                     for i in range(len(season_dates))
                                                 ],
                                                 0.0,
                                                 var,
-                                            )
+                                            ),
                                         )
 
                     name_args = ["incidence", season_range.season, *pm_cov_names]
@@ -542,8 +589,10 @@ class SeasonalUptakeModel:
                         else epsilon[
                             coords["season_by_category"].index(
                                 _coord_name(
-                                    "season", season_range.season, *pm_cov_names
-                                )
+                                    "season",
+                                    season_range.season,
+                                    *pm_cov_names,
+                                ),
                             )
                         ]
                     )
@@ -574,7 +623,9 @@ class SeasonalUptakeModel:
                             pm.math.ge(prevalence, 0.0) * pm.math.le(prevalence, 1.0)
                         ).all()
                         prevalence_constraint_name = _pm_name(
-                            *name_args, "prevalence", "constraint"
+                            *name_args,
+                            "prevalence",
+                            "constraint",
                         )
                         pm.Potential(
                             prevalence_constraint_name,
@@ -634,7 +685,7 @@ class SeasonalUptakeModel:
         self,
         draws: int = 500,
         var_names: Iterable[str] | None = None,
-        random_seed: Any = 1,
+        random_seed: int = 1,
         idata_kwargs: dict[str, Any] | None = None,
         compile_kwargs: dict[str, Any] | None = None,
     ) -> az.InferenceData:
@@ -646,8 +697,9 @@ class SeasonalUptakeModel:
 
         """
         if self._model is None:
+            msg = "The `build` method must be called before `sample_prior`."
             raise AttributeError(
-                "The `build` method must be called before `sample_prior`."
+                msg,
             )
         with self._model:
             prior = pm.sample_prior_predictive(
@@ -658,10 +710,13 @@ class SeasonalUptakeModel:
                 idata_kwargs=idata_kwargs,
                 compile_kwargs=compile_kwargs,
             )
-        return cast(az.InferenceData, prior)
+        return cast("az.InferenceData", prior)
 
     def sample(
-        self, random_seed: Any = 1, nuts_sampler: str = "blackjax", **kwargs: Any
+        self,
+        random_seed: int = 1,
+        nuts_sampler: str = "blackjax",
+        **kwargs: Any,
     ) -> Self:
         """
         Sample from the posterior distribution of the model.
@@ -687,7 +742,8 @@ class SeasonalUptakeModel:
 
         """
         if self._model is None:
-            raise AttributeError("The `build` method must be called before `sample`.")
+            msg = "The `build` method must be called before `sample`."
+            raise AttributeError(msg)
         with self._model:
             self._trace = pm.sample(
                 random_seed=random_seed,
@@ -709,7 +765,8 @@ class SeasonalUptakeModel:
 
         """
         if self.observations is not None:
-            raise ValueError("Observations have already been added to the model.")
+            msg = "Observations have already been added to the model."
+            raise ValueError(msg)
         return SeasonalUptakeModel(
             curve=self.curve,
             covariates=self._covariates,
@@ -736,8 +793,9 @@ class SeasonalUptakeModel:
 
         """
         if self._trace is None:
+            msg = "The `sample` method must be called before `dataframe`."
             raise AttributeError(
-                "The `sample` method must be called before `dataframe`."
+                msg,
             )
         coords = self.coordinates()
         incidence_dataframes: list[pd.DataFrame] = []
@@ -746,13 +804,13 @@ class SeasonalUptakeModel:
                 *[
                     coords[_coord_name("covariate", covariate_name, "categories")]
                     for covariate_name in coords["covariate_names"]
-                ]
-            )
+                ],
+            ),
         )
         for category_combo in category_combinations:
             pm_cov_names = [
                 item
-                for pair in zip(coords["covariate_names"], category_combo)
+                for pair in zip(coords["covariate_names"], category_combo, strict=False)
                 for item in pair
             ]
             for season_range in self._season_ranges:
@@ -767,17 +825,21 @@ class SeasonalUptakeModel:
                     columns={
                         _coord_name("season", season_range.season, "dates"): "date",
                         incidence_name: "value",
-                    }
+                    },
                 )
                 tmp_df["season"] = pd.Series(
-                    len(tmp_df) * [season_range.season], dtype="string"
+                    len(tmp_df) * [season_range.season],
+                    dtype="string",
                 )
                 tmp_df["type"] = pd.Series(len(tmp_df) * ["incidence"], dtype="string")
                 for cov_name, cov_value in zip(
-                    coords["covariate_names"], category_combo
+                    coords["covariate_names"],
+                    category_combo,
+                    strict=False,
                 ):
                     tmp_df[cov_name] = pd.Series(
-                        len(tmp_df) * [cov_value], dtype="string"
+                        len(tmp_df) * [cov_value],
+                        dtype="string",
                     )
                 tmp_df["date"] = pd.to_datetime(tmp_df["date"])
                 tmp_df = tmp_df[
@@ -786,5 +848,4 @@ class SeasonalUptakeModel:
                     + ["type", "value"]
                 ]
                 incidence_dataframes.append(tmp_df)
-        incidence_df = pd.concat(incidence_dataframes)
-        return incidence_df
+        return pd.concat(incidence_dataframes)

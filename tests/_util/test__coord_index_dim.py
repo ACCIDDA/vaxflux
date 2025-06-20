@@ -25,8 +25,8 @@ for dim, values in EXAMPLE_COORDS.items():
         example_args.append((dim, covariate_name, value, i))
 
 
-@pytest.mark.parametrize("dim", ("unknown", "nope", "nada"))
-@pytest.mark.parametrize("covariate_name", ("age", "sex"))
+@pytest.mark.parametrize("dim", ["unknown", "nope", "nada"])
+@pytest.mark.parametrize("covariate_name", ["age", "sex"])
 def test_unknown_dimension_not_implemented_error(dim: str, covariate_name: str) -> None:
     """Test that an unknown dimension raises a NotImplementedError."""
     assert dim not in {
@@ -41,7 +41,8 @@ def test_unknown_dimension_not_implemented_error(dim: str, covariate_name: str) 
 
 @pytest.mark.parametrize("season", EXAMPLE_COORDS.get("season", []))
 @pytest.mark.parametrize(
-    ("dim", "covariate_name", "category", "expected"), example_args
+    ("dim", "covariate_name", "category", "expected"),
+    example_args,
 )
 def test_exact_values_for_select_inputs_independent_of_season(
     dim: str,

@@ -16,7 +16,7 @@ __all__ = (
 
 import io
 import time
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Literal, TypedDict, cast
 
 import numpy as np
@@ -48,7 +48,7 @@ def get_ncird_weekly_cumulative_vaccination_coverage() -> pd.DataFrame:
         'legend_sort', '95_ci_lower', and '95_ci_upper'.
 
     """  # noqa: E501
-    now = datetime.now()
+    now = datetime.now(timezone.utc)
     cache_bust = time.mktime(now.timetuple())
     date = now.strftime("%Y%m%d")
     url = (
@@ -56,7 +56,7 @@ def get_ncird_weekly_cumulative_vaccination_coverage() -> pd.DataFrame:
         f"&cacheBust={cache_bust}&date={date}&accessType=DOWNLOAD"
     )
     # Get and parse the data
-    resp = requests.get(url)
+    resp = requests.get(url, timeout=30)
     ncird_df = pd.read_csv(
         io.BytesIO(resp.content),
         dtype={
@@ -109,25 +109,27 @@ def get_ncird_weekly_cumulative_vaccination_coverage() -> pd.DataFrame:
             "Geographic_Sort": "geographic_sort",
             "Season_Sort": "season_sort",
             "Legend_Sort": "legend_sort",
-        }
+        },
     )
     # Special handling for select columns
     ncird_df["suppression_flag"] = ncird_df["suppression_flag"].astype("boolean")
     ncird_df["current_season_week_ending"] = pd.to_datetime(
-        ncird_df["current_season_week_ending"], format="%m/%d/%Y %H:%M:%S %p"
+        ncird_df["current_season_week_ending"],
+        format="%m/%d/%Y %H:%M:%S %p",
     )
     ncird_df[["95_ci_lower", "95_ci_upper"]] = ncird_df["95_ci"].str.split(
-        "-", n=1, expand=True
+        "-",
+        n=1,
+        expand=True,
     )
     ncird_df["95_ci_lower"] = pd.to_numeric(ncird_df["95_ci_lower"].str.strip()).astype(
-        "Float64"
+        "Float64",
     )
     ncird_df["95_ci_upper"] = pd.to_numeric(ncird_df["95_ci_upper"].str.strip()).astype(
-        "Float64"
+        "Float64",
     )
-    ncird_df = ncird_df.drop(columns=["week_ending", "95_ci"])
+    return ncird_df.drop(columns=["week_ending", "95_ci"])
     # Return
-    return ncird_df
 
 
 def format_incidence_dataframe(incidence: pd.DataFrame) -> pd.DataFrame:
@@ -165,9 +167,12 @@ def format_incidence_dataframe(incidence: pd.DataFrame) -> pd.DataFrame:
     incidence_columns = set(incidence.columns.tolist())
 
     if missing_columns := {"time", "incidence"} - incidence_columns:
-        raise ValueError(
+        msg = (
             "The `incidence` provided is missing required columns: "
             f"""'{"', '".join(missing_columns)}'."""
+        )
+        raise ValueError(
+            msg,
         )
 
     for column in ("time", "incidence"):
@@ -176,14 +181,13 @@ def format_incidence_dataframe(incidence: pd.DataFrame) -> pd.DataFrame:
     for column in ("season", "strata", "region"):
         if column not in incidence_columns:
             incidence[column] = pd.Series(
-                data=len(incidence) * [f"All {column.capitalize()}s"], dtype="string"
+                data=len(incidence) * [f"All {column.capitalize()}s"],
+                dtype="string",
             )
         else:
             incidence[column] = incidence[column].astype("string")
 
-    incidence = incidence[["season", "strata", "region", "time", "incidence"]]
-
-    return incidence
+    return incidence[["season", "strata", "region", "time", "incidence"]]
 
 
 def coordinates_from_incidence(
@@ -206,7 +210,7 @@ def coordinates_from_incidence(
     )
     coords: dict[Literal["season", "region", "strata", "observation"], list[str]] = {
         **{v: np.sort(incidence[v].unique()).tolist() for v in keys},
-        **{"observation": np.arange(len(incidence)).astype(str).tolist()},
+        "observation": np.arange(len(incidence)).astype(str).tolist(),
     }
     return coords
 
@@ -279,10 +283,9 @@ def create_logistic_sample_dataset(
         13  2023/24  All stratas  All regions  39.0  0.000210
 
     """
-    # TODO: Input validation for parameters
     rs = np.random.RandomState(seed)
     incidence = []
-    for row in cast(list[ParametersRow], parameters.to_dict(orient="records")):
+    for row in cast("list[ParametersRow]", parameters.to_dict(orient="records")):
         tmp = np.exp(-row["r"] * (time - row["s"]))
         mu = expit(row["m"]) * row["r"] * tmp * np.power(1.0 + tmp, -2.0)
         if error == "gamma":
@@ -299,13 +302,12 @@ def create_logistic_sample_dataset(
                     "region": len(time) * [row["region"]],
                     "time": time,
                     "incidence": obs,
-                }
-            )
+                },
+            ),
         )
     incidence_df = pd.concat(incidence, ignore_index=True)
     incidence_df = format_incidence_dataframe(incidence_df)
-    incidence_df = incidence_df.rename(columns={"incidence": "value"})
-    return incidence_df
+    return incidence_df.rename(columns={"incidence": "value"})
 
 
 def sample_dataset(
@@ -361,7 +363,8 @@ def sample_dataset(
             y = curve.prevalence_difference(t0, t1, **kwargs).eval()
             if epsilon > 0:
                 y = generator.gamma(
-                    shape=np.power(y / epsilon, 2.0), scale=(epsilon**2.0) / y
+                    shape=np.power(y / epsilon, 2.0),
+                    scale=(epsilon**2.0) / y,
                 )
             value = sum(y)
             record = (

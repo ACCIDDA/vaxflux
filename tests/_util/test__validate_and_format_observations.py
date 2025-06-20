@@ -85,7 +85,7 @@ def test_na_in_value_column_raises_value_error() -> None:
             "report_date": ["2022-02-01"],
             "type": ["incidence"],
             "value": [None],
-        }
+        },
     )
     with pytest.raises(
         ValueError,
@@ -107,7 +107,7 @@ def test_value_column_contains_negative_values_raises_value_error() -> None:
             "report_date": ["2022-02-01"],
             "type": ["incidence"],
             "value": [-0.1],
-        }
+        },
     )
     with pytest.raises(
         ValueError,
@@ -129,7 +129,7 @@ def test_invalid_types_raises_value_error() -> None:
             "report_date": ["2022-02-01"],
             "type": ["invalid"],
             "value": [0.0],
-        }
+        },
     )
     with pytest.raises(
         ValueError,
@@ -151,7 +151,7 @@ def test_type_other_than_incidence_raises_not_implemented_error() -> None:
             "report_date": ["2025-01-31"],
             "type": ["prevalence"],
             "value": [0.1],
-        }
+        },
     )
     with pytest.raises(
         NotImplementedError,
@@ -173,7 +173,7 @@ def test_observations_with_report_date_raises_not_implemented_error() -> None:
             "report_date": ["2017-11-08", "2017-11-09"],
             "type": ["incidence", "incidence"],
             "value": [0.1, 0.11],
-        }
+        },
     )
     with pytest.raises(
         NotImplementedError,
@@ -195,7 +195,7 @@ def test_observations_with_report_date_raises_not_implemented_error() -> None:
                 "end_date": ["2025-01-31"],
                 "type": ["incidence"],
                 "value": [0.5],
-            }
+            },
         ),
         pd.DataFrame(
             data={
@@ -204,7 +204,7 @@ def test_observations_with_report_date_raises_not_implemented_error() -> None:
                 "end_date": ["1/31/2021", "2/28/2021"],
                 "type": ["incidence", "incidence"],
                 "value": [0.55, 0.62],
-            }
+            },
         ),
     ],
 )
@@ -227,7 +227,7 @@ def test_returns_copy_of_original_data_frame(observations: pd.DataFrame) -> None
                 "report_date": ["2020-01-01", "2020-01-02"],
                 "type": ["incidence", "incidence"],
                 "value": [0.4, 0.5],
-            }
+            },
         ),
         pd.DataFrame(
             data={
@@ -237,7 +237,7 @@ def test_returns_copy_of_original_data_frame(observations: pd.DataFrame) -> None
                 "other_date": ["1/8/2021", "1/15/2021"],
                 "type": ["incidence", "incidence"],
                 "value": [0.123, 0.234],
-            }
+            },
         ),
         pd.DataFrame(
             data={
@@ -247,7 +247,7 @@ def test_returns_copy_of_original_data_frame(observations: pd.DataFrame) -> None
                 "report_date": [date(2021, 1, 8), date(2021, 1, 15)],
                 "type": ["incidence", "incidence"],
                 "value": ["0.1", "0.2"],
-            }
+            },
         ),
     ],
 )

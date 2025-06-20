@@ -46,7 +46,7 @@ format: .venv
 	$(UV_PROJECT_ENVIRONMENT)/bin/ruff format
 
 check: .venv
-	$(UV_PROJECT_ENVIRONMENT)/bin/ruff check --fix
+	$(UV_PROJECT_ENVIRONMENT)/bin/ruff check --fix --unsafe-fixes
 
 lint: format check
 

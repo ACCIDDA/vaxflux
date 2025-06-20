@@ -8,7 +8,7 @@
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 project = "vaxflux"
-copyright = "2025, ACCIDDA"
+copyright = "2025, ACCIDDA"  # noqa: A001
 author = "ACCIDDA"
 
 # -- General configuration ---------------------------------------------------

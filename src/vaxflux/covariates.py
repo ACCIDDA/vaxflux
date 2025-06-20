@@ -37,7 +37,8 @@ class CovariateCategories(BaseModel):
         unique_categories = set()
         for category in categories:
             if category in unique_categories:
-                raise ValueError(f"Category '{category}' is not unique.")
+                msg = f"Category '{category}' is not unique."
+                raise ValueError(msg)
             unique_categories.add(category)
         return categories
 
@@ -87,8 +88,11 @@ def _covariate_categories_to_dict(
         for covariate_category in covariate_categories
     }
     if len(covariate_categories_dict) != len(covariate_categories):
-        raise ValueError(
+        msg = (
             "Covariate category `covariate` names must be unique to collapse to a dict."
+        )
+        raise ValueError(
+            msg,
         )
     return covariate_categories_dict
 
@@ -164,7 +168,10 @@ def _covariate_categories_product(
     for covariate_category in covariate_categories:
         names.append(covariate_category.covariate)
         categories.append(covariate_category.categories)
-    return [dict(zip(names, category)) for category in list(product(*categories))]
+    return [
+        dict(zip(names, category, strict=False))
+        for category in list(product(*categories))
+    ]
 
 
 class Covariate(ABC, BaseModel):
@@ -179,7 +186,9 @@ class Covariate(ABC, BaseModel):
 
     @abstractmethod
     def pymc_distribution(
-        self, name: str, coords: dict[str, list[str]]
+        self,
+        name: str,
+        coords: dict[str, list[str]],
     ) -> tuple[pm.Distribution, tuple[str, ...]]:
         """
         Return a PyMC3 distribution for the covariate.
@@ -211,7 +220,9 @@ class PooledCovariate(Covariate):
     distribution_kwargs: dict[str, Any]
 
     def pymc_distribution(
-        self, name: str, coords: dict[str, list[str]]
+        self,
+        name: str,
+        coords: dict[str, list[str]],  # noqa: ARG002
     ) -> tuple[pm.Distribution, tuple[str, ...]]:
         """
         Return a PyMC3 distribution for the pooled covariate.
@@ -250,7 +261,9 @@ class GaussianRandomWalkCovariate(Covariate):
     eta: Annotated[float, Field(gt=0.0)] = 1.0
 
     def pymc_distribution(
-        self, name: str, coords: dict[str, list[str]]
+        self,
+        name: str,
+        coords: dict[str, list[str]],
     ) -> tuple[pm.Distribution, tuple[str, ...]]:
         """
         Return a PyMC3 distribution for the pooled covariate.
@@ -264,25 +277,35 @@ class GaussianRandomWalkCovariate(Covariate):
             dims of the distribution.
         """
         if self.covariate is None:
+            msg = "A covariate name is required for a gaussian random walk covariate."
             raise ValueError(
-                "A covariate name is required for a gaussian random walk covariate."
+                msg,
             )
         categories_limited_coord_name = _coord_name(
-            "covariate", self.covariate, "categories", "limited"
+            "covariate",
+            self.covariate,
+            "categories",
+            "limited",
         )
         categories_limited = coords.get(categories_limited_coord_name)
         if not categories_limited:
-            raise ValueError(
+            msg = (
                 f"Missing limited categories for '{self.covariate}' in the coordinates."
+            )
+            raise ValueError(
+                msg,
             )
         len_categories_limited = len(categories_limited)
         for param in ("init_mu", "mu", "sigma"):
             attr = getattr(self, param)
             if (len_attr := len(attr)) != len_categories_limited:
-                raise ValueError(
+                msg = (
                     f"The number of values for the '{param}' parameter, "
                     f"{len_attr}, must match the number of limited "
                     f"categories, {len_categories_limited}."
+                )
+                raise ValueError(
+                    msg,
                 )
         if len_categories_limited == 1:
             return pm.GaussianRandomWalk(
@@ -302,7 +325,9 @@ class GaussianRandomWalkCovariate(Covariate):
         )
         chol = pm.expand_packed_triangular(len_categories_limited, packed_chol)
         init_dist = pm.MvNormal.dist(
-            mu=self.init_mu, chol=chol, shape=(len_categories_limited,)
+            mu=self.init_mu,
+            chol=chol,
+            shape=(len_categories_limited,),
         )
         dims = ("season", categories_limited_coord_name)
         return pm.MvGaussianRandomWalk(
@@ -334,7 +359,9 @@ class GaussianCovariate(Covariate):
     eta: Annotated[float, Field(gt=0.0)] = 1.0
 
     def pymc_distribution(
-        self, name: str, coords: dict[str, list[str]]
+        self,
+        name: str,
+        coords: dict[str, list[str]],
     ) -> tuple[pm.Distribution, tuple[str, ...]]:
         """
         Return a PyMC3 distribution for the pooled covariate.
@@ -348,25 +375,35 @@ class GaussianCovariate(Covariate):
             dims of the distribution.
         """
         if self.covariate is None:
+            msg = "A covariate name is required for a gaussian random walk covariate."
             raise ValueError(
-                "A covariate name is required for a gaussian random walk covariate."
+                msg,
             )
         categories_limited_coord_name = _coord_name(
-            "covariate", self.covariate, "categories", "limited"
+            "covariate",
+            self.covariate,
+            "categories",
+            "limited",
         )
         categories_limited = coords.get(categories_limited_coord_name)
         if not categories_limited:
-            raise ValueError(
+            msg = (
                 f"Missing limited categories for '{self.covariate}' in the coordinates."
+            )
+            raise ValueError(
+                msg,
             )
         len_categories_limited = len(categories_limited)
         for param in ("mu", "sigma"):
             attr = getattr(self, param)
             if (len_attr := len(attr)) != len_categories_limited:
-                raise ValueError(
+                msg = (
                     f"The number of values for the '{param}' parameter, "
                     f"{len_attr}, must match the number of limited "
                     f"categories, {len_categories_limited}."
+                )
+                raise ValueError(
+                    msg,
                 )
         if len_categories_limited == 1:
             return pm.Normal(
@@ -422,29 +459,34 @@ def _infer_covariate_categories_from_observations(
         # Only observations
         if not covariate_categories:
             if missing_columns := covariate_names - set(observations.columns):
-                raise ValueError(
+                msg = (
                     f"Missing required columns in the observations: {missing_columns}."
                 )
-            covariate_categories = [
+                raise ValueError(
+                    msg,
+                )
+            return [
                 CovariateCategories(
                     covariate=covariate,
                     categories=tuple(sorted(observations[covariate].unique().tolist())),
                 )
                 for covariate in covariate_names
             ]
-            return covariate_categories
         # Observations and covariate categories
         observation_covariate_categories = {
             covariate_category.covariate: covariate_category
             for covariate_category in _infer_covariate_categories_from_observations(
-                observations, covariates, []
+                observations,
+                covariates,
+                [],
             )
         }
-        if missing_covariates := set(
+        if missing_covariates := {
             covariate_category.covariate for covariate_category in covariate_categories
-        ) - set(observation_covariate_categories.keys()):
+        } - set(observation_covariate_categories.keys()):
+            msg = f"Missing covariates in the observations: {missing_covariates}."
             raise ValueError(
-                f"Missing covariates in the observations: {missing_covariates}."
+                msg,
             )
         for covariate_category in covariate_categories:
             if covariate_category.covariate in observation_covariate_categories:
@@ -452,11 +494,14 @@ def _infer_covariate_categories_from_observations(
                     covariate_category.covariate
                 ].categories
                 if missing_categories := set(observation_categories) - set(
-                    covariate_category.categories
+                    covariate_category.categories,
                 ):
-                    raise ValueError(
+                    msg = (
                         f"Missing categories for '{covariate_category.covariate}' "
                         f"in the covariate categories: {missing_categories}."
+                    )
+                    raise ValueError(
+                        msg,
                     )
     # Only covariate categories
     return covariate_categories
