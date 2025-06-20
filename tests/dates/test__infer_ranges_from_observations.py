@@ -20,7 +20,8 @@ def test_at_least_one_of_observations_or_ranges_required_value_error(
 ) -> None:
     """Test that at least one of observations or ranges is provided."""
     with pytest.raises(
-        ValueError, match="^At least one of `observations` or `ranges` is required.$"
+        ValueError,
+        match="^At least one of `observations` or `ranges` is required.$",
     ):
         _infer_ranges_from_observations(None, [], mode)
 
@@ -37,7 +38,8 @@ def test_at_least_one_of_observations_or_ranges_required_value_error(
     ],
 )
 def test_infer_ranges_from_observations_missing_columns_value_error(
-    mode: Literal["date", "season"], observations_columns: set[str]
+    mode: Literal["date", "season"],
+    observations_columns: set[str],
 ) -> None:
     """Test that the required columns are present in the observations."""
     missing_columns = _INFER_RANGES_REQUIRED_COLUMNS[mode] - set(observations_columns)
@@ -51,7 +53,7 @@ def test_infer_ranges_from_observations_missing_columns_value_error(
 
 
 @pytest.mark.parametrize(
-    ["observations", "ranges"],
+    ("observations", "ranges"),
     [
         (
             pd.DataFrame(
@@ -63,7 +65,9 @@ def test_infer_ranges_from_observations_missing_columns_value_error(
             ),
             [
                 SeasonRange(
-                    season="2024", start_date="2024-01-01", end_date="2024-12-31"
+                    season="2024",
+                    start_date="2024-01-01",
+                    end_date="2024-12-31",
                 ),
             ],
         ),
@@ -77,7 +81,9 @@ def test_infer_ranges_from_observations_missing_columns_value_error(
             ),
             [
                 SeasonRange(
-                    season="2024", start_date="2024-01-01", end_date="2024-12-31"
+                    season="2024",
+                    start_date="2024-01-01",
+                    end_date="2024-12-31",
                 ),
             ],
         ),
@@ -91,21 +97,26 @@ def test_infer_ranges_from_observations_missing_columns_value_error(
             ),
             [
                 SeasonRange(
-                    season="2025", start_date="2025-01-01", end_date="2025-12-31"
+                    season="2025",
+                    start_date="2025-01-01",
+                    end_date="2025-12-31",
                 ),
                 SeasonRange(
-                    season="2026", start_date="2026-01-01", end_date="2026-12-31"
+                    season="2026",
+                    start_date="2026-01-01",
+                    end_date="2026-12-31",
                 ),
             ],
         ),
     ],
 )
 def test_observation_season_ranges_inconsistent_with_explicit_ranges_value_error(
-    observations: pd.DataFrame, ranges: list[SeasonRange]
+    observations: pd.DataFrame,
+    ranges: list[SeasonRange],
 ) -> None:
     """Test that the observed season ranges are consistent with the explicit ranges."""
     season_names = ", ".join(
-        sorted(set(observations["season"].unique()) - {r.season for r in ranges})
+        sorted(set(observations["season"].unique()) - {r.season for r in ranges}),
     )
     with pytest.raises(
         ValueError,
@@ -128,7 +139,7 @@ def test_observation_season_ranges_inconsistent_with_explicit_ranges_value_error
                     start_date="2023-01-01",
                     end_date="2023-12-31",
                     report_date="2023-12-31",
-                )
+                ),
             ],
             "date",
         ),
@@ -199,7 +210,7 @@ def test_observation_season_ranges_inconsistent_with_explicit_ranges_value_error
                     "start_date": ["2023-01-01"],
                     "end_date": ["2023-12-31"],
                     "report_date": ["2023-12-31"],
-                }
+                },
             ),
             [],
             "date",
@@ -211,7 +222,7 @@ def test_observation_season_ranges_inconsistent_with_explicit_ranges_value_error
                     "start_date": ["2023-01-01"],
                     "end_date": ["2023-12-31"],
                     "report_date": ["2023-12-31"],
-                }
+                },
             ),
             [
                 DateRange(
@@ -219,7 +230,7 @@ def test_observation_season_ranges_inconsistent_with_explicit_ranges_value_error
                     start_date="2023-01-01",
                     end_date="2023-12-31",
                     report_date="2023-12-31",
-                )
+                ),
             ],
             "date",
         ),
@@ -230,7 +241,7 @@ def test_observation_season_ranges_inconsistent_with_explicit_ranges_value_error
                     "start_date": ["2023-12-01", "2024-01-01"],
                     "end_date": ["2023-12-31", "2024-01-31"],
                     "report_date": ["2024-01-01", "2024-02-01"],
-                }
+                },
             ),
             [
                 DateRange(
@@ -252,8 +263,10 @@ def test_observation_season_ranges_inconsistent_with_explicit_ranges_value_error
             None,
             [
                 SeasonRange(
-                    season="2023", start_date="2023-01-01", end_date="2023-12-31"
-                )
+                    season="2023",
+                    start_date="2023-01-01",
+                    end_date="2023-12-31",
+                ),
             ],
             "season",
         ),
@@ -277,13 +290,19 @@ def test_observation_season_ranges_inconsistent_with_explicit_ranges_value_error
             None,
             [
                 SeasonRange(
-                    season="2023/24", start_date="2023-11-01", end_date="2024-01-31"
+                    season="2023/24",
+                    start_date="2023-11-01",
+                    end_date="2024-01-31",
                 ),
                 SeasonRange(
-                    season="2024/25", start_date="2024-11-01", end_date="2025-01-31"
+                    season="2024/25",
+                    start_date="2024-11-01",
+                    end_date="2025-01-31",
                 ),
                 SeasonRange(
-                    season="2025/26", start_date="2025-11-01", end_date="2026-01-31"
+                    season="2025/26",
+                    start_date="2025-11-01",
+                    end_date="2026-01-31",
                 ),
             ],
             "season",
@@ -294,7 +313,7 @@ def test_observation_season_ranges_inconsistent_with_explicit_ranges_value_error
                     "season": ["2023"],
                     "start_date": ["2023-01-01"],
                     "end_date": ["2023-12-31"],
-                }
+                },
             ),
             [],
             "season",
@@ -305,14 +324,14 @@ def test_observation_season_ranges_inconsistent_with_explicit_ranges_value_error
                     "season": ["2023"],
                     "start_date": ["2023-01-01"],
                     "end_date": ["2023-12-31"],
-                }
+                },
             ),
             [
                 SeasonRange(
                     season="2023",
                     start_date="2023-01-01",
                     end_date="2023-12-31",
-                )
+                ),
             ],
             "season",
         ),
@@ -322,17 +341,23 @@ def test_observation_season_ranges_inconsistent_with_explicit_ranges_value_error
                     "season": ["2023/24", "2024/25"],
                     "start_date": ["2023-11-01", "2024-11-01"],
                     "end_date": ["2024-01-31", "2025-01-31"],
-                }
+                },
             ),
             [
                 SeasonRange(
-                    season="2023/24", start_date="2023-11-01", end_date="2024-01-31"
+                    season="2023/24",
+                    start_date="2023-11-01",
+                    end_date="2024-01-31",
                 ),
                 SeasonRange(
-                    season="2024/25", start_date="2024-11-01", end_date="2025-01-31"
+                    season="2024/25",
+                    start_date="2024-11-01",
+                    end_date="2025-01-31",
                 ),
                 SeasonRange(
-                    season="2025/26", start_date="2025-11-01", end_date="2026-01-31"
+                    season="2025/26",
+                    start_date="2025-11-01",
+                    end_date="2026-01-31",
                 ),
             ],
             "season",
@@ -388,7 +413,7 @@ def test_ranges_is_subset_of_output_when_observations_provided(
                     "start_date": ["2023-12-01"],
                     "end_date": ["2023-12-31"],
                     "report_date": ["2024-01-01"],
-                }
+                },
             ),
             [],
             "date",
@@ -409,7 +434,7 @@ def test_ranges_is_subset_of_output_when_observations_provided(
                     "start_date": ["2023-12-01"],
                     "end_date": ["2023-12-31"],
                     "report_date": ["2024-01-01"],
-                }
+                },
             ),
             [
                 DateRange(
@@ -443,7 +468,7 @@ def test_ranges_is_subset_of_output_when_observations_provided(
                     "start_date": ["2023-12-01", "2024-01-01"],
                     "end_date": ["2023-12-31", "2024-01-31"],
                     "report_date": ["2024-01-01", "2024-02-01"],
-                }
+                },
             ),
             [
                 DateRange(
@@ -478,7 +503,7 @@ def test_ranges_is_subset_of_output_when_observations_provided(
                     "end_date": 10 * ["2023-12-31"],
                     "report_date": 10 * ["2024-01-01"],
                     "value": list(range(10)),
-                }
+                },
             ),
             [],
             "date",
@@ -496,19 +521,27 @@ def test_ranges_is_subset_of_output_when_observations_provided(
             None,
             [
                 SeasonRange(
-                    season="2023/24", start_date="2023-11-01", end_date="2024-01-31"
+                    season="2023/24",
+                    start_date="2023-11-01",
+                    end_date="2024-01-31",
                 ),
                 SeasonRange(
-                    season="2024/25", start_date="2024-11-01", end_date="2025-01-31"
+                    season="2024/25",
+                    start_date="2024-11-01",
+                    end_date="2025-01-31",
                 ),
             ],
             "season",
             [
                 SeasonRange(
-                    season="2023/24", start_date="2023-11-01", end_date="2024-01-31"
+                    season="2023/24",
+                    start_date="2023-11-01",
+                    end_date="2024-01-31",
                 ),
                 SeasonRange(
-                    season="2024/25", start_date="2024-11-01", end_date="2025-01-31"
+                    season="2024/25",
+                    start_date="2024-11-01",
+                    end_date="2025-01-31",
                 ),
             ],
         ),
@@ -519,13 +552,15 @@ def test_ranges_is_subset_of_output_when_observations_provided(
                     "season": ["2023/24"],
                     "start_date": ["2023-11-01"],
                     "end_date": ["2024-01-31"],
-                }
+                },
             ),
             [],
             "season",
             [
                 SeasonRange(
-                    season="2023/24", start_date="2023-11-01", end_date="2024-01-31"
+                    season="2023/24",
+                    start_date="2023-11-01",
+                    end_date="2024-01-31",
                 ),
             ],
         ),
@@ -536,17 +571,21 @@ def test_ranges_is_subset_of_output_when_observations_provided(
                     "season": ["2023/24"],
                     "start_date": ["2023-11-01"],
                     "end_date": ["2024-01-31"],
-                }
+                },
             ),
             [
                 SeasonRange(
-                    season="2023/24", start_date="2023-11-01", end_date="2024-01-31"
+                    season="2023/24",
+                    start_date="2023-11-01",
+                    end_date="2024-01-31",
                 ),
             ],
             "season",
             [
                 SeasonRange(
-                    season="2023/24", start_date="2023-11-01", end_date="2024-01-31"
+                    season="2023/24",
+                    start_date="2023-11-01",
+                    end_date="2024-01-31",
                 ),
             ],
         ),
@@ -557,23 +596,31 @@ def test_ranges_is_subset_of_output_when_observations_provided(
                     "season": ["2023/24"],
                     "start_date": ["2023-11-01"],
                     "end_date": ["2024-01-31"],
-                }
+                },
             ),
             [
                 SeasonRange(
-                    season="2023/24", start_date="2023-11-01", end_date="2024-01-31"
+                    season="2023/24",
+                    start_date="2023-11-01",
+                    end_date="2024-01-31",
                 ),
                 SeasonRange(
-                    season="2024/25", start_date="2024-11-01", end_date="2025-01-31"
+                    season="2024/25",
+                    start_date="2024-11-01",
+                    end_date="2025-01-31",
                 ),
             ],
             "season",
             [
                 SeasonRange(
-                    season="2023/24", start_date="2023-11-01", end_date="2024-01-31"
+                    season="2023/24",
+                    start_date="2023-11-01",
+                    end_date="2024-01-31",
                 ),
                 SeasonRange(
-                    season="2024/25", start_date="2024-11-01", end_date="2025-01-31"
+                    season="2024/25",
+                    start_date="2024-11-01",
+                    end_date="2025-01-31",
                 ),
             ],
         ),
@@ -584,13 +631,15 @@ def test_ranges_is_subset_of_output_when_observations_provided(
                     "season": 10 * ["2023/24"],
                     "start_date": 10 * ["2023-11-01"],
                     "end_date": 10 * ["2024-01-31"],
-                }
+                },
             ),
             [],
             "season",
             [
                 SeasonRange(
-                    season="2023/24", start_date="2023-11-01", end_date="2024-01-31"
+                    season="2023/24",
+                    start_date="2023-11-01",
+                    end_date="2024-01-31",
                 ),
             ],
         ),
@@ -603,13 +652,15 @@ def test_ranges_is_subset_of_output_when_observations_provided(
                     "end_date": ["2023-11-30", "2023-12-31", "2024-01-31"],
                     "report_date": ["2023-12-01", "2024-01-01", "2024-02-01"],
                     "value": list(range(3)),
-                }
+                },
             ),
             [],
             "season",
             [
                 SeasonRange(
-                    season="2023/24", start_date="2023-11-01", end_date="2024-01-31"
+                    season="2023/24",
+                    start_date="2023-11-01",
+                    end_date="2024-01-31",
                 ),
             ],
         ),

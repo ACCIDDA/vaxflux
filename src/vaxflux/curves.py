@@ -48,11 +48,16 @@ class Curve(ABC):
         """
         raise NotImplementedError
 
-    def evaluate(self, *args, **kwargs):  # type: ignore[no-untyped-def]
+    def evaluate(
+        self,
+        *args: npt.NDArray[np.float64] | pt.variable.TensorVariable[Any, Any],
+        **kwargs: npt.NDArray[np.float64] | pt.variable.TensorVariable[Any, Any],
+    ) -> pt.variable.TensorVariable[Any, Any]:
         """Deprecated in favor of the `incidence` method."""
         warnings.warn(
             "The `evaluate` method is deprecated, use `incidence` instead.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self.incidence(*args, **kwargs)
 
@@ -116,7 +121,7 @@ class Curve(ABC):
 
         """
         return cast(
-            pt.variable.TensorVariable[Any, Any],
+            "pt.variable.TensorVariable[Any, Any]",
             self.prevalence(t1, **kwargs) - self.prevalence(t0, **kwargs),
         )
 
@@ -155,7 +160,7 @@ class LogisticCurve(Curve):
 
         """
         return cast(
-            pt.variable.TensorVariable[Any, Any],
+            "pt.variable.TensorVariable[Any, Any]",
             pm.math.invlogit(kwargs["m"])
             * pm.math.invlogit(pm.math.exp(kwargs["r"]) * (t - kwargs["s"])),
         )
@@ -179,7 +184,7 @@ class LogisticCurve(Curve):
         """
         u = pm.math.exp(kwargs["r"]) * (t - kwargs["s"])
         return cast(
-            pt.variable.TensorVariable[Any, Any],
+            "pt.variable.TensorVariable[Any, Any]",
             (
                 pm.math.invlogit(kwargs["m"])
                 * pm.math.exp(kwargs["r"])
@@ -223,7 +228,7 @@ class TanhCurve(Curve):
 
         """
         return cast(
-            pt.variable.TensorVariable[Any, Any],
+            "pt.variable.TensorVariable[Any, Any]",
             0.5
             * pm.math.invlogit(kwargs["m"])
             * (pm.math.tanh(pm.math.exp(kwargs["r"]) * (t - kwargs["s"])) + 1.0),
@@ -247,7 +252,7 @@ class TanhCurve(Curve):
 
         """
         return cast(
-            pt.variable.TensorVariable[Any, Any],
+            "pt.variable.TensorVariable[Any, Any]",
             0.5
             * pm.math.invlogit(kwargs["m"])
             * pm.math.exp(kwargs["r"])

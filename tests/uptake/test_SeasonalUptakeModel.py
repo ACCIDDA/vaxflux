@@ -11,7 +11,13 @@ def test_covariate_parameters_missing_value_error() -> None:
     """Covariate parameter not present in curve parameters raises a value error."""
     curve = LogisticCurve()
     assert "a" not in curve.parameters
-    with pytest.raises(ValueError):
+    with pytest.raises(
+        ValueError,
+        match=(
+            r"^The following parameters were given in the covariates, "
+            r"but not present in the curve family parameters: \['a'\].$"
+        ),
+    ):
         SeasonalUptakeModel(
             curve,
             [

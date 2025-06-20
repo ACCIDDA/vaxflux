@@ -135,7 +135,7 @@ class Implementation(BaseModel):
                     for k in sorted((self.covariate_categories or {}).keys())
                     for item in [k, self.covariate_categories[k]]  # type: ignore[index]
                 ],
-            ]
+            ],
         )
 
 
@@ -170,18 +170,21 @@ def _check_interventions_and_implementations(
     if (
         len(
             missing_intervention_names := implementation_intervention_names
-            - intervention_names
+            - intervention_names,
         )
         > 0
     ):
-        raise ValueError(
+        msg = (
             "The following implementation intervention names do not match "
             f"any interventions: {', '.join(missing_intervention_names)}."
+        )
+        raise ValueError(
+            msg,
         )
     if (
         len(
             missing_implementation_names := intervention_names
-            - implementation_intervention_names
+            - implementation_intervention_names,
         )
         > 0
     ):
@@ -189,42 +192,58 @@ def _check_interventions_and_implementations(
             f"The following interventions do not have a corresponding implementation, "
             f"affect will be unknown: {', '.join(missing_implementation_names)}.",
             RuntimeWarning,
+            stacklevel=2,
         )
     season_map = {season.season: season for season in season_ranges}
     implementation_seasons = {i.season for i in implementations}
     if len(missing_season_names := implementation_seasons - season_map.keys()) > 0:
-        raise ValueError(
+        msg = (
             "The following implementation seasons do not match "
             f"any seasons: {', '.join(missing_season_names)}."
+        )
+        raise ValueError(
+            msg,
         )
     for implementation in implementations:
         if (
             implementation.start_date is not None
             and implementation.start_date < season_map[implementation.season].start_date
         ):
-            raise ValueError(
+            msg = (
                 f"The start date of the implementation {implementation} is before "
                 f"the start date of the season {implementation.season}."
+            )
+            raise ValueError(
+                msg,
             )
         if (
             implementation.end_date is not None
             and implementation.end_date > season_map[implementation.season].end_date
         ):
-            raise ValueError(
+            msg = (
                 f"The end date of the implementation {implementation} is after "
                 f"the end date of the season {implementation.season}."
+            )
+            raise ValueError(
+                msg,
             )
     covariate_categories_map = _covariate_categories_to_dict(covariate_categories)
     for implementation in implementations:
         if implementation.covariate_categories is not None:
             for covariate, category in implementation.covariate_categories.items():
                 if covariate not in covariate_categories_map:
-                    raise ValueError(
+                    msg = (
                         f"The covariate '{covariate}' is not a valid covariate "
                         f"category."
                     )
-                if category not in covariate_categories_map[covariate]:
                     raise ValueError(
+                        msg,
+                    )
+                if category not in covariate_categories_map[covariate]:
+                    msg = (
                         f"The category '{category}' is not a valid category for "
                         f"covariate '{covariate}'."
+                    )
+                    raise ValueError(
+                        msg,
                     )

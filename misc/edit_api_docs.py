@@ -17,7 +17,7 @@ def main() -> None:
     """Main function to edit API documentation files."""
     api = Path.cwd() / "docs" / "api"
     if not api.exists():
-        return None
+        return
     modules_rst = api / "modules.rst"
     if modules_rst.exists():
         modules_rst.unlink()

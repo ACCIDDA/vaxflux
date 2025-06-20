@@ -21,7 +21,9 @@ _REQUIRED_OBSERVATION_COLUMNS: Final = {
 
 
 def _clean_name(
-    *args: str | None, joiner: str = "", transform: Callable[[str], str] = lambda x: x
+    *args: str | None,
+    joiner: str = "",
+    transform: Callable[[str], str] = lambda x: x,
 ) -> str:
     """
     Generic function to clean and join names.
@@ -58,12 +60,13 @@ def _clean_name(
         'a_b_c_d_e99'
     """
     return joiner.join(
-        map(
-            lambda x: transform(_CLEAN_TEXT_REGEX.sub(" ", x).strip()).replace(
-                " ", joiner
-            ),
-            filter(None, args),
-        )
+        (
+            transform(_CLEAN_TEXT_REGEX.sub(" ", x).strip()).replace(
+                " ",
+                joiner,
+            )
+            for x in filter(None, args)
+        ),
     )
 
 
@@ -120,10 +123,10 @@ def _make_float_list(x: float) -> list[float]: ...
 
 
 @overload
-def _make_float_list(x: Any) -> Any: ...
+def _make_float_list(x: Any) -> Any: ...  # noqa: ANN401
 
 
-def _make_float_list(x: float | int | Any) -> list[float] | Any:
+def _make_float_list(x: float | Any) -> list[float] | Any:
     """
     Utility function to make a float list from a single float or integer.
 
@@ -230,7 +233,8 @@ def _coord_index_dim(
         return coords[dim].index(category)
     if covariate_name is not None and dim == "covariate_names":
         return coords[dim].index(covariate_name)
-    raise NotImplementedError(f"Unknown dimension: '{dim}'.")
+    msg = f"Unknown dimension: '{dim}'."
+    raise NotImplementedError(msg)
 
 
 def _coord_index(
@@ -301,39 +305,56 @@ def _validate_and_format_observations(
     if observations is None:
         return None
     if not len(observations):
-        raise ValueError("No observations provided.")
+        msg = "No observations provided."
+        raise ValueError(msg)
     observation_columns = set(observations.columns)
     if missing_columns := _REQUIRED_OBSERVATION_COLUMNS - observation_columns:
-        raise ValueError(
+        msg = (
             "The observations DataFrame is missing "
             f"required columns: {missing_columns}."
+        )
+        raise ValueError(
+            msg,
         )
     observations = observations.copy()
     observations["season"] = observations["season"].astype(str)
     observations["value"] = pd.to_numeric(observations["value"])
     if observations["value"].isna().any():
-        raise ValueError(
+        msg = (
             "The observations DataFrame contains invalid values in the 'value' column."
         )
-    if observations["value"].lt(0).any():
         raise ValueError(
+            msg,
+        )
+    if observations["value"].lt(0).any():
+        msg = (
             "The observations DataFrame contains negative values in the 'value' column."
         )
+        raise ValueError(
+            msg,
+        )
     observations["type"] = pd.Categorical(
-        observations["type"].astype(str), categories=_OBSERVATION_TYPE_CATEGORIES
+        observations["type"].astype(str),
+        categories=_OBSERVATION_TYPE_CATEGORIES,
     )
     if observations["type"].isna().any():
-        raise ValueError(
+        msg = (
             "The observations DataFrame contains invalid values in the "
             f"'type' column, must be one of {_OBSERVATION_TYPE_CATEGORIES}."
         )
+        raise ValueError(
+            msg,
+        )
     if {"incidence"} != set(observations["type"].unique().tolist()):
-        raise NotImplementedError(
+        msg = (
             "Only 'incidence' data is supported, 'prevalence' and count equivalents "
             "are planned."
         )
+        raise NotImplementedError(
+            msg,
+        )
     for col in {"start_date", "end_date", "report_date"}.intersection(
-        observation_columns
+        observation_columns,
     ):
         if not is_datetime64_any_dtype(observations[col]):
             observations[col] = pd.to_datetime(observations[col])
@@ -341,11 +362,14 @@ def _validate_and_format_observations(
         observations["report_date"] = observations["end_date"].copy()
     unique_start_end = observations.drop_duplicates(["start_date", "end_date"])
     unique_start_end_report = observations.drop_duplicates(
-        ["start_date", "end_date", "report_date"]
+        ["start_date", "end_date", "report_date"],
     )
     if len(unique_start_end) != len(unique_start_end_report):
-        raise NotImplementedError(
+        msg = (
             "Observations with differing report dates were provided, "
             "nowcasting is not currently supported but planned."
+        )
+        raise NotImplementedError(
+            msg,
         )
     return observations

@@ -8,7 +8,7 @@ import pytest
 from vaxflux.dates import DateRange, SeasonRange, daily_date_ranges
 
 
-@pytest.mark.parametrize("range_days", (-10, -1))
+@pytest.mark.parametrize("range_days", [-10, -1])
 def test_daily_date_ranges_invalid_range_days_value_error(range_days: int) -> None:
     """Test `ValueError` is raised when `range_days` is less than 1."""
     with pytest.raises(
@@ -25,7 +25,7 @@ def test_daily_date_ranges_invalid_range_days_value_error(range_days: int) -> No
         )
 
 
-@pytest.mark.parametrize("range_days", (2, 10, 14))
+@pytest.mark.parametrize("range_days", [2, 10, 14])
 def test_daily_date_ranges_invalid_range_days_remainder_raise(range_days: int) -> None:
     """Test `ValueError` is raised when `remainder` is 'raise'."""
     season_range = SeasonRange(
@@ -47,7 +47,7 @@ def test_daily_date_ranges_invalid_range_days_remainder_raise(range_days: int) -
 
 @pytest.mark.parametrize(
     "season_ranges",
-    (
+    [
         [
             SeasonRange(
                 season="Dec 2019",
@@ -96,10 +96,10 @@ def test_daily_date_ranges_invalid_range_days_remainder_raise(range_days: int) -
                 end_date=date(2024, 2, 29),
             ),
         ],
-    ),
+    ],
 )
-@pytest.mark.parametrize("range_days", (0, 1, 2, 5, 7))
-@pytest.mark.parametrize("remainder", ("fill", "skip"))
+@pytest.mark.parametrize("range_days", [0, 1, 2, 5, 7])
+@pytest.mark.parametrize("remainder", ["fill", "skip"])
 def test_output_validation(
     season_ranges: list[SeasonRange],
     range_days: int,
@@ -107,7 +107,9 @@ def test_output_validation(
 ) -> None:
     """Test output validation."""
     date_ranges = daily_date_ranges(
-        season_ranges, range_days=range_days, remainder=remainder
+        season_ranges,
+        range_days=range_days,
+        remainder=remainder,
     )
     assert isinstance(date_ranges, list)
     assert all(isinstance(date_range, DateRange) for date_range in date_ranges)
