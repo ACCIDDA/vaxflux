@@ -19,6 +19,22 @@ uv sync
 uv pip install --editable .
 ```
 
+# Documentation
+
+`vaxflux`'s documentation is not hosted yet, but can be viewed locally by installing from source (see above). Then in your clone of `vaxflux` you can run the following commands:
+
+```bash
+make docs
+make serve
+```
+
+These commands will:
+
+1. Build the documentation, namely the API reference which is not included in the git repository, and
+2. Launch python's built-in webserver to view the documentation in your browser.
+
+The documentation will be available for viewing at `http://localhost:8000/`. The port might vary, please consult `make serve` output to confirm.
+
 # Contributing
 
 To contribute install the package from source (as described above). `vaxflux` uses several tools to maintain code quality which can be run as follows:
