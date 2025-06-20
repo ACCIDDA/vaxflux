@@ -49,3 +49,7 @@ The source for this package also includes a `Makefile` with these commands built
 * `make ci`: Will replicate the steps that the GitHub CI workflow will do to make it easier for contributors to debug CI failures locally.
 
 The `Makefile` has only been tested with MacOS/Linux so it may not work as expected on Windows.
+
+# Funding Acknowledgement
+
+This project was made possible by cooperative agreement CDC-RFA-FT-23-0069 from the CDC's Center for Forecasting and Outbreak Analytics. Its contents are solely the responsibility of the authors and do not necessarily represent the official views of the Centers for Disease Control and Prevention.
