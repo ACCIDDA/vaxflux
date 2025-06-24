@@ -1,9 +1,6 @@
 name: CI
 
 on:
-  push:
-    branches:
-      - main
   pull_request:
     branches:
       - main
@@ -21,8 +18,6 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-      - name: Setup pandoc for docs
-        uses: r-lib/actions/setup-pandoc@v2
       - name: Setup uv with python ${{ matrix.python-version }}
         uses: astral-sh/setup-uv@v6
         with:
@@ -31,5 +26,27 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - name: Run Checks
         run: make ci
+        env:
+          UV_PYTHON_VERSION: ${{ matrix.python-version }}
+  docs:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version:
+          - '3.12'
+    needs: ci
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Setup pandoc for docs
+        uses: r-lib/actions/setup-pandoc@v2
+      - name: Setup uv with python ${{ matrix.python-version }}
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+          cache-dependency-glob: 'pyproject.toml'
+          python-version: ${{ matrix.python-version }}
+      - name: Build docs
+        run: make docs
         env:
           UV_PYTHON_VERSION: ${{ matrix.python-version }}

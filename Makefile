@@ -26,7 +26,7 @@ clean:
 	uv sync --all-extras
 	uv pip install --editable .
 
-rstcheck:
+rstcheck: .venv
 	$(UV_PROJECT_ENVIRONMENT)/bin/rstcheck --warn-unknown-settings --recursive docs/
 
 docs/_build: .venv
@@ -71,4 +71,3 @@ ci: .venv
 	$(UV_PROJECT_ENVIRONMENT)/bin/ruff check --no-fix
 	$(UV_PROJECT_ENVIRONMENT)/bin/mypy --strict .
 	$(UV_PROJECT_ENVIRONMENT)/bin/pytest --doctest-modules --exitfirst
-	@$(MAKE) docs
