@@ -36,6 +36,7 @@ html_context = {
     "doc_path": "docs",
 }
 html_sidebars: dict[str, list[str]] = {
+    "changes": [],
     "installation": [],
     "introduction": [],
     "getting-started": [],
