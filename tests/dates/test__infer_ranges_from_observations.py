@@ -53,7 +53,7 @@ def test_infer_ranges_from_observations_missing_columns_value_error(
 
 
 @pytest.mark.parametrize(
-    ("observations", "ranges"),
+    ("observations", "ranges", "season_names"),
     [
         (
             pd.DataFrame(
@@ -70,6 +70,7 @@ def test_infer_ranges_from_observations_missing_columns_value_error(
                     end_date="2024-12-31",
                 ),
             ],
+            ["2023"],
         ),
         (
             pd.DataFrame(
@@ -86,6 +87,7 @@ def test_infer_ranges_from_observations_missing_columns_value_error(
                     end_date="2024-12-31",
                 ),
             ],
+            ["2023"],
         ),
         (
             pd.DataFrame(
@@ -107,22 +109,79 @@ def test_infer_ranges_from_observations_missing_columns_value_error(
                     end_date="2026-12-31",
                 ),
             ],
+            ["2023", "2024"],
+        ),
+        (
+            pd.DataFrame(
+                data={
+                    "season": ["2025"],
+                    "start_date": ["2024-12-01"],
+                    "end_date": ["2025-12-31"],
+                },
+            ),
+            [
+                SeasonRange(
+                    season="2025",
+                    start_date="2025-01-01",
+                    end_date="2025-12-31",
+                ),
+            ],
+            ["2025"],
+        ),
+        (
+            pd.DataFrame(
+                data={
+                    "season": ["2025"],
+                    "start_date": ["2025-01-01"],
+                    "end_date": ["2026-01-31"],
+                },
+            ),
+            [
+                SeasonRange(
+                    season="2025",
+                    start_date="2025-01-01",
+                    end_date="2025-12-31",
+                ),
+            ],
+            ["2025"],
+        ),
+        (
+            pd.DataFrame(
+                data={
+                    "season": ["2025", "2026"],
+                    "start_date": ["2025-01-01", "2026-01-01"],
+                    "end_date": ["2025-12-31", "2027-01-10"],
+                },
+            ),
+            [
+                SeasonRange(
+                    season="2025",
+                    start_date="2025-01-01",
+                    end_date="2025-12-31",
+                ),
+                SeasonRange(
+                    season="2026",
+                    start_date="2025-01-01",
+                    end_date="2025-12-31",
+                ),
+            ],
+            ["2026"],
         ),
     ],
 )
 def test_observation_season_ranges_inconsistent_with_explicit_ranges_value_error(
     observations: pd.DataFrame,
     ranges: list[SeasonRange],
+    season_names: list[str],
 ) -> None:
     """Test that the observed season ranges are consistent with the explicit ranges."""
-    season_names = ", ".join(
-        sorted(set(observations["season"].unique()) - {r.season for r in ranges}),
-    )
     with pytest.raises(
         ValueError,
         match=(
-            "^The observed season ranges are not consistent with the "
-            f"explicit season ranges, not accounting for: {season_names}.$"
+            "^The observed season ranges are not consistent with the explicit season "
+            f"ranges: {', '.join(sorted(season_names))}. Either they are not present "
+            "in the explicit ranges or the observed dates are not within the explicit "
+            "ranges.$"
         ),
     ):
         _infer_ranges_from_observations(observations, ranges, "season")
@@ -358,6 +417,42 @@ def test_observation_season_ranges_inconsistent_with_explicit_ranges_value_error
                     season="2025/26",
                     start_date="2025-11-01",
                     end_date="2026-01-31",
+                ),
+            ],
+            "season",
+        ),
+        (
+            pd.DataFrame(
+                data={
+                    "season": ["2023/24", "2024/25"],
+                    "start_date": ["2023-11-01", "2024-11-01"],
+                    "end_date": ["2024-01-31", "2025-01-31"],
+                },
+            ),
+            [
+                SeasonRange(
+                    season="2023/24", start_date="2023-09-01", end_date="2024-03-31"
+                ),
+                SeasonRange(
+                    season="2024/25", start_date="2024-09-01", end_date="2025-03-31"
+                ),
+            ],
+            "season",
+        ),
+        (
+            pd.DataFrame(
+                data={
+                    "season": ["2023/24", "2024/25"],
+                    "start_date": ["2023-09-01", "2024-11-01"],
+                    "end_date": ["2024-03-31", "2025-01-31"],
+                },
+            ),
+            [
+                SeasonRange(
+                    season="2023/24", start_date="2023-09-01", end_date="2024-03-31"
+                ),
+                SeasonRange(
+                    season="2024/25", start_date="2024-10-01", end_date="2025-04-30"
                 ),
             ],
             "season",
