@@ -4,7 +4,7 @@ __all__ = ("DateRange", "SeasonRange", "daily_date_ranges")
 
 
 from datetime import date, datetime, timedelta
-from typing import Final, Literal, NamedTuple, TypeVar, cast
+from typing import Final, Literal, NamedTuple, TypeVar
 
 import pandas as pd
 from pydantic import BaseModel, ConfigDict, model_validator
@@ -313,19 +313,33 @@ def _infer_ranges_from_observations(
             if mode == "date":
                 return list(set(ranges) | set(observation_ranges))
             if non_explicit_ranges := set(observation_ranges) - set(ranges):
-                non_explicit_season_ranges = cast(
-                    "set[SeasonRange]",
-                    non_explicit_ranges,
-                )
+                ranges_map = {r.season: r for r in ranges}
                 season_names = ", ".join(
-                    sorted({season.season for season in non_explicit_season_ranges}),
+                    sorted(
+                        [
+                            non_explicit_range.season
+                            for non_explicit_range in non_explicit_ranges
+                            if (
+                                explicit_range := ranges_map.get(
+                                    non_explicit_range.season
+                                )
+                            )
+                            is None
+                            or (
+                                explicit_range.start_date
+                                > non_explicit_range.start_date
+                                or explicit_range.end_date < non_explicit_range.end_date
+                            )
+                        ]
+                    )
                 )
-                msg = (
-                    "The observed season ranges are not consistent with the "
-                    f"explicit season ranges, not accounting for: {season_names}."
-                )
-                raise ValueError(
-                    msg,
-                )
+                if season_names:
+                    msg = (
+                        "The observed season ranges are not consistent with the "
+                        f"explicit season ranges: {season_names}. Either they are not "
+                        "present in the explicit ranges or the observed dates are not "
+                        "within the explicit ranges."
+                    )
+                    raise ValueError(msg)
     # Only ranges
     return ranges
