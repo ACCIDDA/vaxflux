@@ -344,7 +344,7 @@ def sample_dataset(
     season_ranges_map = {
         season_range.season: season_range for season_range in season_ranges
     }
-    categories_prod = _covariate_categories_product(covariate_categories)
+    categories_prod = _covariate_categories_product(covariate_categories) or [{}]
     records = []
     for date_range in date_ranges:
         for category_prod in categories_prod:
