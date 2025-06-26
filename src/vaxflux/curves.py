@@ -15,7 +15,6 @@ __all__ = (
 )
 
 
-import warnings
 from abc import ABC, abstractmethod
 from typing import Any, cast
 
@@ -23,6 +22,7 @@ import numpy as np
 import numpy.typing as npt
 import pymc as pm
 import pytensor.tensor as pt
+from scipy.special import logit
 
 
 class Curve(ABC):
@@ -48,24 +48,13 @@ class Curve(ABC):
         """
         raise NotImplementedError
 
-    def evaluate(
-        self,
-        *args: npt.NDArray[np.float64] | pt.variable.TensorVariable[Any, Any],
-        **kwargs: npt.NDArray[np.float64] | pt.variable.TensorVariable[Any, Any],
-    ) -> pt.variable.TensorVariable[Any, Any]:
-        """Deprecated in favor of the `incidence` method."""
-        warnings.warn(
-            "The `evaluate` method is deprecated, use `incidence` instead.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.incidence(*args, **kwargs)
-
     @abstractmethod
     def incidence(
         self,
         t: npt.NDArray[np.float64] | pt.variable.TensorVariable[Any, Any],
-        **kwargs: npt.NDArray[np.float64] | pt.variable.TensorVariable[Any, Any],
+        **kwargs: npt.NDArray[np.float64]
+        | pt.variable.TensorVariable[Any, Any]
+        | float,
     ) -> pt.variable.TensorVariable[Any, Any]:
         """
         Evaluate the incidence curve at given set of time steps.
@@ -85,7 +74,9 @@ class Curve(ABC):
     def prevalence(
         self,
         t: npt.NDArray[np.float64] | pt.variable.TensorVariable[Any, Any],
-        **kwargs: npt.NDArray[np.float64] | pt.variable.TensorVariable[Any, Any],
+        **kwargs: npt.NDArray[np.float64]
+        | pt.variable.TensorVariable[Any, Any]
+        | float,
     ) -> pt.variable.TensorVariable[Any, Any]:
         """
         Evaluate the prevalence curve at given set of time steps.
@@ -105,7 +96,9 @@ class Curve(ABC):
         self,
         t0: npt.NDArray[np.float64] | pt.variable.TensorVariable[Any, Any],
         t1: npt.NDArray[np.float64] | pt.variable.TensorVariable[Any, Any],
-        **kwargs: npt.NDArray[np.float64] | pt.variable.TensorVariable[Any, Any],
+        **kwargs: npt.NDArray[np.float64]
+        | pt.variable.TensorVariable[Any, Any]
+        | float,
     ) -> pt.variable.TensorVariable[Any, Any]:
         """
         Evaluate the difference in prevalence between two time steps.
@@ -124,6 +117,69 @@ class Curve(ABC):
             "pt.variable.TensorVariable[Any, Any]",
             self.prevalence(t1, **kwargs) - self.prevalence(t0, **kwargs),
         )
+
+    def propose_p0(
+        self, t: npt.NDArray[np.float64], y: npt.NDArray[np.float64]
+    ) -> tuple[float, ...]:
+        """
+        Propose an initial guess for the model parameters given a single timeseries.
+
+        Args:
+            t: The time steps to evaluate the incidence curve at.
+            y: The prevalence values at the time steps provided.
+
+        Returns:
+            A proposed initial value for the prevalence at time zero with each entry
+            corresponding to a parameter in the `parameters` attribute.
+
+        Raises:
+            NotImplementedError: If the method is not implemented by the subclass.
+
+        """
+        raise NotImplementedError
+
+    def get_p0_proposal(
+        self, t: npt.NDArray[np.float64], y: npt.NDArray[np.float64]
+    ) -> tuple[float, ...]:
+        """
+        Get a proposed initial guess for the model parameters given a single timeseries.
+
+        Args:
+            t: The time steps to evaluate the incidence curve at.
+            y: The prevalence values at the time steps provided.
+
+        Returns:
+            A proposed initial value for the prevalence at time zero.
+
+        Raises:
+            ValueError: If the length of `t` and `y` do not match.
+            ValueError: If the length of `t` is less than the number of parameters
+                plus one.
+            ValueError: If the time steps or prevalence values are not monotonically
+                increasing.
+            ValueError: If the length of `p0` does not match the number of parameters
+                in the `parameters` attribute.
+
+        """
+        if len(t) != len(y):
+            msg = f"Expected {len(t)} time steps, got {len(y)} prevalence values."
+            raise ValueError(msg)
+        if len(t) < len(self.parameters) + 1:
+            msg = (
+                f"Expected at least {len(self.parameters) + 1} "
+                f"time steps, got {len(t)}."
+            )
+            raise ValueError(msg)
+        if np.any(np.diff(t) < 0) or np.any(np.diff(y) < 0):
+            msg = (
+                "The time steps and prevalence values must be monotonically increasing."
+            )
+            raise ValueError(msg)
+        p0 = self.propose_p0(t, y)
+        if len(p0) != len(self.parameters):
+            msg = f"Expected {len(self.parameters)} parameters, got {len(p0)}."
+            raise ValueError(msg)
+        return p0
 
 
 class LogisticCurve(Curve):
@@ -145,7 +201,9 @@ class LogisticCurve(Curve):
     def prevalence(
         self,
         t: npt.NDArray[np.float64] | pt.variable.TensorVariable[Any, Any],
-        **kwargs: npt.NDArray[np.float64] | pt.variable.TensorVariable[Any, Any],
+        **kwargs: npt.NDArray[np.float64]
+        | pt.variable.TensorVariable[Any, Any]
+        | float,
     ) -> pt.variable.TensorVariable[Any, Any]:
         """
         Evaluate the prevalence curve at given set of time steps.
@@ -168,7 +226,9 @@ class LogisticCurve(Curve):
     def incidence(
         self,
         t: npt.NDArray[np.float64] | pt.variable.TensorVariable[Any, Any],
-        **kwargs: npt.NDArray[np.float64] | pt.variable.TensorVariable[Any, Any],
+        **kwargs: npt.NDArray[np.float64]
+        | pt.variable.TensorVariable[Any, Any]
+        | float,
     ) -> pt.variable.TensorVariable[Any, Any]:
         """
         Evaluate the incidence curve at given set of time steps.
@@ -193,6 +253,45 @@ class LogisticCurve(Curve):
             ),
         )
 
+    def propose_p0(
+        self, t: npt.NDArray[np.float64], y: npt.NDArray[np.float64]
+    ) -> tuple[float, ...]:
+        r"""
+        Propose an initial guess for the model parameters given a single timeseries.
+
+        Args:
+            t: The time steps to evaluate the incidence curve at.
+            y: The prevalence values at the time steps provided.
+
+        Returns:
+            A proposed initial value for the prevalence at time zero with each entry
+            corresponding to a parameter in the `parameters` attribute.
+
+        Notes:
+            This method proposes an initial guess for the parameters of the logistic
+            curve by:
+
+            - Taking the second largest value of the prevalence as the initial value
+                for the parameter :math:`\\mathrm{invlogit}\\left(m\right)`.
+            - Finding the time step closest to the midpoint of the prevalence values
+                as the initial value for :math:`s`.
+            - Taking the slope at the inflection point as the initial value for
+                :math:`e^r`.
+
+            This initial proposal is a rough heuristic and may not be optimal for all
+            datasets. It is recommended to use this as a starting point and refine the
+            parameters using a fitting procedure.
+
+        """
+        # The second largest value is used as the initial value for m.
+        m = logit(np.partition(y, -2)[-2])
+        # The inflection point is the time closest to the prevalence values midpoint.
+        t_idx = np.argmin(np.abs(y - (0.5 * (np.max(y) - np.min(y))) + np.min(y)))
+        s = t[t_idx]
+        # Take the slope at the inflection point as the initial value for r.
+        r = np.log(np.gradient(y, t)[t_idx])
+        return (m, r, s)
+
 
 class TanhCurve(Curve):
     r"""
@@ -213,7 +312,9 @@ class TanhCurve(Curve):
     def prevalence(
         self,
         t: npt.NDArray[np.float64] | pt.variable.TensorVariable[Any, Any],
-        **kwargs: npt.NDArray[np.float64] | pt.variable.TensorVariable[Any, Any],
+        **kwargs: npt.NDArray[np.float64]
+        | pt.variable.TensorVariable[Any, Any]
+        | float,
     ) -> pt.variable.TensorVariable[Any, Any]:
         """
         Evaluate the prevalence curve at given set of time steps.
@@ -237,7 +338,9 @@ class TanhCurve(Curve):
     def incidence(
         self,
         t: npt.NDArray[np.float64] | pt.variable.TensorVariable[Any, Any],
-        **kwargs: npt.NDArray[np.float64] | pt.variable.TensorVariable[Any, Any],
+        **kwargs: npt.NDArray[np.float64]
+        | pt.variable.TensorVariable[Any, Any]
+        | float,
     ) -> pt.variable.TensorVariable[Any, Any]:
         """
         Evaluate the incidence curve at given set of time steps.
