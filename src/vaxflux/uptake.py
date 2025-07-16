@@ -92,6 +92,8 @@ class SeasonalUptakeModel:
             None
 
         Raises:
+            NotImplementedError: If the observations DataFrame contains values other
+                than 'incidence' in the 'type' column.
             ValueError: If a covariate parameter is not present in the curve family
                 parameters.
 
@@ -100,6 +102,14 @@ class SeasonalUptakeModel:
         self.curve = copy.deepcopy(curve)
         self.name = name
         self.observations = _validate_and_format_observations(observations)
+        if self.observations is not None and set(
+            self.observations["type"].unique().tolist()
+        ) != {"incidence"}:
+            msg = (
+                "Only 'incidence' data is supported, 'prevalence' and count "
+                "equivalents are planned."
+            )
+            raise NotImplementedError(msg)
 
         # Private attributes
         self._covariates = copy.deepcopy(covariates)

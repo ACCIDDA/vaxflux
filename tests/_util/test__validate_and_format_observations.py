@@ -141,28 +141,6 @@ def test_invalid_types_raises_value_error() -> None:
         _validate_and_format_observations(observations)
 
 
-def test_type_other_than_incidence_raises_not_implemented_error() -> None:
-    """Observations with non-'incidence' types raises a `NotImplementedError`."""
-    observations = pd.DataFrame(
-        data={
-            "season": ["2024/25"],
-            "start_date": ["2025-01-01"],
-            "end_date": ["2025-01-31"],
-            "report_date": ["2025-01-31"],
-            "type": ["prevalence"],
-            "value": [0.1],
-        },
-    )
-    with pytest.raises(
-        NotImplementedError,
-        match=(
-            "^Only 'incidence' data is supported, 'prevalence' "
-            "and count equivalents are planned.$"
-        ),
-    ):
-        _validate_and_format_observations(observations)
-
-
 def test_observations_with_report_date_raises_not_implemented_error() -> None:
     """Observations with a 'report_date' raises a `NotImplementedError`."""
     observations = pd.DataFrame(
