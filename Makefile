@@ -2,16 +2,17 @@ UV_PROJECT_ENVIRONMENT ?= .venv
 RM                     := rm -f
 RMDIR                  := rm -rf
 
-.PHONY: all check ci clean clean-docs docs format lint mypy pytest rstcheck serve
-
+.PHONY: all
 all: clean .venv lint mypy pytest docs
 
+.PHONY: clean-docs
 clean-docs:
 	$(RMDIR) docs/__pycache__
 	$(RMDIR) docs/api
 	$(RMDIR) docs/_build
 	$(RM) docs/changes.rst
 
+.PHONY: clean
 clean:
 	$(RMDIR) .mypy_cache
 	$(RMDIR) .pytest_cache
@@ -26,6 +27,7 @@ clean:
 	uv sync --all-extras
 	uv pip install --editable .
 
+.PHONY: rstcheck
 rstcheck: .venv
 	$(UV_PROJECT_ENVIRONMENT)/bin/rstcheck --warn-unknown-settings --recursive docs/
 
@@ -43,29 +45,37 @@ docs/_build: .venv
 docs/changes.rst: .venv
 	pandoc --from=markdown --to=rst --output=docs/changes.rst CHANGES.md
 
+.PHONY: docs
 docs:
 	@$(MAKE) clean-docs
 	@$(MAKE) rstcheck
 	@$(MAKE) docs/changes.rst
 	@$(MAKE) docs/_build
 
+.PHONY: serve
 serve: .venv docs
 	$(UV_PROJECT_ENVIRONMENT)/bin/python -m http.server --directory docs/_build
 
+.PHONY: format
 format: .venv
 	$(UV_PROJECT_ENVIRONMENT)/bin/ruff format
 
+.PHONY: check
 check: .venv
 	$(UV_PROJECT_ENVIRONMENT)/bin/ruff check --fix --unsafe-fixes
 
+.PHONY: lint
 lint: format check
 
+.PHONY: mypy
 mypy: .venv
 	$(UV_PROJECT_ENVIRONMENT)/bin/mypy --strict .
 
+.PHONY: pytest
 pytest: .venv
 	$(UV_PROJECT_ENVIRONMENT)/bin/pytest --doctest-modules
 
+.PHONY: ci
 ci: .venv
 	$(UV_PROJECT_ENVIRONMENT)/bin/ruff format --check
 	$(UV_PROJECT_ENVIRONMENT)/bin/ruff check --no-fix
