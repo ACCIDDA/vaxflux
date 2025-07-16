@@ -5,6 +5,7 @@ __all__ = (
     "curves",
     "data",
     "dates",
+    "fitting",
     "interventions",
     "uptake",
 )
@@ -16,6 +17,7 @@ from vaxflux import (
     curves,
     data,
     dates,
+    fitting,
     interventions,
     uptake,
 )
