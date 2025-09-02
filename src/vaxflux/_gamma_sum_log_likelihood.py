@@ -146,7 +146,7 @@ def _delta_k(alpha: Array, beta: Array, min_beta: ArrayLike, k: Array) -> Array:
 
 
 def _gamma_sum_log_likelihood(
-    y: ArrayLike, alpha: Array, beta: Array, n_k: int = 30
+    y: ArrayLike, alpha: Array, beta: Array, n_k: int = 100
 ) -> ArrayLike:
     """
     Compute the log-likelihood of a sum of gamma-distributed variables.
