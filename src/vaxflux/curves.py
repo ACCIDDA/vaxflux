@@ -130,12 +130,12 @@ class LogisticCurve(Curve):
     r"""
     Logistic uptake curve.
 
-    This class implements a logistic curve with parameters :math:`m`, :math:`r`, and
-    :math:`s` which is given by:
+    This class implements a logistic curve with parameters $m$, $r$, and $s$ which is
+    given by:
 
-    .. math::
-
-        f(t\vert m,r,s)=\mathrm{invlogit}\left(m\right)\mathrm{logit}\left(e^r\left(t-s\right)\right)
+    $$
+    f(t\vert m,r,s)=\mathrm{invlogit}\left(m\right)\mathrm{logit}\left(e^r\left(t-s\right)\right)
+    $$
 
     """  # noqa: E501
 
@@ -198,12 +198,12 @@ class TanhCurve(Curve):
     r"""
     Tanh uptake curve.
 
-    This class implements a :math:`\tanh` curve with parameters :math:`m`, :math:`r`,
-    and :math:`s` which is given by:
+    This class implements a $\tanh$ curve with parameters $m$, $r$, and $s$ which is
+    given by:
 
-    .. math::
-
-        f(t\vert m,r,s)=\frac{1}{2}\mathrm{invlogit}\left(m\right)\left(\tanh\left(e^r\left(t-s\right)\right)+1\right)
+    $$
+    f(t\vert m,r,s)=\frac{1}{2}\mathrm{invlogit}\left(m\right)\left(\tanh\left(e^r\left(t-s\right)\right)+1\right)
+    $$
 
     """  # noqa: E501
 

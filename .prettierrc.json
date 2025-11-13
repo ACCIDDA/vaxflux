@@ -1,0 +1,15 @@
+{
+  "printWidth": 80,
+  "proseWrap": "always",
+  "endOfLine": "lf",
+  "tabWidth": 2,
+  "singleQuote": true,
+  "overrides": [
+    {
+      "files": "*.yaml",
+      "options": {
+        "singleQuote": true
+      }
+    }
+  ]
+}

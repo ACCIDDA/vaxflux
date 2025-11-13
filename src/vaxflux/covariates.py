@@ -205,13 +205,7 @@ class Covariate(ABC, BaseModel):
 
 
 class PooledCovariate(Covariate):
-    """
-    A pooled covariate for uptake models.
-
-    Returns:
-        A PyMC3 distribution describing the effect of the covariate along with the
-        dims of the distribution.
-    """
+    """A pooled covariate for uptake models."""
 
     #: The PyMC3 distribution to use for the covariate.
     distribution: str
@@ -239,13 +233,7 @@ class PooledCovariate(Covariate):
 
 
 class GaussianRandomWalkCovariate(Covariate):
-    """
-    A gaussian random walk covariate for uptake models.
-
-    Returns:
-        A PyMC3 distribution describing the effect of the covariate along with the
-        dims of the distribution.
-    """
+    """A gaussian random walk covariate for uptake models."""
 
     #: The initial mean for the gaussian random walk.
     init_mu: ListOfFloats
@@ -340,13 +328,7 @@ class GaussianRandomWalkCovariate(Covariate):
 
 
 class GaussianCovariate(Covariate):
-    """
-    A gaussian random variable covariate for uptake models.
-
-    Returns:
-        A PyMC3 distribution describing the effect of the covariate along with the
-        dims of the distribution.
-    """
+    """A gaussian random variable covariate for uptake models."""
 
     #: Prior mean for the gaussian random variables.
     mu: ListOfFloats

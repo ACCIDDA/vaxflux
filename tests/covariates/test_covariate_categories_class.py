@@ -14,7 +14,7 @@ from vaxflux.covariates import CovariateCategories
         (("a", "b", "a", "b"), "a"),
     ],
 )
-def test_nonunique_categories_value_error(
+def test_non_unique_categories_value_error(
     categories: tuple[str],
     duplicate_category: str,
 ) -> None:

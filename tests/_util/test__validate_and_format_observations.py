@@ -49,7 +49,7 @@ def test_none_returns_none() -> None:
 )
 def test_zero_length_data_frame_value_error(observations: pd.DataFrame) -> None:
     """Providing a zero-length data frame raises a `ValueError`."""
-    with pytest.raises(ValueError, match="^No observations provided.$"):
+    with pytest.raises(ValueError, match=r"^No observations provided.$"):
         _validate_and_format_observations(observations)
 
 
@@ -70,7 +70,7 @@ def test_missing_required_columns_raises_value_error(
     observations = PERFECT_OBSERVATIONS.drop(columns=columns_to_drop)
     with pytest.raises(
         ValueError,
-        match="^The observations DataFrame is missing required columns: .*.$",
+        match=r"^The observations DataFrame is missing required columns: .*.$",
     ):
         _validate_and_format_observations(observations)
 
@@ -90,8 +90,8 @@ def test_na_in_value_column_raises_value_error() -> None:
     with pytest.raises(
         ValueError,
         match=(
-            "^The observations DataFrame contains "
-            "invalid values in the 'value' column.$"
+            r"^The observations DataFrame contains "
+            r"invalid values in the 'value' column.$"
         ),
     ):
         _validate_and_format_observations(observations)
@@ -112,8 +112,8 @@ def test_value_column_contains_negative_values_raises_value_error() -> None:
     with pytest.raises(
         ValueError,
         match=(
-            "^The observations DataFrame contains "
-            "negative values in the 'value' column.$"
+            r"^The observations DataFrame contains "
+            r"negative values in the 'value' column.$"
         ),
     ):
         _validate_and_format_observations(observations)
@@ -134,8 +134,8 @@ def test_invalid_types_raises_value_error() -> None:
     with pytest.raises(
         ValueError,
         match=(
-            "^The observations DataFrame contains invalid "
-            "values in the 'type' column, must be one of .*.$"
+            r"^The observations DataFrame contains invalid "
+            r"values in the 'type' column, must be one of .*.$"
         ),
     ):
         _validate_and_format_observations(observations)
@@ -156,8 +156,8 @@ def test_type_other_than_incidence_raises_not_implemented_error() -> None:
     with pytest.raises(
         NotImplementedError,
         match=(
-            "^Only 'incidence' data is supported, 'prevalence' "
-            "and count equivalents are planned.$"
+            r"^Only 'incidence' data is supported, 'prevalence' "
+            r"and count equivalents are planned.$"
         ),
     ):
         _validate_and_format_observations(observations)
@@ -178,8 +178,8 @@ def test_observations_with_report_date_raises_not_implemented_error() -> None:
     with pytest.raises(
         NotImplementedError,
         match=(
-            "^Observations with differing report dates were provided, "
-            "nowcasting is not currently supported but planned.$"
+            r"^Observations with differing report dates were provided, "
+            r"nowcasting is not currently supported but planned.$"
         ),
     ):
         _validate_and_format_observations(observations)

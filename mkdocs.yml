@@ -1,0 +1,67 @@
+---
+# Site information
+site_name: vaxflux Documentation
+site_url: https://accidda.github.io/vaxflux/
+
+# Repository information
+repo_name: ACCIDDA/vaxflux
+repo_url: https://github.com/ACCIDDA/vaxflux
+edit_uri: ''
+
+# Theme information and customization
+theme:
+  name: material
+  custom_dir: overrides
+
+extra_javascript:
+  - javascripts/katex.js
+  - https://unpkg.com/katex@0/dist/katex.min.js
+  - https://unpkg.com/katex@0/dist/contrib/auto-render.min.js
+
+extra_css:
+  - https://unpkg.com/katex@0/dist/katex.min.css
+
+# Plugins
+plugins:
+  - search
+  - autorefs
+  - mkdocstrings:
+      handlers:
+        python:
+          options:
+            docstring_style: google
+            show_source: true
+            show_root_heading: true
+            show_root_full_path: false
+            merge_init_into_class: true
+            heading_level: 2
+
+# Extras
+extra:
+  version:
+    provider: mike
+
+# Markdown extensions
+markdown_extensions:
+  - toc:
+      permalink: true
+      toc_depth: 4
+  - attr_list
+  - pymdownx.arithmatex:
+      generic: true
+
+# Navigation structure
+nav:
+  - Home: index.md
+  - Introdution: introduction.md
+  - Installation: installation.md
+  - Getting Started: getting-started.md
+  - Model Details: model-details.md
+  - API Reference:
+      - Covariates: api/covariates.md
+      - Curves: api/curves.md
+      - Data: api/data.md
+      - Dates: api/dates.md
+      - Interventions: api/interventions.md
+      - Uptake: api/uptake.md
+  - Changelog: changelog.md

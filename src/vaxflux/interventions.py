@@ -60,7 +60,6 @@ class Intervention(BaseModel):
 
         Args:
             name: The name of the distribution already formatted.
-            coords: The coordinates for the uptake model.
         """
         return getattr(pm, self.distribution)(
             name=name,

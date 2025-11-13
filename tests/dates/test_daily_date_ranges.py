@@ -13,7 +13,7 @@ def test_daily_date_ranges_invalid_range_days_value_error(range_days: int) -> No
     """Test `ValueError` is raised when `range_days` is less than 1."""
     with pytest.raises(
         ValueError,
-        match="^The number of days for each daily date range must be at least 0.$",
+        match=r"^The number of days for each daily date range must be at least 0.$",
     ):
         daily_date_ranges(
             SeasonRange(
@@ -38,8 +38,8 @@ def test_daily_date_ranges_invalid_range_days_remainder_raise(range_days: int) -
     with pytest.raises(
         ValueError,
         match=(
-            "^The number of days for each daily date range does not divide "
-            f"evenly into the season range for {season_range.season}.$"
+            r"^The number of days for each daily date range does not divide "
+            rf"evenly into the season range for {season_range.season}.$"
         ),
     ):
         daily_date_ranges(season_range, range_days=range_days, remainder="raise")

@@ -40,8 +40,8 @@ class SeasonRange(BaseModel):
         Traceback (most recent call last):
             ...
         pydantic_core._pydantic_core.ValidationError: 1 validation error for SeasonRange
-          Value error, The end date, 2023-12-01, must be after or the same as the start date 2024-03-31. [type=value_error, input_value={'season': '2023/2024', '...nd_date': '2023-12-01'}, input_type=dict]
-            For further information visit https://errors.pydantic.dev/2.11/v/value_error
+          Value error, The end date, 2023-12-01, must be after or the same as the start date 2024-03-31. [...]
+            For further information visit ...
 
     """  # noqa: E501
 
@@ -108,8 +108,8 @@ class DateRange(BaseModel):
         Traceback (most recent call last):
             ...
         pydantic_core._pydantic_core.ValidationError: 1 validation error for DateRange
-          Value error, The end date, 2023-11-30, must be after or the same as the start date 2023-12-01. [type=value_error, input_value={'season': '2023/2024', '...ort_date': '2023-12-01'}, input_type=dict]
-            For further information visit https://errors.pydantic.dev/2.11/v/value_error
+          Value error, The end date, 2023-11-30, must be after or the same as the start date 2023-12-01. [...]
+            For further information visit ...
         >>> DateRange(
         ...     season="2023/2024",
         ...     start_date="2023-12-01",
@@ -119,8 +119,8 @@ class DateRange(BaseModel):
         Traceback (most recent call last):
             ...
         pydantic_core._pydantic_core.ValidationError: 1 validation error for DateRange
-          Value error, The report date, 2023-12-30, must be after or the same as the end date 2023-12-31. [type=value_error, input_value={'season': '2023/2024', '...ort_date': '2023-12-30'}, input_type=dict]
-            For further information visit https://errors.pydantic.dev/2.11/v/value_error
+          Value error, The report date, 2023-12-30, must be after or the same as the end date 2023-12-31. [...]
+            For further information visit ...
 
     """  # noqa: E501
 

@@ -25,7 +25,7 @@ for dim, values in EXAMPLE_COORDS.items():
         example_args.append((dim, covariate_name, value, i))
 
 
-@pytest.mark.parametrize("dim", ["unknown", "nope", "nada"])
+@pytest.mark.parametrize("dim", ["unknown", "nope"])
 @pytest.mark.parametrize("covariate_name", ["age", "sex"])
 def test_unknown_dimension_not_implemented_error(dim: str, covariate_name: str) -> None:
     """Test that an unknown dimension raises a NotImplementedError."""

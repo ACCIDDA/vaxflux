@@ -596,7 +596,7 @@ class SeasonalUptakeModel:
                             )
                         ]
                     )
-                    evaled_kwargs = {
+                    evaluated_kwargs = {
                         param: sum(modified_kwargs.get(param, [])) + kwargs[param]
                         for param in kwargs
                     }
@@ -605,7 +605,7 @@ class SeasonalUptakeModel:
                         mu=self.curve.prevalence_difference(
                             date_indexes[season_range.season],
                             date_indexes[season_range.season] + 1.0,
-                            **evaled_kwargs,
+                            **evaluated_kwargs,
                         ),
                         sigma=eps,
                         dims=(_coord_name("season", season_range.season, "dates"),),
