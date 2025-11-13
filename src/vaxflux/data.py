@@ -356,9 +356,9 @@ def sample_dataset(
                     *category_prod.values(),
                 ]:
                     kwargs[str(parameter[0])] = np.array(float(parameter[-1]))
-            tstart = (date_range.start_date - season_range.start_date).days
-            tend = (date_range.end_date - season_range.start_date).days + 1.0
-            t0 = np.array([float(i) for i in range(int(tstart), int(tend))])
+            t_start = (date_range.start_date - season_range.start_date).days
+            t_end = (date_range.end_date - season_range.start_date).days + 1.0
+            t0 = np.array([float(i) for i in range(int(t_start), int(t_end))])
             t1 = t0 + 1.0
             y = curve.prevalence_difference(t0, t1, **kwargs).eval()
             if epsilon > 0:
