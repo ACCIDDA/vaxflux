@@ -64,4 +64,5 @@ nav:
       - Dates: api/dates.md
       - Interventions: api/interventions.md
       - Uptake: api/uptake.md
+  - Contributing: contributing.md
   - Changelog: changelog.md

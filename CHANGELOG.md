@@ -17,6 +17,9 @@ Added:
 - Added additional linting checks via `cspell`, `prettier`, and `yamllint` for
   spelling and JSON/markdown/YAML files as well as a linting workflow to run
   these checks regularly.
+- Added a `CONTRIBUTING.md` document that is also synced with the documentation
+  site outlining how to get started as a developer and contribute, see
+  [#75](https://github.com/ACCIDDA/vaxflux/issues/75).
 
 Changed:
 
