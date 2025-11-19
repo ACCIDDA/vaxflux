@@ -40,6 +40,7 @@ api-reference:
     uv run python scripts/api-reference.py
     {{cp}} CHANGELOG.md docs/changelog.md
     {{cp}} CONTRIBUTING.md docs/contributing.md
+    {{cp}} README.md docs/index.md
 
 # Build complete documentation
 [group('docs')]

@@ -27,6 +27,8 @@ Changed:
   [#85](https://github.com/ACCIDDA/vaxflux/issues/85).
 - Switched from `make` to `just` for task running, see
   [#86](https://github.com/ACCIDDA/vaxflux/issues/86).
+- Generate documentation index page from `README.md` file, see
+  [#71](https://github.com/ACCIDDA/vaxflux/issues/71).
 
 Deprecated:
 

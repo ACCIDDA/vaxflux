@@ -7,6 +7,7 @@ notebooks/**/*.png
 docs/api/
 docs/changelog.md
 docs/contributing.md
+docs/index.md
 
 # https://raw.githubusercontent.com/github/gitignore/refs/heads/main/Python.gitignore
 # Byte-compiled / optimized / DLL files
