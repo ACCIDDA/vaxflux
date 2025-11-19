@@ -20,6 +20,9 @@ Added:
 - Added a `CONTRIBUTING.md` document that is also synced with the documentation
   site outlining how to get started as a developer and contribute, see
   [#75](https://github.com/ACCIDDA/vaxflux/issues/75).
+- Added versioned documentation site hosted by GitHub pages at
+  [accidda.github.io/vaxflux/](https://accidda.github.io/vaxflux/), see
+  [#62](https://github.com/ACCIDDA/vaxflux/issues/62).
 
 Changed:
 
