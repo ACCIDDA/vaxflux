@@ -242,7 +242,7 @@ version.
   
   
     <li class="md-nav__item">
-      <a href=".." class="md-nav__link">
+      <a href="../index.md" class="md-nav__link">
         
   
   
@@ -548,7 +548,7 @@ version.
   
   
     <li class="md-nav__item">
-      <a href="../api/covariates/" class="md-nav__link">
+      <a href="../api/covariates.md" class="md-nav__link">
         
   
   
@@ -576,7 +576,7 @@ version.
   
   
     <li class="md-nav__item">
-      <a href="../api/curves/" class="md-nav__link">
+      <a href="../api/curves.md" class="md-nav__link">
         
   
   
@@ -604,7 +604,7 @@ version.
   
   
     <li class="md-nav__item">
-      <a href="../api/data/" class="md-nav__link">
+      <a href="../api/data.md" class="md-nav__link">
         
   
   
@@ -632,7 +632,7 @@ version.
   
   
     <li class="md-nav__item">
-      <a href="../api/dates/" class="md-nav__link">
+      <a href="../api/dates.md" class="md-nav__link">
         
   
   
@@ -660,7 +660,7 @@ version.
   
   
     <li class="md-nav__item">
-      <a href="../api/interventions/" class="md-nav__link">
+      <a href="../api/interventions.md" class="md-nav__link">
         
   
   
@@ -688,7 +688,7 @@ version.
   
   
     <li class="md-nav__item">
-      <a href="../api/uptake/" class="md-nav__link">
+      <a href="../api/uptake.md" class="md-nav__link">
         
   
   
@@ -723,7 +723,7 @@ version.
   
   
     <li class="md-nav__item">
-      <a href="../contributing/" class="md-nav__link">
+      <a href="../contributing.md" class="md-nav__link">
         
   
   
@@ -750,7 +750,7 @@ version.
   
   
     <li class="md-nav__item">
-      <a href="../changelog/" class="md-nav__link">
+      <a href="../changelog.md" class="md-nav__link">
         
   
   
@@ -900,7 +900,7 @@ this data, and steps for working with a fitted model.</p>
 <p>At the core of <code>vaxflux</code> is the concept of a curve family. A curve family is a
 set of curves that share a common structure and are used for modeling the uptake
 prevalence of a vaccine. This package provides several curve families via the
-<a href="../api/curves/"><code>vaxflux.curves</code></a> module, including logistic which we'll use in
+<a href="api/curves.md"><code>vaxflux.curves</code></a> module, including logistic which we'll use in
 this example. Advanced users can also create their own curve families to model
 different types of vaccine uptake patterns.</p>
 <pre><code class="language-python">from vaxflux.curves import LogisticCurve
@@ -914,23 +914,23 @@ saturated with the vaccine. However, <code>vaxflux</code> makes some modificatio
 typical logistic curve to better suit the requirements of vaccine uptake
 modeling. For details on how the logistic curve is defined in <code>vaxflux</code>, refer
 to the
-<a href="../api/curves/#vaxflux.curves.LogisticCurve"><code>vaxflux.curves.LogisticCurve</code></a>
+<a href="api/curves.md#vaxflux.curves.LogisticCurve"><code>vaxflux.curves.LogisticCurve</code></a>
 class documentation.</p>
 <h2 id="season-and-date-ranges">Season And Date Ranges<a class="headerlink" href="#season-and-date-ranges" title="Permanent link">&para;</a></h2>
 <p>In <code>vaxflux</code>, a season is defined as a period of time during which vaccine
 uptake is measured. The package allows you to specify the start and end dates of
 a season, which is crucial for modeling vaccine uptake patterns over time. These
 are specified to the model using the
-<a href="../api/dates/#vaxflux.dates.SeasonRange"><code>vaxflux.dates.SeasonRange</code></a> class.
+<a href="api/dates.md#vaxflux.dates.SeasonRange"><code>vaxflux.dates.SeasonRange</code></a> class.
 Within each season, you can define a date range that represents the period
 during which vaccine uptake is observed, which is done using the
-<a href="../api/dates/#vaxflux.dates.DateRange"><code>vaxflux.dates.DateRange</code></a> class. For
+<a href="api/dates.md#vaxflux.dates.DateRange"><code>vaxflux.dates.DateRange</code></a> class. For
 this example we will create a season that starts the 1st Monday of October and
 ends the 1st Sunday of the following February for the 2022/23, 2023/24, and
 2024/25 seasons.</p>
 <p>Then we'll define date ranges for each of these seasons that span a week using
 the
-<a href="../api/dates/#vaxflux.dates.daily_date_ranges"><code>vaxflux.dates.daily_date_ranges</code></a>
+<a href="api/dates.md#vaxflux.dates.daily_date_ranges"><code>vaxflux.dates.daily_date_ranges</code></a>
 function. The <code>daily_date_ranges</code> function generates a list of date ranges for
 each season, where each date range represents a period of time during which
 vaccine uptake is observed. The <code>range_days</code> argument specifies the number of
@@ -950,7 +950,7 @@ dates = daily_date_ranges(seasons, range_days=6)
 uptake patterns. These can include demographic information, geographic data, or
 any other relevant factors. Covariates and their categories are defined using
 the
-<a href="../api/covariates/#vaxflux.covariates.CovariateCategories"><code>vaxflux.covariates.CovariateCategories</code></a>
+<a href="api/covariates.md#vaxflux.covariates.CovariateCategories"><code>vaxflux.covariates.CovariateCategories</code></a>
 class. In this example, we will create a single "age" covariate with three
 categories, "youth", "adult", and "elderly", which loosely correspond to 0-17
 yrs, 18-65 yrs, and 65+ yrs, respectively. This covariate will be used to model
@@ -964,7 +964,7 @@ age_covariate = CovariateCategories(
 </code></pre>
 <h2 id="create-a-sample-dataset">Create A Sample Dataset<a class="headerlink" href="#create-a-sample-dataset" title="Permanent link">&para;</a></h2>
 <p>As a first step in using the package you can create a sample dataset with
-<a href="../api/data/#vaxflux.data.sample_dataset"><code>vaxflux.data.sample_dataset</code></a>. This
+<a href="api/data.md#vaxflux.data.sample_dataset"><code>vaxflux.data.sample_dataset</code></a>. This
 will create a dataset with the same data generating process that the model
 assumes in the format needed for <code>vaxflux</code>. The function requires a curve
 family, a list of seasons and dates, a list of covariates, a list of parameters
@@ -974,7 +974,7 @@ defined in the previous sections.</p>
 <p>The parameters are defined as a list of tuples, where each tuple contains the
 curve family parameter name, season, covariate category/categories, and the
 value for that parameter. The parameters for a logistic curve can be found in
-the <a href="../api/curves/#vaxflux.curves.LogisticCurve"><code>vaxflux.curves.LogisticCurve</code></a>
+the <a href="api/curves.md#vaxflux.curves.LogisticCurve"><code>vaxflux.curves.LogisticCurve</code></a>
 documentation, but in brief they are:</p>
 <ul>
 <li><span class="arithmatex">\(m\)</span>: The max uptake prevalence, which is the maximum value of the logistic
@@ -1032,7 +1032,7 @@ sample_observations = sample_dataset(
 <h2 id="defining-a-model">Defining A Model<a class="headerlink" href="#defining-a-model" title="Permanent link">&para;</a></h2>
 <p>Now that many of the building blocks of the model have been defined we can
 create a model represented by the
-<a href="../api/uptake/#vaxflux.uptake.SeasonalUptakeModel"><code>vaxflux.uptake.SeasonalUptakeModel</code></a>
+<a href="api/uptake.md#vaxflux.uptake.SeasonalUptakeModel"><code>vaxflux.uptake.SeasonalUptakeModel</code></a>
 class. This class encapsulates the entire modeling process, including the curve
 family, seasons, dates, covariates, and the sample dataset. Many of the
 arguments to this class have already been defined in the previous sections, but
@@ -1042,9 +1042,9 @@ be used in the model.</p>
 covariate. Pooled covariates are used to model parameters that are shared across
 all categories of a covariate, while Gaussian covariates are used to model
 parameters that vary by category. The
-<a href="../api/covariates/#vaxflux.covariates.PooledCovariate"><code>vaxflux.covariates.PooledCovariate</code></a>
+<a href="api/covariates.md#vaxflux.covariates.PooledCovariate"><code>vaxflux.covariates.PooledCovariate</code></a>
 and
-<a href="../api/covariates/#vaxflux.covariates.PooledCovariate"><code>vaxflux.covariates.GaussianCovariate</code></a>
+<a href="api/covariates.md#vaxflux.covariates.PooledCovariate"><code>vaxflux.covariates.GaussianCovariate</code></a>
 classes are used to define these covariates. Note that the priors are loosely
 centered around the values used to generate the sample dataset, but they are not
 exact. This is because the model will learn the parameters from the data, and
@@ -1101,14 +1101,14 @@ model = SeasonalUptakeModel(
 </code></pre>
 <h2 id="fitting-the-model">Fitting The Model<a class="headerlink" href="#fitting-the-model" title="Permanent link">&para;</a></h2>
 <p>Finally, we can fit the model to the sample dataset using the
-<a href="../api/uptake/#vaxflux.uptake.SeasonalUptakeModel.build"><code>vaxflux.uptake.SeasonalUptakeModel.build</code></a>
+<a href="./api/uptake.md#vaxflux.uptake.SeasonalUptakeModel.build"><code>vaxflux.uptake.SeasonalUptakeModel.build</code></a>
 method. This method compiles the model and prepares it for sampling. After
 building the model, we can sample from it using the
-<a href="../api/uptake/#vaxflux.uptake.SeasonalUptakeModel.sample"><code>vaxflux.uptake.SeasonalUptakeModel.sample</code></a>
+<a href="./api/uptake.md#vaxflux.uptake.SeasonalUptakeModel.sample"><code>vaxflux.uptake.SeasonalUptakeModel.sample</code></a>
 method. This method allows us to specify the number of tuning steps, draws, and
 chains for the sampling process. In this example, we will use 2,000 tuning
 steps, 1,000 draws, and 2 chains. Those samples can be extracted using the
-<a href="../api/uptake/#vaxflux.uptake.SeasonalUptakeModel.dataframe"><code>vaxflux.uptake.SeasonalUptakeModel.dataframe</code></a>
+<a href="./api/uptake.md#vaxflux.uptake.SeasonalUptakeModel.dataframe"><code>vaxflux.uptake.SeasonalUptakeModel.dataframe</code></a>
 method, which returns a Pandas DataFrame containing the sampled incidence data.</p>
 <p><strong>If you are following along with this tutorial with a REPL or notebook please
 note that the following code will take anywhere from a few seconds to a few
