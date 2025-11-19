@@ -51,7 +51,8 @@ jobs:
         run: |
           git fetch origin main:main
           GIT_LOG=$(git log main..HEAD --pretty=format:"%s %b")
-          if echo "$GIT_LOG" | grep -iq "no major changes"; then
+          SKIP_REGEX="no[[:space:]]+major[[:space:]]+changes"
+          if echo "$GIT_LOG" | tr '\n' ' ' | grep -Eiq "$SKIP_REGEX"; then
             echo "Bypassing changelog check: 'no major changes' found in commit history"
             exit 0
           fi
