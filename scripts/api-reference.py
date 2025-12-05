@@ -85,7 +85,34 @@ def generate_api_doc(item_path: Path, src_root: Path, output_dir: Path) -> str:
     return doc_name
 
 
-def update_mkdocs_nav(mkdocs_path: Path, api_docs: list[str]) -> None:
+def generate_package_doc(package_name: str, output_dir: Path) -> str:
+    """Generate API documentation for the main package.
+
+    Args:
+        package_name: The name of the package (e.g., 'vaxflux').
+        output_dir: Directory to write the documentation file.
+
+    Returns:
+        The name of the generated documentation file (without .md extension).
+    """
+    doc_name = package_name
+    output_file = output_dir / f"{doc_name}.md"
+
+    # Start building the content
+    lines = [
+        f"# {doc_name.capitalize()}",
+        "",
+        f"::: {package_name}",
+        "",
+    ]
+
+    # Write the file
+    output_file.write_text("\n".join(lines))
+
+    return doc_name
+
+
+def update_mkdocs_nav(mkdocs_path: Path, api_docs: list[str], package_doc: str) -> None:
     """Update the mkdocs.yml navigation with generated API docs.
 
     Uses ruamel.yaml to preserve comments and formatting.
@@ -93,6 +120,7 @@ def update_mkdocs_nav(mkdocs_path: Path, api_docs: list[str]) -> None:
     Args:
         mkdocs_path: Path to the mkdocs.yml file.
         api_docs: List of API document names (without .md extension).
+        package_doc: The package documentation name (without .md extension).
     """
     yaml = YAML()
     yaml.preserve_quotes = True
@@ -115,9 +143,11 @@ def update_mkdocs_nav(mkdocs_path: Path, api_docs: list[str]) -> None:
         return
 
     # Build the new API navigation structure
-    nav[reference_idx]["API Reference"] = [
-        {doc.capitalize(): f"api/{doc}.md"} for doc in sorted(api_docs)
-    ]
+    # Start with the package documentation, then add module docs
+    api_nav = [{package_doc.capitalize(): f"api/{package_doc}.md"}]
+    api_nav.extend({doc.capitalize(): f"api/{doc}.md"} for doc in sorted(api_docs))
+
+    nav[reference_idx]["API Reference"] = api_nav
     with mkdocs_path.open("w", encoding="utf-8") as f:
         yaml.dump(config, f)
 
@@ -138,6 +168,9 @@ def main() -> None:
     for md_file in output_dir.glob("*.md"):
         md_file.unlink()
 
+    # Generate main package documentation
+    package_doc = generate_package_doc("vaxflux", output_dir)
+
     # Find all public modules
     generated_docs = []
     for item in sorted(vaxflux_root.iterdir()):
@@ -148,7 +181,7 @@ def main() -> None:
             generated_docs.append(doc_name)
 
     # Update mkdocs.yml navigation
-    update_mkdocs_nav(mkdocs_path, generated_docs)
+    update_mkdocs_nav(mkdocs_path, generated_docs, package_doc)
 
 
 if __name__ == "__main__":

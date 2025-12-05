@@ -169,6 +169,83 @@ class DateRange(BaseModel):
         return self
 
 
+def _seasons_overlap(season1: SeasonRange, season2: SeasonRange) -> bool:
+    """
+    Check if two seasons have overlapping date ranges.
+
+    Two seasons overlap if any date appears in both date ranges. This is true when
+    the start of one season is on or before the end of the other season, and vice versa.
+
+    Args:
+        season1: First season to check.
+        season2: Second season to check.
+
+    Returns:
+        True if the seasons overlap, False otherwise.
+
+    Examples:
+        >>> from datetime import date
+        >>> from vaxflux.dates import SeasonRange, _seasons_overlap
+        >>> season1 = SeasonRange(
+        ...     season="2023/2024",
+        ...     start_date=date(2023, 12, 1),
+        ...     end_date=date(2024, 3, 31),
+        ... )
+        >>> season2 = SeasonRange(
+        ...     season="2024/2025",
+        ...     start_date=date(2024, 12, 1),
+        ...     end_date=date(2025, 3, 31),
+        ... )
+        >>> _seasons_overlap(season1, season2)
+        False
+        >>> # Overlapping seasons
+        >>> season3 = SeasonRange(
+        ...     season="2024 Winter",
+        ...     start_date=date(2024, 3, 1),
+        ...     end_date=date(2024, 5, 31),
+        ... )
+        >>> _seasons_overlap(season1, season3)
+        True
+        >>> # Adjacent seasons (no overlap)
+        >>> season4 = SeasonRange(
+        ...     season="2024 Spring",
+        ...     start_date=date(2024, 4, 1),
+        ...     end_date=date(2024, 6, 30),
+        ... )
+        >>> _seasons_overlap(season1, season4)
+        False
+        >>> # Single day overlap
+        >>> season5 = SeasonRange(
+        ...     season="2024 Q2",
+        ...     start_date=date(2024, 3, 31),
+        ...     end_date=date(2024, 6, 30),
+        ... )
+        >>> _seasons_overlap(season1, season5)
+        True
+        >>> # One season contains another
+        >>> season6 = SeasonRange(
+        ...     season="January 2024",
+        ...     start_date=date(2024, 1, 1),
+        ...     end_date=date(2024, 1, 31),
+        ... )
+        >>> _seasons_overlap(season1, season6)
+        True
+        >>> # Identical date ranges
+        >>> season7 = SeasonRange(
+        ...     season="Alt 2023/2024",
+        ...     start_date=date(2023, 12, 1),
+        ...     end_date=date(2024, 3, 31),
+        ... )
+        >>> _seasons_overlap(season1, season7)
+        True
+
+    """
+    return (
+        season1.start_date <= season2.end_date
+        and season2.start_date <= season1.end_date
+    )
+
+
 def daily_date_ranges(
     season_ranges: list[SeasonRange] | SeasonRange,
     range_days: int = 0,

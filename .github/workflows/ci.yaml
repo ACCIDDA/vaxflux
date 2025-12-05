@@ -23,7 +23,6 @@ jobs:
         python-version:
           - '3.11'
           - '3.12'
-          - '3.13'
     steps:
       - name: 'checkout repository'
         uses: 'actions/checkout@v5'

@@ -23,8 +23,8 @@ Added:
 - Added versioned documentation site hosted by GitHub pages at
   [accidda.github.io/vaxflux/](https://accidda.github.io/vaxflux/), see
   [#62](https://github.com/ACCIDDA/vaxflux/issues/62).
-- Added support for python 3.13, see
-  [#90](https://github.com/ACCIDDA/vaxflux/issues/90).
+- Added `VaxfluxModel` and new `Curve` classes that are based on
+  `jax`/`numpyro`.
 
 Changed:
 

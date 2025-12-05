@@ -58,6 +58,7 @@ nav:
   - Getting Started: getting-started.md
   - Model Details: model-details.md
   - API Reference:
+      - Vaxflux: api/vaxflux.md
       - Covariates: api/covariates.md
       - Curves: api/curves.md
       - Data: api/data.md
