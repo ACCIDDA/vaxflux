@@ -16,7 +16,7 @@ __all__ = (
 
 import io
 import time
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Literal, TypedDict, cast
 
 import numpy as np
@@ -48,7 +48,7 @@ def get_ncird_weekly_cumulative_vaccination_coverage() -> pd.DataFrame:
         'legend_sort', '95_ci_lower', and '95_ci_upper'.
 
     """  # noqa: E501
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     cache_bust = time.mktime(now.timetuple())
     date = now.strftime("%Y%m%d")
     url = (
