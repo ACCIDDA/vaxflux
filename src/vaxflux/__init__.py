@@ -1,6 +1,9 @@
 """Model seasonal vaccination uptake curves."""
 
 __all__ = (
+    "Curve",
+    "LogisticCurve",
+    "VaxfluxModel",
     "covariates",
     "curves",
     "data",
@@ -8,7 +11,7 @@ __all__ = (
     "interventions",
     "uptake",
 )
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 
 
 from vaxflux import (
@@ -19,3 +22,5 @@ from vaxflux import (
     interventions,
     uptake,
 )
+from vaxflux._curves import Curve, LogisticCurve
+from vaxflux._vaxflux_model import VaxfluxModel
