@@ -910,7 +910,7 @@ data from external data providers.</p>
 
 
 
-  <div class="doc doc-children">
+<div class="doc doc-children">
 
 
 
@@ -1825,7 +1825,7 @@ dataset: <code>Weekly Cumulative Influenza Vaccination Coverage, Adults 18 and O
 <span class="sd">        &#39;legend_sort&#39;, &#39;95_ci_lower&#39;, and &#39;95_ci_upper&#39;.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>  <span class="c1"># noqa: E501</span>
-    <span class="n">now</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">)</span>
+    <span class="n">now</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">UTC</span><span class="p">)</span>
     <span class="n">cache_bust</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">mktime</span><span class="p">(</span><span class="n">now</span><span class="o">.</span><span class="n">timetuple</span><span class="p">())</span>
     <span class="n">date</span> <span class="o">=</span> <span class="n">now</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;%Y%m</span><span class="si">%d</span><span class="s2">&quot;</span><span class="p">)</span>
     <span class="n">url</span> <span class="o">=</span> <span class="p">(</span>
