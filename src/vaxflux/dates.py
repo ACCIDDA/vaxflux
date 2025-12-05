@@ -3,6 +3,7 @@
 __all__ = ("DateRange", "SeasonRange", "daily_date_ranges")
 
 
+from collections.abc import Sequence
 from datetime import date, datetime, timedelta
 from typing import Final, Literal, NamedTuple, TypeVar
 
@@ -169,6 +170,51 @@ class DateRange(BaseModel):
         return self
 
 
+def _date_ranges_overlap(date_range1: DateRange, date_range2: DateRange) -> bool:
+    """
+    Check if two date ranges have overlapping date ranges.
+
+    Args:
+        date_range1: First date range to check.
+        date_range2: Second date range to check.
+
+    Returns:
+        True if the date ranges overlap, False otherwise.
+
+    Examples:
+        >>> from datetime import date
+        >>> from vaxflux.dates import DateRange, _date_ranges_overlap
+        >>> dr1 = DateRange(
+        ...     season="2023/2024",
+        ...     start_date=date(2023, 12, 1),
+        ...     end_date=date(2023, 12, 7),
+        ...     report_date=date(2023, 12, 8),
+        ... )
+        >>> dr2 = DateRange(
+        ...     season="2023/2024",
+        ...     start_date=date(2023, 12, 8),
+        ...     end_date=date(2023, 12, 14),
+        ...     report_date=date(2023, 12, 15),
+        ... )
+        >>> _date_ranges_overlap(dr1, dr2)
+        False
+        >>> # Overlapping date ranges
+        >>> dr3 = DateRange(
+        ...     season="2023/2024",
+        ...     start_date=date(2023, 12, 5),
+        ...     end_date=date(2023, 12, 10),
+        ...     report_date=date(2023, 12, 11),
+        ... )
+        >>> _date_ranges_overlap(dr1, dr3)
+        True
+
+    """
+    return (
+        date_range1.start_date <= date_range2.end_date
+        and date_range2.start_date <= date_range1.end_date
+    )
+
+
 def _seasons_overlap(season1: SeasonRange, season2: SeasonRange) -> bool:
     """
     Check if two seasons have overlapping date ranges.
@@ -244,6 +290,204 @@ def _seasons_overlap(season1: SeasonRange, season2: SeasonRange) -> bool:
         season1.start_date <= season2.end_date
         and season2.start_date <= season1.end_date
     )
+
+
+Range = TypeVar("Range", bound="DateRange | SeasonRange")
+
+
+def _collect_ranges(
+    args: tuple[Range | Sequence[Range], ...],
+    expected_type: type[Range],
+    type_name: str,
+) -> list[Range]:
+    """Collect and validate range objects from arguments.
+
+    Args:
+        args: Variable arguments that can be range objects or sequences.
+        expected_type: The expected type (SeasonRange or DateRange).
+        type_name: Name of the type for error messages.
+
+    Returns:
+        List of validated range objects.
+
+    Raises:
+        TypeError: If arguments are not of the expected type.
+    """
+    ranges: list[Range] = []
+    for arg in args:
+        if isinstance(arg, expected_type):
+            ranges.append(arg)
+        elif isinstance(arg, Sequence) and not isinstance(arg, (str, bytes)):
+            # Validate that all items in the sequence are of expected type
+            for item in arg:
+                if not isinstance(item, expected_type):
+                    msg = (
+                        f"All items in a sequence must be {type_name} objects, "
+                        f"got {type(item).__name__}."
+                    )
+                    raise TypeError(msg)
+            ranges.extend(arg)
+        else:
+            msg = (
+                f"Arguments must be {type_name} objects or sequences of "
+                f"{type_name} objects, got {type(arg).__name__}."
+            )
+            raise TypeError(msg)
+    return ranges
+
+
+def _validate_ranges(
+    new_ranges: list[Range],
+    existing_ranges: list[Range],
+) -> None:
+    """Validate ranges for duplicates and overlaps.
+
+    For SeasonRange objects, checks for:
+    - Duplicate season names within new ranges
+    - Duplicate season names against existing ranges
+    - Overlapping date ranges
+
+    For DateRange objects, checks for:
+    - Exact duplicate date ranges within new ranges
+    - Exact duplicate date ranges against existing ranges
+    - Overlapping date ranges
+
+    Args:
+        new_ranges: New range objects to validate.
+        existing_ranges: Existing range objects to check against.
+
+    Raises:
+        ValueError: If duplicate or overlapping ranges are found.
+    """
+    if not new_ranges:
+        return
+
+    # Determine type and apply appropriate validations
+    if isinstance(new_ranges[0], SeasonRange):
+        _validate_season_ranges(
+            new_ranges,  # type: ignore[arg-type]
+            existing_ranges,  # type: ignore[arg-type]
+        )
+    else:  # DateRange
+        _validate_date_ranges(
+            new_ranges,  # type: ignore[arg-type]
+            existing_ranges,  # type: ignore[arg-type]
+        )
+
+
+def _validate_season_ranges(
+    new_seasons: list[SeasonRange],
+    existing_seasons: list[SeasonRange],
+) -> None:
+    """Validate season ranges for duplicates and overlaps.
+
+    Args:
+        new_seasons: New season ranges to validate.
+        existing_seasons: Existing season ranges to check against.
+
+    Raises:
+        ValueError: If duplicate season names or overlapping ranges are found.
+    """
+    # Check for duplicate season names within the new seasons
+    new_season_names = [season.season for season in new_seasons]
+    if len(new_season_names) != len(set(new_season_names)):
+        duplicates = {
+            name for name in new_season_names if new_season_names.count(name) > 1
+        }
+        msg = f"Duplicate season names found in new seasons: {sorted(duplicates)}."
+        raise ValueError(msg)
+
+    # Check for duplicate season names against existing seasons
+    existing_season_names = {season.season for season in existing_seasons}
+    conflicting_names = existing_season_names & set(new_season_names)
+    if conflicting_names:
+        msg = f"Season names already exist in the model: {sorted(conflicting_names)}."
+        raise ValueError(msg)
+
+    # Check for overlapping date ranges within new seasons
+    for i, season1 in enumerate(new_seasons):
+        for season2 in new_seasons[i + 1 :]:
+            if _seasons_overlap(season1, season2):
+                msg = (
+                    f"Overlapping date ranges found: "
+                    f"'{season1.season}' ({season1.start_date} to "
+                    f"{season1.end_date}) and '{season2.season}' "
+                    f"({season2.start_date} to {season2.end_date})."
+                )
+                raise ValueError(msg)
+
+    # Check for overlapping date ranges against existing seasons
+    for existing_season in existing_seasons:
+        for new_season in new_seasons:
+            if _seasons_overlap(existing_season, new_season):
+                msg = (
+                    f"Overlapping date ranges found: "
+                    f"'{existing_season.season}' ({existing_season.start_date} "
+                    f"to {existing_season.end_date}) and '{new_season.season}' "
+                    f"({new_season.start_date} to {new_season.end_date})."
+                )
+                raise ValueError(msg)
+
+
+def _validate_date_ranges(  # noqa: C901
+    new_dates: list[DateRange],
+    existing_dates: list[DateRange],
+) -> None:
+    """Validate date ranges for exact duplicates and overlaps.
+
+    Args:
+        new_dates: New date ranges to validate.
+        existing_dates: Existing date ranges to check against.
+
+    Raises:
+        ValueError: If duplicate or overlapping date ranges are found.
+    """
+    # Check for exact duplicates within new dates
+    for i, date1 in enumerate(new_dates):
+        for date2 in new_dates[i + 1 :]:
+            if date1 == date2:
+                msg = (
+                    f"Duplicate date range found: season='{date1.season}', "
+                    f"dates={date1.start_date} to {date1.end_date}, "
+                    f"report={date1.report_date}."
+                )
+                raise ValueError(msg)
+
+    # Check for exact duplicates against existing dates
+    for existing_date in existing_dates:
+        for new_date in new_dates:
+            if existing_date == new_date:
+                msg = (
+                    f"Date range already exists: season='{new_date.season}', "
+                    f"dates={new_date.start_date} to {new_date.end_date}, "
+                    f"report={new_date.report_date}."
+                )
+                raise ValueError(msg)
+
+    # Check for overlapping date ranges within new dates
+    for i, date1 in enumerate(new_dates):
+        for date2 in new_dates[i + 1 :]:
+            if _date_ranges_overlap(date1, date2):
+                msg = (
+                    "Overlapping date ranges found: "
+                    f"'{date1.season}' ({date1.start_date} to {date1.end_date}) "
+                    f"and '{date2.season}' ({date2.start_date} to "
+                    f"{date2.end_date})."
+                )
+                raise ValueError(msg)
+
+    # Check for overlapping date ranges against existing dates
+    for existing_date in existing_dates:
+        for new_date in new_dates:
+            if _date_ranges_overlap(existing_date, new_date):
+                msg = (
+                    f"Overlapping date ranges found: "
+                    f"existing '{existing_date.season}' "
+                    f"({existing_date.start_date} to {existing_date.end_date}) "
+                    f"and new '{new_date.season}' "
+                    f"({new_date.start_date} to {new_date.end_date})."
+                )
+                raise ValueError(msg)
 
 
 def daily_date_ranges(

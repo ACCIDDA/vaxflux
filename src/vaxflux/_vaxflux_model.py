@@ -1,6 +1,5 @@
 __all__: list[str] = []
 
-from collections.abc import Sequence
 from typing import Any, Self
 
 import numpyro
@@ -8,7 +7,12 @@ from jax.random import PRNGKey
 from numpyro.infer import MCMC, NUTS
 
 from vaxflux._curves import Curve
-from vaxflux.dates import SeasonRange, _seasons_overlap
+from vaxflux.dates import (
+    DateRange,
+    SeasonRange,
+    _collect_ranges,
+    _validate_ranges,
+)
 
 
 class VaxfluxModel:
@@ -22,8 +26,9 @@ class VaxfluxModel:
         """
         self._curve = curve
         self._seasons: list[SeasonRange] = []
+        self._dates: list[DateRange] = []
 
-    def add_seasons(self, *args: SeasonRange | Sequence[SeasonRange]) -> Self:
+    def add_seasons(self, *args: SeasonRange | list[SeasonRange]) -> Self:
         """
         Add one or more seasons to the model.
 
@@ -81,27 +86,48 @@ class VaxfluxModel:
             TypeError: Arguments must be SeasonRange objects or sequences of SeasonRange objects, got str.
 
         """  # noqa: E501
-        seasons: list[SeasonRange] = []
-        for arg in args:
-            if isinstance(arg, SeasonRange):
-                seasons.append(arg)
-            elif isinstance(arg, Sequence) and not isinstance(arg, (str, bytes)):
-                # Validate that all items in the sequence are SeasonRange objects
-                for item in arg:
-                    if not isinstance(item, SeasonRange):
-                        msg = (
-                            f"All items in a sequence must be SeasonRange objects, "
-                            f"got {type(item).__name__}."
-                        )
-                        raise TypeError(msg)
-                seasons.extend(arg)
-            else:
-                msg = (
-                    f"Arguments must be SeasonRange objects or sequences of "
-                    f"SeasonRange objects, got {type(arg).__name__}."
-                )
-                raise TypeError(msg)
-        self._validate_and_add_seasons(seasons)
+        seasons = _collect_ranges(args, SeasonRange, "SeasonRange")
+        _validate_ranges(seasons, self._seasons)
+        self._seasons.extend(seasons)
+        return self
+
+    def add_dates(self, *args: DateRange | list[DateRange]) -> Self:
+        """
+        Add one or more date ranges to the model.
+
+        Args:
+            *args: One or more `DateRange` objects or sequences of `DateRange` objects.
+
+        Returns:
+            The model instance for method chaining.
+
+        Raises:
+            TypeError: If any argument is not a `DateRange` or a sequence of
+                `DateRange` objects.
+            ValueError: If duplicate date ranges are found.
+            ValueError: If overlapping date ranges are found.
+
+        Examples:
+            >>> from vaxflux._curves import LogisticCurve
+            >>> from vaxflux.dates import DateRange
+            >>> model = VaxfluxModel(curve=LogisticCurve())
+            >>> result = model.add_dates(
+            ...     DateRange(
+            ...         season="2023/2024",
+            ...         start_date="2023-12-01",
+            ...         end_date="2023-12-07",
+            ...         report_date="2023-12-08",
+            ...     )
+            ... )
+            >>> model.add_dates("invalid_argument")
+            Traceback (most recent call last):
+                ...
+            TypeError: Arguments must be DateRange objects or sequences of DateRange objects, got str.
+
+        """  # noqa: E501
+        dates = _collect_ranges(args, DateRange, "DateRange")
+        _validate_ranges(dates, self._dates)
+        self._dates.extend(dates)
         return self
 
     def sample(
@@ -131,58 +157,3 @@ class VaxfluxModel:
 
     def _model(self) -> None:
         raise NotImplementedError
-
-    def _validate_and_add_seasons(self, seasons: list[SeasonRange]) -> None:
-        """Validate and add seasons to the model.
-
-        Args:
-            seasons: List of seasons to validate and add.
-
-        Raises:
-            ValueError: If duplicate season names are found.
-            ValueError: If overlapping date ranges are found.
-        """
-        # Check for duplicate season names within the new seasons
-        new_season_names = [season.season for season in seasons]
-        if len(new_season_names) != len(set(new_season_names)):
-            duplicates = {
-                name for name in new_season_names if new_season_names.count(name) > 1
-            }
-            msg = f"Duplicate season names found in new seasons: {sorted(duplicates)}."
-            raise ValueError(msg)
-
-        # Check for duplicate season names against existing seasons
-        existing_season_names = {season.season for season in self._seasons}
-        conflicting_names = existing_season_names & set(new_season_names)
-        if conflicting_names:
-            msg = (
-                f"Season names already exist in the model: {sorted(conflicting_names)}."
-            )
-            raise ValueError(msg)
-
-        # Check for overlapping date ranges within new seasons
-        for i, season1 in enumerate(seasons):
-            for season2 in seasons[i + 1 :]:
-                if _seasons_overlap(season1, season2):
-                    msg = (
-                        f"Overlapping date ranges found: "
-                        f"'{season1.season}' ({season1.start_date} to "
-                        f"{season1.end_date}) and '{season2.season}' "
-                        f"({season2.start_date} to {season2.end_date})."
-                    )
-                    raise ValueError(msg)
-
-        # Check for overlapping date ranges against existing seasons
-        for existing_season in self._seasons:
-            for new_season in seasons:
-                if _seasons_overlap(existing_season, new_season):
-                    msg = (
-                        f"Overlapping date ranges found: "
-                        f"'{existing_season.season}' ({existing_season.start_date} "
-                        f"to {existing_season.end_date}) and '{new_season.season}' "
-                        f"({new_season.start_date} to {new_season.end_date})."
-                    )
-                    raise ValueError(msg)
-
-        # All validations passed, add the seasons
-        self._seasons.extend(seasons)
