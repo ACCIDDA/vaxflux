@@ -7,10 +7,9 @@ import copy
 import itertools
 import logging
 import math
-import sys
 from collections.abc import Iterable
 from datetime import timedelta
-from typing import Any, cast
+from typing import Any, Self, cast
 
 import arviz as az
 import pandas as pd
@@ -35,11 +34,6 @@ from vaxflux.interventions import (
     Intervention,
     _check_interventions_and_implementations,
 )
-
-if sys.version_info[:2] >= (3, 11):
-    from typing import Self
-else:
-    Self = Any
 
 
 class SeasonalUptakeModel:
