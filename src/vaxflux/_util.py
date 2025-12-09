@@ -2,8 +2,8 @@ __all__: tuple[str, ...] = ()
 
 
 import re
-from collections.abc import Callable
-from typing import Annotated, Any, Final, overload
+from collections.abc import Callable, Sequence
+from typing import Annotated, Any, Final, TypeVar, overload
 
 import pandas as pd
 from pandas.api.types import is_datetime64_any_dtype
@@ -18,6 +18,63 @@ _REQUIRED_OBSERVATION_COLUMNS: Final = {
     "type",
     "value",
 }
+
+T = TypeVar("T")
+
+
+def _collect_args(
+    args: tuple[T | Sequence[T], ...],
+    expected_type: type[T],
+    type_name: str,
+) -> list[T]:
+    """Collect and validate objects from arguments.
+
+    Args:
+        args: Variable arguments that can be objects or sequences of objects.
+        expected_type: The expected type of the objects.
+        type_name: Name of the type for error messages.
+
+    Returns:
+        List of validated objects.
+
+    Raises:
+        TypeError: If arguments are not of the expected type.
+
+    Examples:
+        >>> from vaxflux._util import _collect_args
+        >>> _collect_args((1, 2, 3), int, "int")
+        [1, 2, 3]
+        >>> _collect_args(([1, 2], 3), int, "int")
+        [1, 2, 3]
+        >>> _collect_args((1, [2, 3], 4), int, "int")
+        [1, 2, 3, 4]
+        >>> _collect_args(("not an int",), int, "int")
+        Traceback (most recent call last):
+            ...
+        TypeError: Arguments must be int objects or sequences of int objects, got str.
+
+    """
+    items: list[T] = []
+    for arg in args:
+        if isinstance(arg, expected_type):
+            items.append(arg)
+        elif isinstance(arg, Sequence) and not isinstance(arg, (str, bytes)):
+            # Validate that all items in the sequence are of expected type
+            for item in arg:
+                if not isinstance(item, expected_type):
+                    msg = (
+                        f"All items in a sequence must be {type_name} objects, "
+                        f"got {type(item).__name__}."
+                    )
+                    raise TypeError(msg)
+            items.extend(arg)
+        else:
+            msg = (
+                f"Arguments must be {type_name} objects or sequences of "
+                f"{type_name} objects, got {type(arg).__name__}."
+            )
+            raise TypeError(msg)
+    return items
 
 
 def _clean_name(

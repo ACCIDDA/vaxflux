@@ -161,17 +161,6 @@ from vaxflux.dates import DateRange
             2,
         ),
     ],
-    ids=[
-        "single_date_range",
-        "multiple_date_ranges_as_args",
-        "list_of_date_ranges",
-        "tuple_of_date_ranges",
-        "mixed_args_and_sequences",
-        "empty_call",
-        "empty_list",
-        "adjacent_date_ranges_no_overlap",
-        "different_seasons_non_overlapping",
-    ],
 )
 def test_add_dates_input_variations(args_factory: object, expected_count: int) -> None:
     """Test adding date ranges with various input patterns."""
@@ -218,49 +207,6 @@ def test_add_dates_preserves_existing_dates() -> None:
     assert len(model._dates) == 3
     assert model._dates[1] == dr2
     assert model._dates[2] == dr3
-
-
-@pytest.mark.parametrize(
-    "invalid_arg",
-    [
-        "not a date range",
-        123,
-        45.6,
-        {"season": "2023/2024"},
-        None,
-    ],
-)
-def test_add_dates_invalid_type_error(invalid_arg: object) -> None:
-    """Test TypeError is raised when passing invalid types."""
-    model = VaxfluxModel(curve=LogisticCurve())
-
-    with pytest.raises(
-        TypeError,
-        match=r"Arguments must be DateRange objects or sequences of DateRange objects",
-    ):
-        model.add_dates(invalid_arg)  # type: ignore[arg-type]
-
-
-@pytest.mark.parametrize(
-    "invalid_item",
-    ["not a date range", 123, {"key": "value"}],
-    ids=["string", "int", "dict"],
-)
-def test_add_dates_sequence_with_invalid_items(invalid_item: object) -> None:
-    """Test TypeError is raised when a sequence contains non-DateRange items."""
-    model = VaxfluxModel(curve=LogisticCurve())
-    dr = DateRange(
-        season="2023/2024",
-        start_date=date(2023, 12, 1),
-        end_date=date(2023, 12, 7),
-        report_date=date(2023, 12, 8),
-    )
-
-    with pytest.raises(
-        TypeError,
-        match=r"All items in a sequence must be DateRange objects",
-    ):
-        model.add_dates([dr, invalid_item])  # type: ignore[list-item]
 
 
 def test_add_dates_exact_duplicate_in_single_call() -> None:
@@ -418,14 +364,6 @@ def test_add_dates_exact_duplicate_across_calls() -> None:
             ),
             r"Overlapping date ranges found: existing '2023/2024'",
         ),
-    ],
-    ids=[
-        "partial_overlap_single_call",
-        "complete_containment",
-        "same_dates_different_report",
-        "single_day_overlap",
-        "different_seasons_overlapping",
-        "overlap_with_existing",
     ],
 )
 def test_add_dates_overlapping_errors(

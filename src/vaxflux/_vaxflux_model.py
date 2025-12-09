@@ -6,7 +6,10 @@ import numpyro
 from jax.random import key
 from numpyro.infer import MCMC, NUTS
 
+from vaxflux._covariates import Covariate
 from vaxflux._curves import Curve
+from vaxflux._util import _collect_args
+from vaxflux.covariates import CovariateCategories
 from vaxflux.dates import (
     DateRange,
     SeasonRange,
@@ -27,6 +30,8 @@ class VaxfluxModel:
         self._curve = curve
         self._seasons: list[SeasonRange] = []
         self._dates: list[DateRange] = []
+        self._covariate_categories: list[CovariateCategories] = []
+        self._covariates: list[Covariate] = []
 
     def add_seasons(self, *args: SeasonRange | list[SeasonRange]) -> Self:
         """
@@ -128,6 +133,75 @@ class VaxfluxModel:
         dates = _collect_ranges(args, DateRange, "DateRange")
         _validate_ranges(dates, self._dates)
         self._dates.extend(dates)
+        return self
+
+    def add_covariate_categories(
+        self, *args: CovariateCategories | list[CovariateCategories]
+    ) -> Self:
+        """
+        Add one or more covariate categories to the model.
+
+        Args:
+            *args: One or more `CovariateCategories` objects or sequences of
+                `CovariateCategories` objects.
+
+        Returns:
+            The model instance for method chaining.
+
+        Raises:
+            TypeError: If any argument is not a `CovariateCategories` or a sequence of
+                `CovariateCategories` objects.
+
+        """
+        covariate_categories = _collect_args(
+            args, CovariateCategories, "CovariateCategories"
+        )
+        self._covariate_categories.extend(covariate_categories)
+        return self
+
+    def add_covariates(self, *args: Covariate | list[Covariate]) -> Self:
+        """
+        Add one or more covariates to the model.
+
+        Args:
+            *args: One or more `Covariate` objects or sequences of `Covariate` objects.
+
+        Returns:
+            The model instance for method chaining.
+
+        Raises:
+            TypeError: If any argument is not a `Covariate` or a sequence of
+                `Covariate` objects.
+
+        Examples:
+            >>> from vaxflux._covariates import PartiallyPooledGaussianCovariate
+            >>> from vaxflux._curves import LogisticCurve
+            >>> model = VaxfluxModel(curve=LogisticCurve())
+            >>> result = model.add_covariates(
+            ...     PartiallyPooledGaussianCovariate(
+            ...         parameter="m",
+            ...         covariate="age",
+            ...         mu=(0.5, 0.1),
+            ...         sigma=0.2,
+            ...     )
+            ... )
+            >>> result = model.add_covariates(
+            ...     [
+            ...         PartiallyPooledGaussianCovariate(
+            ...             parameter="sigma",
+            ...             mu=(0.2, 0.03),
+            ...             sigma=0.1,
+            ...         ),
+            ...     ]
+            ... )
+            >>> model.add_covariates("invalid_argument")
+            Traceback (most recent call last):
+                ...
+            TypeError: Arguments must be Covariate objects or sequences of Covariate objects, got str.
+
+        """  # noqa: E501
+        covariates = _collect_args(args, Covariate, "Covariate")  # type: ignore[type-abstract]
+        self._covariates.extend(covariates)
         return self
 
     def sample(
