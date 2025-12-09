@@ -3,7 +3,7 @@ __all__: list[str] = []
 from typing import Any, Self
 
 import numpyro
-from jax.random import PRNGKey
+from jax.random import key
 from numpyro.infer import MCMC, NUTS
 
 from vaxflux._curves import Curve
@@ -151,7 +151,7 @@ class VaxfluxModel:
         """
         self._kernel = NUTS(self._model, **nuts_args)
         self._mcmc = MCMC(self._kernel, **mcmc_args)
-        self._rng_key = PRNGKey(random_seed)
+        self._rng_key = key(random_seed)
         with numpyro.handlers.seed(numpyro.handlers.trace(self._model), self._rng_key):
             self._mcmc.run(self._rng_key, num_warmup=warmup, num_samples=samples)
 
