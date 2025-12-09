@@ -577,6 +577,17 @@ version.
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#vaxflux.VaxfluxModel.add_dates" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        add_dates
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#vaxflux.VaxfluxModel.add_seasons" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -962,6 +973,17 @@ version.
   
     <nav class="md-nav" aria-label="VaxfluxModel">
       <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#vaxflux.VaxfluxModel.add_dates" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        add_dates
+      
+    </span>
+  </a>
+  
+</li>
         
           <li class="md-nav__item">
   <a href="#vaxflux.VaxfluxModel.add_seasons" class="md-nav__link">
@@ -1649,16 +1671,17 @@ given by:</p>
 
                   <details class="mkdocstrings-source">
                     <summary>Source code in <code>src/vaxflux/_vaxflux_model.py</code></summary>
-                    <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">15</span>
-<span class="normal">16</span>
-<span class="normal">17</span>
-<span class="normal">18</span>
-<span class="normal">19</span>
+                    <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">19</span>
 <span class="normal">20</span>
 <span class="normal">21</span>
 <span class="normal">22</span>
 <span class="normal">23</span>
-<span class="normal">24</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">curve</span><span class="p">:</span> <span class="n">Curve</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="normal">24</span>
+<span class="normal">25</span>
+<span class="normal">26</span>
+<span class="normal">27</span>
+<span class="normal">28</span>
+<span class="normal">29</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">curve</span><span class="p">:</span> <span class="n">Curve</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Initialize the `VaxfluxModel` with a given uptake curve.</span>
 
@@ -1668,6 +1691,7 @@ given by:</p>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">_curve</span> <span class="o">=</span> <span class="n">curve</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">_seasons</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">SeasonRange</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_dates</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">DateRange</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
 </code></pre></div></td></tr></table></div>
                   </details>
 
@@ -1683,6 +1707,220 @@ given by:</p>
 
 
 
+
+<div class="doc doc-object doc-function">
+
+
+<h4 id="vaxflux.VaxfluxModel.add_dates" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">add_dates</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span></code>
+
+<a href="#vaxflux.VaxfluxModel.add_dates" class="headerlink" title="Permanent link">&para;</a></h4>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Add one or more date ranges to the model.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>*args</code>
+            </td>
+            <td>
+                  <code><a class="autorefs autorefs-internal" title="DateRange (vaxflux.dates.DateRange)" href="../dates/#vaxflux.dates.DateRange">DateRange</a> | <span title="list">list</span>[<a class="autorefs autorefs-internal" title="DateRange (vaxflux.dates.DateRange)" href="../dates/#vaxflux.dates.DateRange">DateRange</a>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>One or more <code>DateRange</code> objects or sequences of <code>DateRange</code> objects.</p>
+              </div>
+            </td>
+            <td>
+                  <code>()</code>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="typing.Self">Self</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The model instance for method chaining.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+<p><span class="doc-section-title">Raises:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="TypeError">TypeError</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>If any argument is not a <code>DateRange</code> or a sequence of
+<code>DateRange</code> objects.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="ValueError">ValueError</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>If duplicate date ranges are found.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="ValueError">ValueError</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>If overlapping date ranges are found.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+<p><span class="doc-section-title">Examples:</span></p>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">vaxflux._curves</span><span class="w"> </span><span class="kn">import</span> <span class="n">LogisticCurve</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">vaxflux.dates</span><span class="w"> </span><span class="kn">import</span> <span class="n">DateRange</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">model</span> <span class="o">=</span> <span class="n">VaxfluxModel</span><span class="p">(</span><span class="n">curve</span><span class="o">=</span><span class="n">LogisticCurve</span><span class="p">())</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">result</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">add_dates</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">DateRange</span><span class="p">(</span>
+<span class="gp">... </span>        <span class="n">season</span><span class="o">=</span><span class="s2">&quot;2023/2024&quot;</span><span class="p">,</span>
+<span class="gp">... </span>        <span class="n">start_date</span><span class="o">=</span><span class="s2">&quot;2023-12-01&quot;</span><span class="p">,</span>
+<span class="gp">... </span>        <span class="n">end_date</span><span class="o">=</span><span class="s2">&quot;2023-12-07&quot;</span><span class="p">,</span>
+<span class="gp">... </span>        <span class="n">report_date</span><span class="o">=</span><span class="s2">&quot;2023-12-08&quot;</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="p">)</span>
+<span class="gp">... </span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">model</span><span class="o">.</span><span class="n">add_dates</span><span class="p">(</span><span class="s2">&quot;invalid_argument&quot;</span><span class="p">)</span>
+<span class="gt">Traceback (most recent call last):</span>
+<span class="w">    </span><span class="o">...</span>
+<span class="gr">TypeError</span>: <span class="n">Arguments must be DateRange objects or sequences of DateRange objects, got str.</span>
+</code></pre></div>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>src/vaxflux/_vaxflux_model.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 94</span>
+<span class="normal"> 95</span>
+<span class="normal"> 96</span>
+<span class="normal"> 97</span>
+<span class="normal"> 98</span>
+<span class="normal"> 99</span>
+<span class="normal">100</span>
+<span class="normal">101</span>
+<span class="normal">102</span>
+<span class="normal">103</span>
+<span class="normal">104</span>
+<span class="normal">105</span>
+<span class="normal">106</span>
+<span class="normal">107</span>
+<span class="normal">108</span>
+<span class="normal">109</span>
+<span class="normal">110</span>
+<span class="normal">111</span>
+<span class="normal">112</span>
+<span class="normal">113</span>
+<span class="normal">114</span>
+<span class="normal">115</span>
+<span class="normal">116</span>
+<span class="normal">117</span>
+<span class="normal">118</span>
+<span class="normal">119</span>
+<span class="normal">120</span>
+<span class="normal">121</span>
+<span class="normal">122</span>
+<span class="normal">123</span>
+<span class="normal">124</span>
+<span class="normal">125</span>
+<span class="normal">126</span>
+<span class="normal">127</span>
+<span class="normal">128</span>
+<span class="normal">129</span>
+<span class="normal">130</span>
+<span class="normal">131</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">add_dates</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">DateRange</span> <span class="o">|</span> <span class="nb">list</span><span class="p">[</span><span class="n">DateRange</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Self</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Add one or more date ranges to the model.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        *args: One or more `DateRange` objects or sequences of `DateRange` objects.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        The model instance for method chaining.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        TypeError: If any argument is not a `DateRange` or a sequence of</span>
+<span class="sd">            `DateRange` objects.</span>
+<span class="sd">        ValueError: If duplicate date ranges are found.</span>
+<span class="sd">        ValueError: If overlapping date ranges are found.</span>
+
+<span class="sd">    Examples:</span>
+<span class="sd">        &gt;&gt;&gt; from vaxflux._curves import LogisticCurve</span>
+<span class="sd">        &gt;&gt;&gt; from vaxflux.dates import DateRange</span>
+<span class="sd">        &gt;&gt;&gt; model = VaxfluxModel(curve=LogisticCurve())</span>
+<span class="sd">        &gt;&gt;&gt; result = model.add_dates(</span>
+<span class="sd">        ...     DateRange(</span>
+<span class="sd">        ...         season=&quot;2023/2024&quot;,</span>
+<span class="sd">        ...         start_date=&quot;2023-12-01&quot;,</span>
+<span class="sd">        ...         end_date=&quot;2023-12-07&quot;,</span>
+<span class="sd">        ...         report_date=&quot;2023-12-08&quot;,</span>
+<span class="sd">        ...     )</span>
+<span class="sd">        ... )</span>
+<span class="sd">        &gt;&gt;&gt; model.add_dates(&quot;invalid_argument&quot;)</span>
+<span class="sd">        Traceback (most recent call last):</span>
+<span class="sd">            ...</span>
+<span class="sd">        TypeError: Arguments must be DateRange objects or sequences of DateRange objects, got str.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>  <span class="c1"># noqa: E501</span>
+    <span class="n">dates</span> <span class="o">=</span> <span class="n">_collect_ranges</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="n">DateRange</span><span class="p">,</span> <span class="s2">&quot;DateRange&quot;</span><span class="p">)</span>
+    <span class="n">_validate_ranges</span><span class="p">(</span><span class="n">dates</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dates</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_dates</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">dates</span><span class="p">)</span>
+    <span class="k">return</span> <span class="bp">self</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
 
 <div class="doc doc-object doc-function">
 
@@ -1714,7 +1952,7 @@ given by:</p>
                 <code>*args</code>
             </td>
             <td>
-                  <code><a class="autorefs autorefs-internal" title="SeasonRange (vaxflux.dates.SeasonRange)" href="../dates/#vaxflux.dates.SeasonRange">SeasonRange</a> | <span title="collections.abc.Sequence">Sequence</span>[<a class="autorefs autorefs-internal" title="SeasonRange (vaxflux.dates.SeasonRange)" href="../dates/#vaxflux.dates.SeasonRange">SeasonRange</a>]</code>
+                  <code><a class="autorefs autorefs-internal" title="SeasonRange (vaxflux.dates.SeasonRange)" href="../dates/#vaxflux.dates.SeasonRange">SeasonRange</a> | <span title="list">list</span>[<a class="autorefs autorefs-internal" title="SeasonRange (vaxflux.dates.SeasonRange)" href="../dates/#vaxflux.dates.SeasonRange">SeasonRange</a>]</code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -1823,86 +2061,68 @@ objects.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/vaxflux/_vaxflux_model.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 26</span>
-<span class="normal"> 27</span>
-<span class="normal"> 28</span>
-<span class="normal"> 29</span>
-<span class="normal"> 30</span>
-<span class="normal"> 31</span>
-<span class="normal"> 32</span>
-<span class="normal"> 33</span>
-<span class="normal"> 34</span>
-<span class="normal"> 35</span>
-<span class="normal"> 36</span>
-<span class="normal"> 37</span>
-<span class="normal"> 38</span>
-<span class="normal"> 39</span>
-<span class="normal"> 40</span>
-<span class="normal"> 41</span>
-<span class="normal"> 42</span>
-<span class="normal"> 43</span>
-<span class="normal"> 44</span>
-<span class="normal"> 45</span>
-<span class="normal"> 46</span>
-<span class="normal"> 47</span>
-<span class="normal"> 48</span>
-<span class="normal"> 49</span>
-<span class="normal"> 50</span>
-<span class="normal"> 51</span>
-<span class="normal"> 52</span>
-<span class="normal"> 53</span>
-<span class="normal"> 54</span>
-<span class="normal"> 55</span>
-<span class="normal"> 56</span>
-<span class="normal"> 57</span>
-<span class="normal"> 58</span>
-<span class="normal"> 59</span>
-<span class="normal"> 60</span>
-<span class="normal"> 61</span>
-<span class="normal"> 62</span>
-<span class="normal"> 63</span>
-<span class="normal"> 64</span>
-<span class="normal"> 65</span>
-<span class="normal"> 66</span>
-<span class="normal"> 67</span>
-<span class="normal"> 68</span>
-<span class="normal"> 69</span>
-<span class="normal"> 70</span>
-<span class="normal"> 71</span>
-<span class="normal"> 72</span>
-<span class="normal"> 73</span>
-<span class="normal"> 74</span>
-<span class="normal"> 75</span>
-<span class="normal"> 76</span>
-<span class="normal"> 77</span>
-<span class="normal"> 78</span>
-<span class="normal"> 79</span>
-<span class="normal"> 80</span>
-<span class="normal"> 81</span>
-<span class="normal"> 82</span>
-<span class="normal"> 83</span>
-<span class="normal"> 84</span>
-<span class="normal"> 85</span>
-<span class="normal"> 86</span>
-<span class="normal"> 87</span>
-<span class="normal"> 88</span>
-<span class="normal"> 89</span>
-<span class="normal"> 90</span>
-<span class="normal"> 91</span>
-<span class="normal"> 92</span>
-<span class="normal"> 93</span>
-<span class="normal"> 94</span>
-<span class="normal"> 95</span>
-<span class="normal"> 96</span>
-<span class="normal"> 97</span>
-<span class="normal"> 98</span>
-<span class="normal"> 99</span>
-<span class="normal">100</span>
-<span class="normal">101</span>
-<span class="normal">102</span>
-<span class="normal">103</span>
-<span class="normal">104</span>
-<span class="normal">105</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">add_seasons</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">SeasonRange</span> <span class="o">|</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">SeasonRange</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Self</span><span class="p">:</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">31</span>
+<span class="normal">32</span>
+<span class="normal">33</span>
+<span class="normal">34</span>
+<span class="normal">35</span>
+<span class="normal">36</span>
+<span class="normal">37</span>
+<span class="normal">38</span>
+<span class="normal">39</span>
+<span class="normal">40</span>
+<span class="normal">41</span>
+<span class="normal">42</span>
+<span class="normal">43</span>
+<span class="normal">44</span>
+<span class="normal">45</span>
+<span class="normal">46</span>
+<span class="normal">47</span>
+<span class="normal">48</span>
+<span class="normal">49</span>
+<span class="normal">50</span>
+<span class="normal">51</span>
+<span class="normal">52</span>
+<span class="normal">53</span>
+<span class="normal">54</span>
+<span class="normal">55</span>
+<span class="normal">56</span>
+<span class="normal">57</span>
+<span class="normal">58</span>
+<span class="normal">59</span>
+<span class="normal">60</span>
+<span class="normal">61</span>
+<span class="normal">62</span>
+<span class="normal">63</span>
+<span class="normal">64</span>
+<span class="normal">65</span>
+<span class="normal">66</span>
+<span class="normal">67</span>
+<span class="normal">68</span>
+<span class="normal">69</span>
+<span class="normal">70</span>
+<span class="normal">71</span>
+<span class="normal">72</span>
+<span class="normal">73</span>
+<span class="normal">74</span>
+<span class="normal">75</span>
+<span class="normal">76</span>
+<span class="normal">77</span>
+<span class="normal">78</span>
+<span class="normal">79</span>
+<span class="normal">80</span>
+<span class="normal">81</span>
+<span class="normal">82</span>
+<span class="normal">83</span>
+<span class="normal">84</span>
+<span class="normal">85</span>
+<span class="normal">86</span>
+<span class="normal">87</span>
+<span class="normal">88</span>
+<span class="normal">89</span>
+<span class="normal">90</span>
+<span class="normal">91</span>
+<span class="normal">92</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">add_seasons</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">SeasonRange</span> <span class="o">|</span> <span class="nb">list</span><span class="p">[</span><span class="n">SeasonRange</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Self</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Add one or more seasons to the model.</span>
 
@@ -1960,27 +2180,9 @@ objects.</p>
 <span class="sd">        TypeError: Arguments must be SeasonRange objects or sequences of SeasonRange objects, got str.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>  <span class="c1"># noqa: E501</span>
-    <span class="n">seasons</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">SeasonRange</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">args</span><span class="p">:</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="n">SeasonRange</span><span class="p">):</span>
-            <span class="n">seasons</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">)):</span>
-            <span class="c1"># Validate that all items in the sequence are SeasonRange objects</span>
-            <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">arg</span><span class="p">:</span>
-                <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">SeasonRange</span><span class="p">):</span>
-                    <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
-                        <span class="sa">f</span><span class="s2">&quot;All items in a sequence must be SeasonRange objects, &quot;</span>
-                        <span class="sa">f</span><span class="s2">&quot;got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">item</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">.&quot;</span>
-                    <span class="p">)</span>
-                    <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-            <span class="n">seasons</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;Arguments must be SeasonRange objects or sequences of &quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;SeasonRange objects, got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">.&quot;</span>
-            <span class="p">)</span>
-            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">_validate_and_add_seasons</span><span class="p">(</span><span class="n">seasons</span><span class="p">)</span>
+    <span class="n">seasons</span> <span class="o">=</span> <span class="n">_collect_ranges</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="n">SeasonRange</span><span class="p">,</span> <span class="s2">&quot;SeasonRange&quot;</span><span class="p">)</span>
+    <span class="n">_validate_ranges</span><span class="p">(</span><span class="n">seasons</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_seasons</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_seasons</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">seasons</span><span class="p">)</span>
     <span class="k">return</span> <span class="bp">self</span>
 </code></pre></div></td></tr></table></div>
             </details>
@@ -2099,30 +2301,30 @@ objects.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/vaxflux/_vaxflux_model.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">107</span>
-<span class="normal">108</span>
-<span class="normal">109</span>
-<span class="normal">110</span>
-<span class="normal">111</span>
-<span class="normal">112</span>
-<span class="normal">113</span>
-<span class="normal">114</span>
-<span class="normal">115</span>
-<span class="normal">116</span>
-<span class="normal">117</span>
-<span class="normal">118</span>
-<span class="normal">119</span>
-<span class="normal">120</span>
-<span class="normal">121</span>
-<span class="normal">122</span>
-<span class="normal">123</span>
-<span class="normal">124</span>
-<span class="normal">125</span>
-<span class="normal">126</span>
-<span class="normal">127</span>
-<span class="normal">128</span>
-<span class="normal">129</span>
-<span class="normal">130</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">sample</span><span class="p">(</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">133</span>
+<span class="normal">134</span>
+<span class="normal">135</span>
+<span class="normal">136</span>
+<span class="normal">137</span>
+<span class="normal">138</span>
+<span class="normal">139</span>
+<span class="normal">140</span>
+<span class="normal">141</span>
+<span class="normal">142</span>
+<span class="normal">143</span>
+<span class="normal">144</span>
+<span class="normal">145</span>
+<span class="normal">146</span>
+<span class="normal">147</span>
+<span class="normal">148</span>
+<span class="normal">149</span>
+<span class="normal">150</span>
+<span class="normal">151</span>
+<span class="normal">152</span>
+<span class="normal">153</span>
+<span class="normal">154</span>
+<span class="normal">155</span>
+<span class="normal">156</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">sample</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">warmup</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
     <span class="n">samples</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
