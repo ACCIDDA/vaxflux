@@ -1,8 +1,10 @@
 """Model seasonal vaccination uptake curves."""
 
 __all__ = (
+    "Covariate",
     "Curve",
     "LogisticCurve",
+    "PartiallyPooledGaussianCovariate",
     "VaxfluxModel",
     "covariates",
     "curves",
@@ -22,5 +24,6 @@ from vaxflux import (
     interventions,
     uptake,
 )
+from vaxflux._covariates import Covariate, PartiallyPooledGaussianCovariate
 from vaxflux._curves import Curve, LogisticCurve
 from vaxflux._vaxflux_model import VaxfluxModel

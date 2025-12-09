@@ -10,6 +10,8 @@ from typing import Final, Literal, NamedTuple, TypeVar
 import pandas as pd
 from pydantic import BaseModel, ConfigDict, model_validator
 
+from vaxflux._util import _collect_args
+
 _INFER_RANGES_REQUIRED_COLUMNS: Final[dict[Literal["date", "season"], set[str]]] = {
     "date": {"season", "start_date", "end_date", "report_date"},
     "season": {"season", "start_date", "end_date"},
@@ -313,27 +315,7 @@ def _collect_ranges(
     Raises:
         TypeError: If arguments are not of the expected type.
     """
-    ranges: list[Range] = []
-    for arg in args:
-        if isinstance(arg, expected_type):
-            ranges.append(arg)
-        elif isinstance(arg, Sequence) and not isinstance(arg, (str, bytes)):
-            # Validate that all items in the sequence are of expected type
-            for item in arg:
-                if not isinstance(item, expected_type):
-                    msg = (
-                        f"All items in a sequence must be {type_name} objects, "
-                        f"got {type(item).__name__}."
-                    )
-                    raise TypeError(msg)
-            ranges.extend(arg)
-        else:
-            msg = (
-                f"Arguments must be {type_name} objects or sequences of "
-                f"{type_name} objects, got {type(arg).__name__}."
-            )
-            raise TypeError(msg)
-    return ranges
+    return _collect_args(args, expected_type, type_name)
 
 
 def _validate_ranges(

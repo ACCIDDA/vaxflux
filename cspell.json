@@ -68,6 +68,7 @@
     "numpyro",
     "operatorname",
     "pprint",
+    "presample",
     "priord",
     "prng",
     "pygments",

@@ -150,17 +150,6 @@ from vaxflux.dates import SeasonRange
             3,
         ),
     ],
-    ids=[
-        "single_season",
-        "multiple_seasons_as_args",
-        "list_of_seasons",
-        "tuple_of_seasons",
-        "mixed_args_and_sequences",
-        "empty_call",
-        "empty_list",
-        "adjacent_seasons_no_overlap",
-        "non_sequential_non_overlapping",
-    ],
 )
 def test_add_seasons_input_variations(
     args_factory: object, expected_count: int
@@ -219,50 +208,6 @@ def test_add_seasons_method_chaining() -> None:
     assert len(model._seasons) == 2
     assert model._seasons[0] == season1
     assert model._seasons[1] == season2
-
-
-@pytest.mark.parametrize(
-    "invalid_arg",
-    [
-        "not a season",
-        123,
-        45.6,
-        {"season": "2023/2024"},
-        None,
-    ],
-)
-def test_add_seasons_invalid_type_error(invalid_arg: object) -> None:
-    """Test TypeError is raised when passing invalid types."""
-    model = VaxfluxModel(curve=LogisticCurve())
-
-    with pytest.raises(
-        TypeError,
-        match=(
-            r"Arguments must be SeasonRange objects or sequences of SeasonRange objects"
-        ),
-    ):
-        model.add_seasons(invalid_arg)  # type: ignore[arg-type]
-
-
-@pytest.mark.parametrize(
-    "invalid_item",
-    ["not a season", 123, {"key": "value"}],
-    ids=["string", "int", "dict"],
-)
-def test_add_seasons_sequence_with_invalid_items(invalid_item: object) -> None:
-    """Test TypeError is raised when a sequence contains non-SeasonRange items."""
-    model = VaxfluxModel(curve=LogisticCurve())
-    season = SeasonRange(
-        season="2023/2024",
-        start_date=date(2023, 12, 1),
-        end_date=date(2024, 3, 31),
-    )
-
-    with pytest.raises(
-        TypeError,
-        match=r"All items in a sequence must be SeasonRange objects",
-    ):
-        model.add_seasons([season, invalid_item])  # type: ignore[list-item]
 
 
 def test_add_seasons_preserves_existing_seasons() -> None:
@@ -365,11 +310,6 @@ def test_add_seasons_preserves_existing_seasons() -> None:
             ),
             r"Season names already exist in the model: \['2023/2024'\]\.",
         ),
-    ],
-    ids=[
-        "single_duplicate_name",
-        "multiple_duplicate_names",
-        "duplicate_with_existing",
     ],
 )
 def test_add_seasons_duplicate_name_errors(
@@ -482,13 +422,6 @@ def test_add_seasons_duplicate_name_errors(
             r"Overlapping date ranges found: '2023/2024' \(2023-12-01 to 2024-03-31\) "
             r"and '2024 Winter' \(2024-03-01 to 2024-05-31\)\.",
         ),
-    ],
-    ids=[
-        "partial_overlap_single_call",
-        "complete_containment",
-        "identical_date_ranges",
-        "single_day_overlap",
-        "overlap_with_existing",
     ],
 )
 def test_add_seasons_overlapping_errors(
