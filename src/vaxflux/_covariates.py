@@ -3,7 +3,7 @@ from typing import cast
 
 import numpyro
 import numpyro.distributions as dist
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 from vaxflux._types import NumericalArrayLike
 
@@ -28,7 +28,7 @@ class Covariate(ABC, BaseModel):
         Returns:
             The prefix string derived from the parameter name.
         """
-        return self.parameter + (f"_{self.covariate}" if self.covariate else "")
+        return self.parameter + (f"_{self.covariate}" if self.covariate else "_season")
 
     def presample(self) -> None:
         """
@@ -46,6 +46,24 @@ class Covariate(ABC, BaseModel):
             A numerical array-like structure containing the sampled covariate values.
         """
         raise NotImplementedError
+
+    @field_validator("covariate", mode="after")
+    @classmethod
+    def _covariate_cannot_be_called_season(cls, v: str) -> str:
+        """
+        Validate that the covariate name is not 'season'.
+
+        Args:
+            v: The covariate name to validate.
+
+        Returns:
+            The validated covariate name.
+
+        """
+        if v == "season":
+            msg = "covariate cannot be called 'season'."
+            raise ValueError(msg)
+        return v
 
 
 class PartiallyPooledGaussianCovariate(Covariate):
