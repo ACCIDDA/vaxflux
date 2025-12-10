@@ -1,7 +1,9 @@
 __all__: list[str] = []
 
-from typing import Any, Self
+import itertools
+from typing import Any, Self, cast
 
+import jax.numpy as jnp
 import numpyro
 from jax.random import key
 from numpyro.infer import MCMC, NUTS
@@ -229,5 +231,152 @@ class VaxfluxModel:
         with numpyro.handlers.seed(numpyro.handlers.trace(self._model), self._rng_key):
             self._mcmc.run(self._rng_key, num_warmup=warmup, num_samples=samples)
 
+    def _pre_model(self) -> None:
+        """
+        Prepare the model by setting up necessary attributes.
+
+        This method should be called before the model is run as it sets up the
+        necessary attributes for the model to run correctly.
+
+        """
+        self._season_names = [season.season for season in self._seasons]
+        self._season_name_indices = {
+            name: idx for idx, name in enumerate(self._season_names)
+        }
+        self._covariate_categories_map = {
+            category.covariate: category.categories
+            for category in self._covariate_categories
+        }
+        self._covariate_names = list(self._covariate_categories_map.keys())
+        self._covariate_name_indices = {
+            name: idx for idx, name in enumerate(self._covariate_names)
+        }
+        self._covariate_category_indices = {
+            name: {category: idx for idx, category in enumerate(categories)}
+            for name, categories in self._covariate_categories_map.items()
+        }
+        self._category_combinations = (
+            list(
+                itertools.product(
+                    *[
+                        self._covariate_categories_map[name]
+                        for name in self._covariate_names
+                    ]
+                )
+            )
+            if self._covariate_names
+            else [()]
+        )
+        self._covariates_by_parameter = {
+            param: [cov for cov in self._covariates if cov.parameter == param]
+            for param in self._curve.parameters
+        }
+
     def _model(self) -> None:
-        raise NotImplementedError
+        """Define the model for inference."""
+        covariate_values = self._model_sample_covariates()
+        self._model_summed_parameters(covariate_values)
+
+    def _model_sample_covariate(self, covariate: Covariate) -> jnp.ndarray:
+        """
+        Sample from a single covariate.
+
+        Args:
+            covariate: The covariate to sample from.
+
+        Returns:
+            The sampled covariate values.
+        """
+        covariate_categories: list[str]
+        if covariate.covariate is None:
+            # If the covariate does not have a covariate name, it is a seasonal
+            # covariate, so we use the season names as the categories.
+            covariate_categories = self._season_names
+            plate_size = len(covariate_categories)
+        else:
+            # If the covariate has a covariate name, we look up the categories
+            # from the map of covariate categories.
+            possible_covariate_categories = self._covariate_categories_map.get(
+                covariate.covariate
+            )
+            if possible_covariate_categories is None:
+                msg = (
+                    f"Covariate categories for '{covariate.covariate}' not found. "
+                    "Ensure matching covariate categories are added to the model."
+                )
+                raise ValueError(msg)
+            covariate_categories = list(possible_covariate_categories)
+            plate_size = len(covariate_categories) - 1
+        # Sample from the covariate and store the sampled values in a
+        # deterministic site.
+        covariate.presample()
+        with numpyro.plate(f"covariate_{covariate.prefix}", plate_size):
+            sampled_values = covariate.sample()
+        return cast(
+            "jnp.ndarray",
+            numpyro.deterministic(
+                f"covariate_values_{covariate.prefix}",
+                jnp.pad(sampled_values, (1, 0), mode="empty"),
+            ),
+        )
+
+    def _model_sample_covariates(self) -> dict[str, jnp.ndarray]:
+        """
+        Sample from all covariates.
+
+        Returns:
+            A dictionary mapping covariate prefixes to their sampled values.
+        """
+        # Loop over the covariates and sample from them
+        covariate_values: dict[str, jnp.ndarray] = {}
+        for covariate in self._covariates:
+            covariate_values[covariate.prefix] = self._model_sample_covariate(covariate)
+        return covariate_values
+
+    def _model_summed_parameters(
+        self, covariate_values: dict[str, jnp.ndarray]
+    ) -> dict[tuple[str, str, tuple[str, ...]], jnp.ndarray]:
+        """
+        Calculate the summed parameters for parameter/season/covariate categories.
+
+        Args:
+            covariate_values: A dictionary mapping covariate prefixes to their sampled
+                values.
+
+        Returns:
+            A dictionary mapping (parameter, season, covariate-category combo) tuples
+            to their summed covariate effects.
+        """
+        # Now calculate the sums of the covariate values for all of the categories
+        # Keys are (parameter, season, covariate-category combo) and values are the
+        # summed covariate effects for that combination.
+        summed_parameters: dict[tuple[str, str, tuple[str, ...]], jnp.ndarray] = {}
+        for param in self._curve.parameters:
+            for season in self._season_names:
+                for category_combo in self._category_combinations:
+                    # Collect covariate components that apply to this parameter,
+                    # season, and covariate-category combination.
+                    components = []
+                    for covariate in self._covariates_by_parameter.get(param, []):
+                        values = covariate_values[covariate.prefix]
+                        if covariate.covariate is None:
+                            # Seasonal covariates are indexed by season.
+                            season_index = self._season_name_indices[season] + 1
+                            components.append(values[season_index])
+                            continue
+                        # Non-seasonal covariates are indexed by category.
+                        category = category_combo[
+                            self._covariate_name_indices[covariate.covariate]
+                        ]
+                        category_index = self._covariate_category_indices[
+                            covariate.covariate
+                        ][category]
+                        components.append(values[category_index])
+                    # Sum the components (or use zero when none apply) for this
+                    # parameter/season/category combination.
+                    summed_parameters[(param, season, category_combo)] = (
+                        jnp.sum(jnp.stack(components))
+                        if components
+                        else jnp.asarray(0.0)
+                    )
+        return summed_parameters

@@ -12,12 +12,37 @@ from vaxflux._types import NumericalArrayLike
 
 
 class Curve(ABC):
-    """Abstract class for implementations of uptake curves."""
+    """
+    Abstract class for implementations of uptake curves.
+
+    Attributes:
+        parameters: A tuple of parameter names required by the prevalence function.
+
+    Examples:
+        >>> import jax.numpy as jnp
+        >>> from vaxflux import Curve
+        >>> class ClampedSlopeCurve(Curve):
+        ...     def prevalence(
+        ...         self, t: NumericalArrayLike, m: NumericalArrayLike
+        ...     ) -> jax.Array:
+        ...         return jnp.clip(t * m, 0.0, 1.0)
+        >>> t = jnp.linspace(-1.0, 3.0, num=8)
+        >>> curve = ClampedSlopeCurve()
+        >>> curve.parameters
+        ('m',)
+        >>> curve.prevalence(t, m=0.5)
+        Array([0.        , 0.        , 0.0714286 , 0.35714293, 0.6428572 ,
+               0.9285715 , 1.        , 1.        ], dtype=float32)
+        >>> curve.incidence(t, m=0.5)
+        Array([0. , 0. , 0.5, 0.5, 0.5, 0.5, 0. , 0. ], dtype=float32)
+
+    """
+
+    parameters: tuple[str, ...]
 
     def __init__(self) -> None:
-        in_axes = (0,) + (None,) * (
-            len(inspect.signature(self.prevalence).parameters) - 1
-        )
+        self.parameters = tuple(inspect.signature(self.prevalence).parameters)[1:]
+        in_axes = (0,) + (None,) * len(self.parameters)
         self._grad_prevalence = jax.vmap(jax.grad(self.prevalence), in_axes=in_axes)
 
     @abstractmethod

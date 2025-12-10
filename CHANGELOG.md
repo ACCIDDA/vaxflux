@@ -27,7 +27,8 @@ Added:
   [#62](https://github.com/ACCIDDA/vaxflux/issues/62).
 - Added `VaxfluxModel` and new `Curve` classes that are based on
   `jax`/`numpyro`. See [#105](https://github.com/ACCIDDA/vaxflux/issues/105),
-  [#106](https://github.com/ACCIDDA/vaxflux/issues/106).
+  [#106](https://github.com/ACCIDDA/vaxflux/issues/106),
+  [#108](https://github.com/ACCIDDA/vaxflux/issues/108).
 
 Changed:
 
