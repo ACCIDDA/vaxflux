@@ -21,7 +21,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.0">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
     
     
       
@@ -29,7 +29,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.618322db.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
       
       
 
@@ -374,6 +374,172 @@ version.
       
   
   
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Demos
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Demos
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../demos/idd-demo/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    IDD Demo
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../demos/synthetic-data-daily/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Synthetic Data Daily
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../demos/synthetic-data/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Synthetic Data
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../demos/uptake-model/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Uptake Model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
     
   
   
@@ -387,10 +553,10 @@ version.
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" checked>
         
           
-          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
             
   
   
@@ -408,8 +574,8 @@ version.
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="true">
-          <label class="md-nav__title" for="__nav_6">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_7">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -923,44 +1089,44 @@ version.
 
 
 <p><span class="doc-section-title">Examples:</span></p>
-    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">vaxflux.dates</span><span class="w"> </span><span class="kn">import</span> <span class="n">DateRange</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">date_range</span> <span class="o">=</span> <span class="n">DateRange</span><span class="p">(</span>
-<span class="gp">... </span>    <span class="n">season</span><span class="o">=</span><span class="s2">&quot;2023/2024&quot;</span><span class="p">,</span>
-<span class="gp">... </span>    <span class="n">start_date</span><span class="o">=</span><span class="s2">&quot;2023-12-01&quot;</span><span class="p">,</span>
-<span class="gp">... </span>    <span class="n">end_date</span><span class="o">=</span><span class="s2">&quot;2023-12-31&quot;</span><span class="p">,</span>
-<span class="gp">... </span>    <span class="n">report_date</span><span class="o">=</span><span class="s2">&quot;2024-01-01&quot;</span><span class="p">,</span>
-<span class="gp">... </span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">date_range</span><span class="o">.</span><span class="n">season</span>
-<span class="go">&#39;2023/2024&#39;</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">date_range</span><span class="o">.</span><span class="n">start_date</span>
-<span class="go">datetime.date(2023, 12, 1)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">date_range</span><span class="o">.</span><span class="n">end_date</span>
-<span class="go">datetime.date(2023, 12, 31)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">date_range</span><span class="o">.</span><span class="n">report_date</span>
-<span class="go">datetime.date(2024, 1, 1)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">DateRange</span><span class="p">(</span>
-<span class="gp">... </span>    <span class="n">season</span><span class="o">=</span><span class="s2">&quot;2023/2024&quot;</span><span class="p">,</span>
-<span class="gp">... </span>    <span class="n">start_date</span><span class="o">=</span><span class="s2">&quot;2023-12-01&quot;</span><span class="p">,</span>
-<span class="gp">... </span>    <span class="n">end_date</span><span class="o">=</span><span class="s2">&quot;2023-11-30&quot;</span><span class="p">,</span>
-<span class="gp">... </span>    <span class="n">report_date</span><span class="o">=</span><span class="s2">&quot;2023-12-01&quot;</span><span class="p">,</span>
-<span class="gp">... </span><span class="p">)</span>
-<span class="gt">Traceback (most recent call last):</span>
-<span class="w">    </span><span class="o">...</span>
-<span class="gr">pydantic_core._pydantic_core.ValidationError</span>: <span class="n">1 validation error for DateRange</span>
-<span class="x">  Value error, The end date, 2023-11-30, must be after or the same as the start date 2023-12-01. [...]</span>
-<span class="x">    For further information visit ...</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">DateRange</span><span class="p">(</span>
-<span class="gp">... </span>    <span class="n">season</span><span class="o">=</span><span class="s2">&quot;2023/2024&quot;</span><span class="p">,</span>
-<span class="gp">... </span>    <span class="n">start_date</span><span class="o">=</span><span class="s2">&quot;2023-12-01&quot;</span><span class="p">,</span>
-<span class="gp">... </span>    <span class="n">end_date</span><span class="o">=</span><span class="s2">&quot;2023-12-31&quot;</span><span class="p">,</span>
-<span class="gp">... </span>    <span class="n">report_date</span><span class="o">=</span><span class="s2">&quot;2023-12-30&quot;</span><span class="p">,</span>
-<span class="gp">... </span><span class="p">)</span>
-<span class="gt">Traceback (most recent call last):</span>
-<span class="w">    </span><span class="o">...</span>
-<span class="gr">pydantic_core._pydantic_core.ValidationError</span>: <span class="n">1 validation error for DateRange</span>
-<span class="x">  Value error, The report date, 2023-12-30, must be after or the same as the end date 2023-12-31. [...]</span>
-<span class="x">    For further information visit ...</span>
-</code></pre></div>
+    <div class="language-pycon highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">vaxflux.dates</span><span class="w"> </span><span class="kn">import</span> <span class="n">DateRange</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">date_range</span> <span class="o">=</span> <span class="n">DateRange</span><span class="p">(</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="gp">... </span>    <span class="n">season</span><span class="o">=</span><span class="s2">&quot;2023/2024&quot;</span><span class="p">,</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="gp">... </span>    <span class="n">start_date</span><span class="o">=</span><span class="s2">&quot;2023-12-01&quot;</span><span class="p">,</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="gp">... </span>    <span class="n">end_date</span><span class="o">=</span><span class="s2">&quot;2023-12-31&quot;</span><span class="p">,</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="gp">... </span>    <span class="n">report_date</span><span class="o">=</span><span class="s2">&quot;2024-01-01&quot;</span><span class="p">,</span>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="gp">... </span><span class="p">)</span>
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">date_range</span><span class="o">.</span><span class="n">season</span>
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="go">&#39;2023/2024&#39;</span>
+</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">date_range</span><span class="o">.</span><span class="n">start_date</span>
+</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="go">datetime.date(2023, 12, 1)</span>
+</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">date_range</span><span class="o">.</span><span class="n">end_date</span>
+</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="go">datetime.date(2023, 12, 31)</span>
+</span><span id="__span-0-14"><a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">date_range</span><span class="o">.</span><span class="n">report_date</span>
+</span><span id="__span-0-15"><a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="go">datetime.date(2024, 1, 1)</span>
+</span><span id="__span-0-16"><a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">DateRange</span><span class="p">(</span>
+</span><span id="__span-0-17"><a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a><span class="gp">... </span>    <span class="n">season</span><span class="o">=</span><span class="s2">&quot;2023/2024&quot;</span><span class="p">,</span>
+</span><span id="__span-0-18"><a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a><span class="gp">... </span>    <span class="n">start_date</span><span class="o">=</span><span class="s2">&quot;2023-12-01&quot;</span><span class="p">,</span>
+</span><span id="__span-0-19"><a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a><span class="gp">... </span>    <span class="n">end_date</span><span class="o">=</span><span class="s2">&quot;2023-11-30&quot;</span><span class="p">,</span>
+</span><span id="__span-0-20"><a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a><span class="gp">... </span>    <span class="n">report_date</span><span class="o">=</span><span class="s2">&quot;2023-12-01&quot;</span><span class="p">,</span>
+</span><span id="__span-0-21"><a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a><span class="gp">... </span><span class="p">)</span>
+</span><span id="__span-0-22"><a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a><span class="gt">Traceback (most recent call last):</span>
+</span><span id="__span-0-23"><a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a><span class="w">    </span><span class="o">...</span>
+</span><span id="__span-0-24"><a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a><span class="gr">pydantic_core._pydantic_core.ValidationError</span>: <span class="n">1 validation error for DateRange</span>
+</span><span id="__span-0-25"><a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a><span class="x">  Value error, The end date, 2023-11-30, must be after or the same as the start date 2023-12-01. [...]</span>
+</span><span id="__span-0-26"><a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a><span class="x">    For further information visit ...</span>
+</span><span id="__span-0-27"><a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">DateRange</span><span class="p">(</span>
+</span><span id="__span-0-28"><a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a><span class="gp">... </span>    <span class="n">season</span><span class="o">=</span><span class="s2">&quot;2023/2024&quot;</span><span class="p">,</span>
+</span><span id="__span-0-29"><a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a><span class="gp">... </span>    <span class="n">start_date</span><span class="o">=</span><span class="s2">&quot;2023-12-01&quot;</span><span class="p">,</span>
+</span><span id="__span-0-30"><a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a><span class="gp">... </span>    <span class="n">end_date</span><span class="o">=</span><span class="s2">&quot;2023-12-31&quot;</span><span class="p">,</span>
+</span><span id="__span-0-31"><a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a><span class="gp">... </span>    <span class="n">report_date</span><span class="o">=</span><span class="s2">&quot;2023-12-30&quot;</span><span class="p">,</span>
+</span><span id="__span-0-32"><a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a><span class="gp">... </span><span class="p">)</span>
+</span><span id="__span-0-33"><a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a><span class="gt">Traceback (most recent call last):</span>
+</span><span id="__span-0-34"><a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a><span class="w">    </span><span class="o">...</span>
+</span><span id="__span-0-35"><a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a><span class="gr">pydantic_core._pydantic_core.ValidationError</span>: <span class="n">1 validation error for DateRange</span>
+</span><span id="__span-0-36"><a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a><span class="x">  Value error, The report date, 2023-12-30, must be after or the same as the end date 2023-12-31. [...]</span>
+</span><span id="__span-0-37"><a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a><span class="x">    For further information visit ...</span>
+</span></code></pre></div>
 
 
 
@@ -1012,29 +1178,29 @@ version.
 
 
 <p><span class="doc-section-title">Examples:</span></p>
-    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">vaxflux.dates</span><span class="w"> </span><span class="kn">import</span> <span class="n">SeasonRange</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">season_range</span> <span class="o">=</span> <span class="n">SeasonRange</span><span class="p">(</span>
-<span class="gp">... </span>    <span class="n">season</span><span class="o">=</span><span class="s2">&quot;2023/2024&quot;</span><span class="p">,</span>
-<span class="gp">... </span>    <span class="n">start_date</span><span class="o">=</span><span class="s2">&quot;2023-12-01&quot;</span><span class="p">,</span>
-<span class="gp">... </span>    <span class="n">end_date</span><span class="o">=</span><span class="s2">&quot;2024-03-31&quot;</span><span class="p">,</span>
-<span class="gp">... </span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">season_range</span><span class="o">.</span><span class="n">season</span>
-<span class="go">&#39;2023/2024&#39;</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">season_range</span><span class="o">.</span><span class="n">start_date</span>
-<span class="go">datetime.date(2023, 12, 1)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">season_range</span><span class="o">.</span><span class="n">end_date</span>
-<span class="go">datetime.date(2024, 3, 31)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">SeasonRange</span><span class="p">(</span>
-<span class="gp">... </span>    <span class="n">season</span><span class="o">=</span><span class="s2">&quot;2023/2024&quot;</span><span class="p">,</span>
-<span class="gp">... </span>    <span class="n">start_date</span><span class="o">=</span><span class="s2">&quot;2024-03-31&quot;</span><span class="p">,</span>
-<span class="gp">... </span>    <span class="n">end_date</span><span class="o">=</span><span class="s2">&quot;2023-12-01&quot;</span><span class="p">,</span>
-<span class="gp">... </span><span class="p">)</span>
-<span class="gt">Traceback (most recent call last):</span>
-<span class="w">    </span><span class="o">...</span>
-<span class="gr">pydantic_core._pydantic_core.ValidationError</span>: <span class="n">1 validation error for SeasonRange</span>
-<span class="x">  Value error, The end date, 2023-12-01, must be after or the same as the start date 2024-03-31. [...]</span>
-<span class="x">    For further information visit ...</span>
-</code></pre></div>
+    <div class="language-pycon highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">vaxflux.dates</span><span class="w"> </span><span class="kn">import</span> <span class="n">SeasonRange</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">season_range</span> <span class="o">=</span> <span class="n">SeasonRange</span><span class="p">(</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="gp">... </span>    <span class="n">season</span><span class="o">=</span><span class="s2">&quot;2023/2024&quot;</span><span class="p">,</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="gp">... </span>    <span class="n">start_date</span><span class="o">=</span><span class="s2">&quot;2023-12-01&quot;</span><span class="p">,</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="gp">... </span>    <span class="n">end_date</span><span class="o">=</span><span class="s2">&quot;2024-03-31&quot;</span><span class="p">,</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="gp">... </span><span class="p">)</span>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">season_range</span><span class="o">.</span><span class="n">season</span>
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="go">&#39;2023/2024&#39;</span>
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">season_range</span><span class="o">.</span><span class="n">start_date</span>
+</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="go">datetime.date(2023, 12, 1)</span>
+</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">season_range</span><span class="o">.</span><span class="n">end_date</span>
+</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="go">datetime.date(2024, 3, 31)</span>
+</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">SeasonRange</span><span class="p">(</span>
+</span><span id="__span-0-14"><a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a><span class="gp">... </span>    <span class="n">season</span><span class="o">=</span><span class="s2">&quot;2023/2024&quot;</span><span class="p">,</span>
+</span><span id="__span-0-15"><a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="gp">... </span>    <span class="n">start_date</span><span class="o">=</span><span class="s2">&quot;2024-03-31&quot;</span><span class="p">,</span>
+</span><span id="__span-0-16"><a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a><span class="gp">... </span>    <span class="n">end_date</span><span class="o">=</span><span class="s2">&quot;2023-12-01&quot;</span><span class="p">,</span>
+</span><span id="__span-0-17"><a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a><span class="gp">... </span><span class="p">)</span>
+</span><span id="__span-0-18"><a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a><span class="gt">Traceback (most recent call last):</span>
+</span><span id="__span-0-19"><a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a><span class="w">    </span><span class="o">...</span>
+</span><span id="__span-0-20"><a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a><span class="gr">pydantic_core._pydantic_core.ValidationError</span>: <span class="n">1 validation error for SeasonRange</span>
+</span><span id="__span-0-21"><a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a><span class="x">  Value error, The end date, 2023-12-01, must be after or the same as the start date 2024-03-31. [...]</span>
+</span><span id="__span-0-22"><a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a><span class="x">    For further information visit ...</span>
+</span></code></pre></div>
 
 
 
@@ -1205,132 +1371,132 @@ evenly into the season range and <code>remainder</code> is 'raise'.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/vaxflux/dates.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">475</span>
-<span class="normal">476</span>
-<span class="normal">477</span>
-<span class="normal">478</span>
-<span class="normal">479</span>
-<span class="normal">480</span>
-<span class="normal">481</span>
-<span class="normal">482</span>
-<span class="normal">483</span>
-<span class="normal">484</span>
-<span class="normal">485</span>
-<span class="normal">486</span>
-<span class="normal">487</span>
-<span class="normal">488</span>
-<span class="normal">489</span>
-<span class="normal">490</span>
-<span class="normal">491</span>
-<span class="normal">492</span>
-<span class="normal">493</span>
-<span class="normal">494</span>
-<span class="normal">495</span>
-<span class="normal">496</span>
-<span class="normal">497</span>
-<span class="normal">498</span>
-<span class="normal">499</span>
-<span class="normal">500</span>
-<span class="normal">501</span>
-<span class="normal">502</span>
-<span class="normal">503</span>
-<span class="normal">504</span>
-<span class="normal">505</span>
-<span class="normal">506</span>
-<span class="normal">507</span>
-<span class="normal">508</span>
-<span class="normal">509</span>
-<span class="normal">510</span>
-<span class="normal">511</span>
-<span class="normal">512</span>
-<span class="normal">513</span>
-<span class="normal">514</span>
-<span class="normal">515</span>
-<span class="normal">516</span>
-<span class="normal">517</span>
-<span class="normal">518</span>
-<span class="normal">519</span>
-<span class="normal">520</span>
-<span class="normal">521</span>
-<span class="normal">522</span>
-<span class="normal">523</span>
-<span class="normal">524</span>
-<span class="normal">525</span>
-<span class="normal">526</span>
-<span class="normal">527</span>
-<span class="normal">528</span>
-<span class="normal">529</span>
-<span class="normal">530</span>
-<span class="normal">531</span>
-<span class="normal">532</span>
-<span class="normal">533</span>
-<span class="normal">534</span>
-<span class="normal">535</span>
-<span class="normal">536</span>
-<span class="normal">537</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">daily_date_ranges</span><span class="p">(</span>
-    <span class="n">season_ranges</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">SeasonRange</span><span class="p">]</span> <span class="o">|</span> <span class="n">SeasonRange</span><span class="p">,</span>
-    <span class="n">range_days</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
-    <span class="n">remainder</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;fill&quot;</span><span class="p">,</span> <span class="s2">&quot;raise&quot;</span><span class="p">,</span> <span class="s2">&quot;skip&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;raise&quot;</span><span class="p">,</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">DateRange</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Create daily date ranges from the season ranges.</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">        season_ranges: The season ranges to create the daily date ranges from.</span>
-<span class="sd">        range_days: The number of days for each daily date range, must be at least 0.</span>
-<span class="sd">        remainder: The strategy to handle the remainder of days when the season ranges</span>
-<span class="sd">            do not divide evenly into daily date ranges. Options are &quot;fill&quot; to fill the</span>
-<span class="sd">            remainder with the last date range, &quot;raise&quot; to raise an error, and &quot;skip&quot; to</span>
-<span class="sd">            skip the remainder.</span>
-
-<span class="sd">    Returns:</span>
-<span class="sd">        The daily date ranges for the uptake scenarios.</span>
-
-<span class="sd">    Raises:</span>
-<span class="sd">        ValueError: If the number of days for each daily date range is less than 1.</span>
-<span class="sd">        ValueError: If the number of days for each daily date range does not divide</span>
-<span class="sd">            evenly into the season range and `remainder` is &#39;raise&#39;.</span>
-
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">season_ranges</span> <span class="o">=</span> <span class="p">(</span>
-        <span class="p">[</span><span class="n">season_ranges</span><span class="p">]</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">season_ranges</span><span class="p">,</span> <span class="n">SeasonRange</span><span class="p">)</span> <span class="k">else</span> <span class="n">season_ranges</span>
-    <span class="p">)</span>
-    <span class="k">if</span> <span class="n">range_days</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
-        <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;The number of days for each daily date range must be at least 0.&quot;</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-            <span class="n">msg</span><span class="p">,</span>
-        <span class="p">)</span>
-    <span class="n">date_ranges</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="n">td</span> <span class="o">=</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">days</span><span class="o">=</span><span class="n">range_days</span><span class="p">)</span>
-    <span class="n">td_one_day</span> <span class="o">=</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">days</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-    <span class="k">for</span> <span class="n">season_range</span> <span class="ow">in</span> <span class="n">season_ranges</span><span class="p">:</span>
-        <span class="n">start_date</span> <span class="o">=</span> <span class="n">season_range</span><span class="o">.</span><span class="n">start_date</span>
-        <span class="k">while</span> <span class="n">start_date</span> <span class="o">&lt;=</span> <span class="n">season_range</span><span class="o">.</span><span class="n">end_date</span><span class="p">:</span>
-            <span class="n">end_date</span> <span class="o">=</span> <span class="n">start_date</span> <span class="o">+</span> <span class="n">td</span>
-            <span class="k">if</span> <span class="n">end_date</span> <span class="o">&gt;</span> <span class="n">season_range</span><span class="o">.</span><span class="n">end_date</span><span class="p">:</span>
-                <span class="k">if</span> <span class="n">remainder</span> <span class="o">==</span> <span class="s2">&quot;raise&quot;</span><span class="p">:</span>
-                    <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
-                        <span class="s2">&quot;The number of days for each daily date range does not divide &quot;</span>
-                        <span class="sa">f</span><span class="s2">&quot;evenly into the season range for </span><span class="si">{</span><span class="n">season_range</span><span class="o">.</span><span class="n">season</span><span class="si">}</span><span class="s2">.&quot;</span>
-                    <span class="p">)</span>
-                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                        <span class="n">msg</span><span class="p">,</span>
-                    <span class="p">)</span>
-                <span class="k">if</span> <span class="n">remainder</span> <span class="o">==</span> <span class="s2">&quot;fill&quot;</span><span class="p">:</span>
-                    <span class="n">end_date</span> <span class="o">=</span> <span class="n">season_range</span><span class="o">.</span><span class="n">end_date</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="k">break</span>
-            <span class="n">date_ranges</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-                <span class="n">DateRange</span><span class="p">(</span>
-                    <span class="n">season</span><span class="o">=</span><span class="n">season_range</span><span class="o">.</span><span class="n">season</span><span class="p">,</span>
-                    <span class="n">start_date</span><span class="o">=</span><span class="n">start_date</span><span class="p">,</span>
-                    <span class="n">end_date</span><span class="o">=</span><span class="n">end_date</span><span class="p">,</span>
-                    <span class="n">report_date</span><span class="o">=</span><span class="n">end_date</span><span class="p">,</span>
-                <span class="p">),</span>
-            <span class="p">)</span>
-            <span class="n">start_date</span> <span class="o">=</span> <span class="n">end_date</span> <span class="o">+</span> <span class="n">td_one_day</span>
-    <span class="k">return</span> <span class="n">date_ranges</span>
-</code></pre></div></td></tr></table></div>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-475">475</a></span>
+<span class="normal"><a href="#__codelineno-0-476">476</a></span>
+<span class="normal"><a href="#__codelineno-0-477">477</a></span>
+<span class="normal"><a href="#__codelineno-0-478">478</a></span>
+<span class="normal"><a href="#__codelineno-0-479">479</a></span>
+<span class="normal"><a href="#__codelineno-0-480">480</a></span>
+<span class="normal"><a href="#__codelineno-0-481">481</a></span>
+<span class="normal"><a href="#__codelineno-0-482">482</a></span>
+<span class="normal"><a href="#__codelineno-0-483">483</a></span>
+<span class="normal"><a href="#__codelineno-0-484">484</a></span>
+<span class="normal"><a href="#__codelineno-0-485">485</a></span>
+<span class="normal"><a href="#__codelineno-0-486">486</a></span>
+<span class="normal"><a href="#__codelineno-0-487">487</a></span>
+<span class="normal"><a href="#__codelineno-0-488">488</a></span>
+<span class="normal"><a href="#__codelineno-0-489">489</a></span>
+<span class="normal"><a href="#__codelineno-0-490">490</a></span>
+<span class="normal"><a href="#__codelineno-0-491">491</a></span>
+<span class="normal"><a href="#__codelineno-0-492">492</a></span>
+<span class="normal"><a href="#__codelineno-0-493">493</a></span>
+<span class="normal"><a href="#__codelineno-0-494">494</a></span>
+<span class="normal"><a href="#__codelineno-0-495">495</a></span>
+<span class="normal"><a href="#__codelineno-0-496">496</a></span>
+<span class="normal"><a href="#__codelineno-0-497">497</a></span>
+<span class="normal"><a href="#__codelineno-0-498">498</a></span>
+<span class="normal"><a href="#__codelineno-0-499">499</a></span>
+<span class="normal"><a href="#__codelineno-0-500">500</a></span>
+<span class="normal"><a href="#__codelineno-0-501">501</a></span>
+<span class="normal"><a href="#__codelineno-0-502">502</a></span>
+<span class="normal"><a href="#__codelineno-0-503">503</a></span>
+<span class="normal"><a href="#__codelineno-0-504">504</a></span>
+<span class="normal"><a href="#__codelineno-0-505">505</a></span>
+<span class="normal"><a href="#__codelineno-0-506">506</a></span>
+<span class="normal"><a href="#__codelineno-0-507">507</a></span>
+<span class="normal"><a href="#__codelineno-0-508">508</a></span>
+<span class="normal"><a href="#__codelineno-0-509">509</a></span>
+<span class="normal"><a href="#__codelineno-0-510">510</a></span>
+<span class="normal"><a href="#__codelineno-0-511">511</a></span>
+<span class="normal"><a href="#__codelineno-0-512">512</a></span>
+<span class="normal"><a href="#__codelineno-0-513">513</a></span>
+<span class="normal"><a href="#__codelineno-0-514">514</a></span>
+<span class="normal"><a href="#__codelineno-0-515">515</a></span>
+<span class="normal"><a href="#__codelineno-0-516">516</a></span>
+<span class="normal"><a href="#__codelineno-0-517">517</a></span>
+<span class="normal"><a href="#__codelineno-0-518">518</a></span>
+<span class="normal"><a href="#__codelineno-0-519">519</a></span>
+<span class="normal"><a href="#__codelineno-0-520">520</a></span>
+<span class="normal"><a href="#__codelineno-0-521">521</a></span>
+<span class="normal"><a href="#__codelineno-0-522">522</a></span>
+<span class="normal"><a href="#__codelineno-0-523">523</a></span>
+<span class="normal"><a href="#__codelineno-0-524">524</a></span>
+<span class="normal"><a href="#__codelineno-0-525">525</a></span>
+<span class="normal"><a href="#__codelineno-0-526">526</a></span>
+<span class="normal"><a href="#__codelineno-0-527">527</a></span>
+<span class="normal"><a href="#__codelineno-0-528">528</a></span>
+<span class="normal"><a href="#__codelineno-0-529">529</a></span>
+<span class="normal"><a href="#__codelineno-0-530">530</a></span>
+<span class="normal"><a href="#__codelineno-0-531">531</a></span>
+<span class="normal"><a href="#__codelineno-0-532">532</a></span>
+<span class="normal"><a href="#__codelineno-0-533">533</a></span>
+<span class="normal"><a href="#__codelineno-0-534">534</a></span>
+<span class="normal"><a href="#__codelineno-0-535">535</a></span>
+<span class="normal"><a href="#__codelineno-0-536">536</a></span>
+<span class="normal"><a href="#__codelineno-0-537">537</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-475"><a id="__codelineno-0-475" name="__codelineno-0-475"></a><span class="k">def</span><span class="w"> </span><span class="nf">daily_date_ranges</span><span class="p">(</span>
+</span><span id="__span-0-476"><a id="__codelineno-0-476" name="__codelineno-0-476"></a>    <span class="n">season_ranges</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">SeasonRange</span><span class="p">]</span> <span class="o">|</span> <span class="n">SeasonRange</span><span class="p">,</span>
+</span><span id="__span-0-477"><a id="__codelineno-0-477" name="__codelineno-0-477"></a>    <span class="n">range_days</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+</span><span id="__span-0-478"><a id="__codelineno-0-478" name="__codelineno-0-478"></a>    <span class="n">remainder</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;fill&quot;</span><span class="p">,</span> <span class="s2">&quot;raise&quot;</span><span class="p">,</span> <span class="s2">&quot;skip&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;raise&quot;</span><span class="p">,</span>
+</span><span id="__span-0-479"><a id="__codelineno-0-479" name="__codelineno-0-479"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">DateRange</span><span class="p">]:</span>
+</span><span id="__span-0-480"><a id="__codelineno-0-480" name="__codelineno-0-480"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="__span-0-481"><a id="__codelineno-0-481" name="__codelineno-0-481"></a><span class="sd">    Create daily date ranges from the season ranges.</span>
+</span><span id="__span-0-482"><a id="__codelineno-0-482" name="__codelineno-0-482"></a>
+</span><span id="__span-0-483"><a id="__codelineno-0-483" name="__codelineno-0-483"></a><span class="sd">    Args:</span>
+</span><span id="__span-0-484"><a id="__codelineno-0-484" name="__codelineno-0-484"></a><span class="sd">        season_ranges: The season ranges to create the daily date ranges from.</span>
+</span><span id="__span-0-485"><a id="__codelineno-0-485" name="__codelineno-0-485"></a><span class="sd">        range_days: The number of days for each daily date range, must be at least 0.</span>
+</span><span id="__span-0-486"><a id="__codelineno-0-486" name="__codelineno-0-486"></a><span class="sd">        remainder: The strategy to handle the remainder of days when the season ranges</span>
+</span><span id="__span-0-487"><a id="__codelineno-0-487" name="__codelineno-0-487"></a><span class="sd">            do not divide evenly into daily date ranges. Options are &quot;fill&quot; to fill the</span>
+</span><span id="__span-0-488"><a id="__codelineno-0-488" name="__codelineno-0-488"></a><span class="sd">            remainder with the last date range, &quot;raise&quot; to raise an error, and &quot;skip&quot; to</span>
+</span><span id="__span-0-489"><a id="__codelineno-0-489" name="__codelineno-0-489"></a><span class="sd">            skip the remainder.</span>
+</span><span id="__span-0-490"><a id="__codelineno-0-490" name="__codelineno-0-490"></a>
+</span><span id="__span-0-491"><a id="__codelineno-0-491" name="__codelineno-0-491"></a><span class="sd">    Returns:</span>
+</span><span id="__span-0-492"><a id="__codelineno-0-492" name="__codelineno-0-492"></a><span class="sd">        The daily date ranges for the uptake scenarios.</span>
+</span><span id="__span-0-493"><a id="__codelineno-0-493" name="__codelineno-0-493"></a>
+</span><span id="__span-0-494"><a id="__codelineno-0-494" name="__codelineno-0-494"></a><span class="sd">    Raises:</span>
+</span><span id="__span-0-495"><a id="__codelineno-0-495" name="__codelineno-0-495"></a><span class="sd">        ValueError: If the number of days for each daily date range is less than 1.</span>
+</span><span id="__span-0-496"><a id="__codelineno-0-496" name="__codelineno-0-496"></a><span class="sd">        ValueError: If the number of days for each daily date range does not divide</span>
+</span><span id="__span-0-497"><a id="__codelineno-0-497" name="__codelineno-0-497"></a><span class="sd">            evenly into the season range and `remainder` is &#39;raise&#39;.</span>
+</span><span id="__span-0-498"><a id="__codelineno-0-498" name="__codelineno-0-498"></a>
+</span><span id="__span-0-499"><a id="__codelineno-0-499" name="__codelineno-0-499"></a><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="__span-0-500"><a id="__codelineno-0-500" name="__codelineno-0-500"></a>    <span class="n">season_ranges</span> <span class="o">=</span> <span class="p">(</span>
+</span><span id="__span-0-501"><a id="__codelineno-0-501" name="__codelineno-0-501"></a>        <span class="p">[</span><span class="n">season_ranges</span><span class="p">]</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">season_ranges</span><span class="p">,</span> <span class="n">SeasonRange</span><span class="p">)</span> <span class="k">else</span> <span class="n">season_ranges</span>
+</span><span id="__span-0-502"><a id="__codelineno-0-502" name="__codelineno-0-502"></a>    <span class="p">)</span>
+</span><span id="__span-0-503"><a id="__codelineno-0-503" name="__codelineno-0-503"></a>    <span class="k">if</span> <span class="n">range_days</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+</span><span id="__span-0-504"><a id="__codelineno-0-504" name="__codelineno-0-504"></a>        <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;The number of days for each daily date range must be at least 0.&quot;</span>
+</span><span id="__span-0-505"><a id="__codelineno-0-505" name="__codelineno-0-505"></a>        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+</span><span id="__span-0-506"><a id="__codelineno-0-506" name="__codelineno-0-506"></a>            <span class="n">msg</span><span class="p">,</span>
+</span><span id="__span-0-507"><a id="__codelineno-0-507" name="__codelineno-0-507"></a>        <span class="p">)</span>
+</span><span id="__span-0-508"><a id="__codelineno-0-508" name="__codelineno-0-508"></a>    <span class="n">date_ranges</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span id="__span-0-509"><a id="__codelineno-0-509" name="__codelineno-0-509"></a>    <span class="n">td</span> <span class="o">=</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">days</span><span class="o">=</span><span class="n">range_days</span><span class="p">)</span>
+</span><span id="__span-0-510"><a id="__codelineno-0-510" name="__codelineno-0-510"></a>    <span class="n">td_one_day</span> <span class="o">=</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">days</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+</span><span id="__span-0-511"><a id="__codelineno-0-511" name="__codelineno-0-511"></a>    <span class="k">for</span> <span class="n">season_range</span> <span class="ow">in</span> <span class="n">season_ranges</span><span class="p">:</span>
+</span><span id="__span-0-512"><a id="__codelineno-0-512" name="__codelineno-0-512"></a>        <span class="n">start_date</span> <span class="o">=</span> <span class="n">season_range</span><span class="o">.</span><span class="n">start_date</span>
+</span><span id="__span-0-513"><a id="__codelineno-0-513" name="__codelineno-0-513"></a>        <span class="k">while</span> <span class="n">start_date</span> <span class="o">&lt;=</span> <span class="n">season_range</span><span class="o">.</span><span class="n">end_date</span><span class="p">:</span>
+</span><span id="__span-0-514"><a id="__codelineno-0-514" name="__codelineno-0-514"></a>            <span class="n">end_date</span> <span class="o">=</span> <span class="n">start_date</span> <span class="o">+</span> <span class="n">td</span>
+</span><span id="__span-0-515"><a id="__codelineno-0-515" name="__codelineno-0-515"></a>            <span class="k">if</span> <span class="n">end_date</span> <span class="o">&gt;</span> <span class="n">season_range</span><span class="o">.</span><span class="n">end_date</span><span class="p">:</span>
+</span><span id="__span-0-516"><a id="__codelineno-0-516" name="__codelineno-0-516"></a>                <span class="k">if</span> <span class="n">remainder</span> <span class="o">==</span> <span class="s2">&quot;raise&quot;</span><span class="p">:</span>
+</span><span id="__span-0-517"><a id="__codelineno-0-517" name="__codelineno-0-517"></a>                    <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+</span><span id="__span-0-518"><a id="__codelineno-0-518" name="__codelineno-0-518"></a>                        <span class="s2">&quot;The number of days for each daily date range does not divide &quot;</span>
+</span><span id="__span-0-519"><a id="__codelineno-0-519" name="__codelineno-0-519"></a>                        <span class="sa">f</span><span class="s2">&quot;evenly into the season range for </span><span class="si">{</span><span class="n">season_range</span><span class="o">.</span><span class="n">season</span><span class="si">}</span><span class="s2">.&quot;</span>
+</span><span id="__span-0-520"><a id="__codelineno-0-520" name="__codelineno-0-520"></a>                    <span class="p">)</span>
+</span><span id="__span-0-521"><a id="__codelineno-0-521" name="__codelineno-0-521"></a>                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+</span><span id="__span-0-522"><a id="__codelineno-0-522" name="__codelineno-0-522"></a>                        <span class="n">msg</span><span class="p">,</span>
+</span><span id="__span-0-523"><a id="__codelineno-0-523" name="__codelineno-0-523"></a>                    <span class="p">)</span>
+</span><span id="__span-0-524"><a id="__codelineno-0-524" name="__codelineno-0-524"></a>                <span class="k">if</span> <span class="n">remainder</span> <span class="o">==</span> <span class="s2">&quot;fill&quot;</span><span class="p">:</span>
+</span><span id="__span-0-525"><a id="__codelineno-0-525" name="__codelineno-0-525"></a>                    <span class="n">end_date</span> <span class="o">=</span> <span class="n">season_range</span><span class="o">.</span><span class="n">end_date</span>
+</span><span id="__span-0-526"><a id="__codelineno-0-526" name="__codelineno-0-526"></a>                <span class="k">else</span><span class="p">:</span>
+</span><span id="__span-0-527"><a id="__codelineno-0-527" name="__codelineno-0-527"></a>                    <span class="k">break</span>
+</span><span id="__span-0-528"><a id="__codelineno-0-528" name="__codelineno-0-528"></a>            <span class="n">date_ranges</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+</span><span id="__span-0-529"><a id="__codelineno-0-529" name="__codelineno-0-529"></a>                <span class="n">DateRange</span><span class="p">(</span>
+</span><span id="__span-0-530"><a id="__codelineno-0-530" name="__codelineno-0-530"></a>                    <span class="n">season</span><span class="o">=</span><span class="n">season_range</span><span class="o">.</span><span class="n">season</span><span class="p">,</span>
+</span><span id="__span-0-531"><a id="__codelineno-0-531" name="__codelineno-0-531"></a>                    <span class="n">start_date</span><span class="o">=</span><span class="n">start_date</span><span class="p">,</span>
+</span><span id="__span-0-532"><a id="__codelineno-0-532" name="__codelineno-0-532"></a>                    <span class="n">end_date</span><span class="o">=</span><span class="n">end_date</span><span class="p">,</span>
+</span><span id="__span-0-533"><a id="__codelineno-0-533" name="__codelineno-0-533"></a>                    <span class="n">report_date</span><span class="o">=</span><span class="n">end_date</span><span class="p">,</span>
+</span><span id="__span-0-534"><a id="__codelineno-0-534" name="__codelineno-0-534"></a>                <span class="p">),</span>
+</span><span id="__span-0-535"><a id="__codelineno-0-535" name="__codelineno-0-535"></a>            <span class="p">)</span>
+</span><span id="__span-0-536"><a id="__codelineno-0-536" name="__codelineno-0-536"></a>            <span class="n">start_date</span> <span class="o">=</span> <span class="n">end_date</span> <span class="o">+</span> <span class="n">td_one_day</span>
+</span><span id="__span-0-537"><a id="__codelineno-0-537" name="__codelineno-0-537"></a>    <span class="k">return</span> <span class="n">date_ranges</span>
+</span></code></pre></div></td></tr></table></div>
             </details>
     </div>
 
@@ -1392,10 +1558,10 @@ evenly into the season range and <code>remainder</code> is 'raise'.</p>
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": [], "search": "../../assets/javascripts/workers/search.7a47a382.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["content.code.copy"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
     
     
-      <script src="../../assets/javascripts/bundle.e71a0d61.min.js"></script>
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
       
         <script src="../../javascripts/katex.js"></script>
       

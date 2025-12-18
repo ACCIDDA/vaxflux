@@ -21,7 +21,7 @@
       
       
       <link rel="icon" href="../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.0">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
     
     
       
@@ -29,7 +29,7 @@
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/main.618322db.min.css">
+      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
       
       
 
@@ -519,7 +519,7 @@ version.
   <span class="md-ellipsis">
     
   
-    API Reference
+    Demos
   
 
     
@@ -532,6 +532,172 @@ version.
         
         <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Demos
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../demos/idd-demo/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    IDD Demo
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../demos/synthetic-data-daily/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Synthetic Data Daily
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../demos/synthetic-data/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Synthetic Data
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../demos/uptake-model/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Uptake Model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API Reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -931,10 +1097,10 @@ prevalence of a vaccine. This package provides several curve families via the
 <a href="../api/curves/"><code>vaxflux.curves</code></a> module, including logistic which we'll use in
 this example. Advanced users can also create their own curve families to model
 different types of vaccine uptake patterns.</p>
-<pre><code class="language-python">from vaxflux.curves import LogisticCurve
-
-logistic_curve = LogisticCurve()
-</code></pre>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">vaxflux.curves</span><span class="w"> </span><span class="kn">import</span> <span class="n">LogisticCurve</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="n">logistic_curve</span> <span class="o">=</span> <span class="n">LogisticCurve</span><span class="p">()</span>
+</span></code></pre></div>
 <p>The logistic curve is a common choice for modeling vaccine uptake because it
 captures the typical S-shaped curve seen in many vaccination campaigns, where
 uptake starts slowly, accelerates, and then levels off as the population becomes
@@ -964,15 +1130,15 @@ each season, where each date range represents a period of time during which
 vaccine uptake is observed. The <code>range_days</code> argument specifies the number of
 days in each date range where ranges are defined start date inclusive end date
 exclusive.</p>
-<pre><code class="language-python">from vaxflux.dates import DateRange, SeasonRange, daily_date_ranges
-
-seasons = [
-    SeasonRange(season=&quot;2022/23&quot;, start_date=&quot;2022-10-03&quot;, end_date=&quot;2023-02-05&quot;),
-    SeasonRange(season=&quot;2023/24&quot;, start_date=&quot;2023-10-02&quot;, end_date=&quot;2024-02-04&quot;),
-    SeasonRange(season=&quot;2024/25&quot;, start_date=&quot;2024-10-07&quot;, end_date=&quot;2025-02-02&quot;),
-]
-dates = daily_date_ranges(seasons, range_days=6)
-</code></pre>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">vaxflux.dates</span><span class="w"> </span><span class="kn">import</span> <span class="n">DateRange</span><span class="p">,</span> <span class="n">SeasonRange</span><span class="p">,</span> <span class="n">daily_date_ranges</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="n">seasons</span> <span class="o">=</span> <span class="p">[</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>    <span class="n">SeasonRange</span><span class="p">(</span><span class="n">season</span><span class="o">=</span><span class="s2">&quot;2022/23&quot;</span><span class="p">,</span> <span class="n">start_date</span><span class="o">=</span><span class="s2">&quot;2022-10-03&quot;</span><span class="p">,</span> <span class="n">end_date</span><span class="o">=</span><span class="s2">&quot;2023-02-05&quot;</span><span class="p">),</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>    <span class="n">SeasonRange</span><span class="p">(</span><span class="n">season</span><span class="o">=</span><span class="s2">&quot;2023/24&quot;</span><span class="p">,</span> <span class="n">start_date</span><span class="o">=</span><span class="s2">&quot;2023-10-02&quot;</span><span class="p">,</span> <span class="n">end_date</span><span class="o">=</span><span class="s2">&quot;2024-02-04&quot;</span><span class="p">),</span>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>    <span class="n">SeasonRange</span><span class="p">(</span><span class="n">season</span><span class="o">=</span><span class="s2">&quot;2024/25&quot;</span><span class="p">,</span> <span class="n">start_date</span><span class="o">=</span><span class="s2">&quot;2024-10-07&quot;</span><span class="p">,</span> <span class="n">end_date</span><span class="o">=</span><span class="s2">&quot;2025-02-02&quot;</span><span class="p">),</span>
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="p">]</span>
+</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="n">dates</span> <span class="o">=</span> <span class="n">daily_date_ranges</span><span class="p">(</span><span class="n">seasons</span><span class="p">,</span> <span class="n">range_days</span><span class="o">=</span><span class="mi">6</span><span class="p">)</span>
+</span></code></pre></div>
 <h2 id="defining-covariates">Defining Covariates<a class="headerlink" href="#defining-covariates" title="Permanent link">&para;</a></h2>
 <p>In <code>vaxflux</code>, covariates are additional variables that can influence vaccine
 uptake patterns. These can include demographic information, geographic data, or
@@ -983,13 +1149,13 @@ class. In this example, we will create a single "age" covariate with three
 categories, "youth", "adult", and "elderly", which loosely correspond to 0-17
 yrs, 18-65 yrs, and 65+ yrs, respectively. This covariate will be used to model
 how vaccine uptake varies across different age groups.</p>
-<pre><code class="language-python">from vaxflux.covariates import CovariateCategories
-
-age_covariate = CovariateCategories(
-    covariate=&quot;age&quot;,
-    categories=[&quot;youth&quot;, &quot;adult&quot;, &quot;elderly&quot;],
-)
-</code></pre>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">vaxflux.covariates</span><span class="w"> </span><span class="kn">import</span> <span class="n">CovariateCategories</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="n">age_covariate</span> <span class="o">=</span> <span class="n">CovariateCategories</span><span class="p">(</span>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>    <span class="n">covariate</span><span class="o">=</span><span class="s2">&quot;age&quot;</span><span class="p">,</span>
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>    <span class="n">categories</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;youth&quot;</span><span class="p">,</span> <span class="s2">&quot;adult&quot;</span><span class="p">,</span> <span class="s2">&quot;elderly&quot;</span><span class="p">],</span>
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="p">)</span>
+</span></code></pre></div>
 <h2 id="create-a-sample-dataset">Create A Sample Dataset<a class="headerlink" href="#create-a-sample-dataset" title="Permanent link">&para;</a></h2>
 <p>As a first step in using the package you can create a sample dataset with
 <a href="../api/data/#vaxflux.data.sample_dataset"><code>vaxflux.data.sample_dataset</code></a>. This
@@ -1016,47 +1182,47 @@ documentation, but in brief they are:</p>
 this is the standard deviation of a
 <code>gamma distribution &lt;https://en.wikipedia.org/wiki/Gamma_distribution&gt;</code>_ that
 daily incidence observations are drawn from.</p>
-<pre><code class="language-python">from vaxflux.data import sample_dataset
-
-parameters = [
-    (&quot;m&quot;, &quot;2022/23&quot;, &quot;youth&quot;,   -0.5),
-    (&quot;m&quot;, &quot;2022/23&quot;, &quot;adult&quot;,    0.5),
-    (&quot;m&quot;, &quot;2022/23&quot;, &quot;elderly&quot;,  1.2),
-    (&quot;r&quot;, &quot;2022/23&quot;, &quot;youth&quot;,   -3.2),
-    (&quot;r&quot;, &quot;2022/23&quot;, &quot;adult&quot;,   -3.2),
-    (&quot;r&quot;, &quot;2022/23&quot;, &quot;elderly&quot;, -3.2),
-    (&quot;s&quot;, &quot;2022/23&quot;, &quot;youth&quot;,   40.0),
-    (&quot;s&quot;, &quot;2022/23&quot;, &quot;adult&quot;,   40.0),
-    (&quot;s&quot;, &quot;2022/23&quot;, &quot;elderly&quot;, 40.0),
-    (&quot;m&quot;, &quot;2023/24&quot;, &quot;youth&quot;,   -0.525),
-    (&quot;m&quot;, &quot;2023/24&quot;, &quot;adult&quot;,    0.53),
-    (&quot;m&quot;, &quot;2023/24&quot;, &quot;elderly&quot;,  1.235),
-    (&quot;r&quot;, &quot;2023/24&quot;, &quot;youth&quot;,   -3.1),
-    (&quot;r&quot;, &quot;2023/24&quot;, &quot;adult&quot;,   -3.1),
-    (&quot;r&quot;, &quot;2023/24&quot;, &quot;elderly&quot;, -3.1),
-    (&quot;s&quot;, &quot;2023/24&quot;, &quot;youth&quot;,   42.0),
-    (&quot;s&quot;, &quot;2023/24&quot;, &quot;adult&quot;,   42.0),
-    (&quot;s&quot;, &quot;2023/24&quot;, &quot;elderly&quot;, 42.0),
-    (&quot;m&quot;, &quot;2024/25&quot;, &quot;youth&quot;,   -0.51),
-    (&quot;m&quot;, &quot;2024/25&quot;, &quot;adult&quot;,    0.52),
-    (&quot;m&quot;, &quot;2024/25&quot;, &quot;elderly&quot;,  1.22),
-    (&quot;r&quot;, &quot;2024/25&quot;, &quot;youth&quot;,   -3.0),
-    (&quot;r&quot;, &quot;2024/25&quot;, &quot;adult&quot;,   -3.0),
-    (&quot;r&quot;, &quot;2024/25&quot;, &quot;elderly&quot;, -3.0),
-    (&quot;s&quot;, &quot;2024/25&quot;, &quot;youth&quot;,   44.0),
-    (&quot;s&quot;, &quot;2024/25&quot;, &quot;adult&quot;,   44.0),
-    (&quot;s&quot;, &quot;2024/25&quot;, &quot;elderly&quot;, 44.0),
-]
-sample_observations = sample_dataset(
-    logistic_curve,
-    seasons,
-    dates,
-    [age_covariate],
-    parameters,
-    0.0005,
-    random_seed=42,
-)
-</code></pre>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">vaxflux.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">sample_dataset</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="n">parameters</span> <span class="o">=</span> <span class="p">[</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>    <span class="p">(</span><span class="s2">&quot;m&quot;</span><span class="p">,</span> <span class="s2">&quot;2022/23&quot;</span><span class="p">,</span> <span class="s2">&quot;youth&quot;</span><span class="p">,</span>   <span class="o">-</span><span class="mf">0.5</span><span class="p">),</span>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>    <span class="p">(</span><span class="s2">&quot;m&quot;</span><span class="p">,</span> <span class="s2">&quot;2022/23&quot;</span><span class="p">,</span> <span class="s2">&quot;adult&quot;</span><span class="p">,</span>    <span class="mf">0.5</span><span class="p">),</span>
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>    <span class="p">(</span><span class="s2">&quot;m&quot;</span><span class="p">,</span> <span class="s2">&quot;2022/23&quot;</span><span class="p">,</span> <span class="s2">&quot;elderly&quot;</span><span class="p">,</span>  <span class="mf">1.2</span><span class="p">),</span>
+</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>    <span class="p">(</span><span class="s2">&quot;r&quot;</span><span class="p">,</span> <span class="s2">&quot;2022/23&quot;</span><span class="p">,</span> <span class="s2">&quot;youth&quot;</span><span class="p">,</span>   <span class="o">-</span><span class="mf">3.2</span><span class="p">),</span>
+</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>    <span class="p">(</span><span class="s2">&quot;r&quot;</span><span class="p">,</span> <span class="s2">&quot;2022/23&quot;</span><span class="p">,</span> <span class="s2">&quot;adult&quot;</span><span class="p">,</span>   <span class="o">-</span><span class="mf">3.2</span><span class="p">),</span>
+</span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>    <span class="p">(</span><span class="s2">&quot;r&quot;</span><span class="p">,</span> <span class="s2">&quot;2022/23&quot;</span><span class="p">,</span> <span class="s2">&quot;elderly&quot;</span><span class="p">,</span> <span class="o">-</span><span class="mf">3.2</span><span class="p">),</span>
+</span><span id="__span-3-10"><a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a>    <span class="p">(</span><span class="s2">&quot;s&quot;</span><span class="p">,</span> <span class="s2">&quot;2022/23&quot;</span><span class="p">,</span> <span class="s2">&quot;youth&quot;</span><span class="p">,</span>   <span class="mf">40.0</span><span class="p">),</span>
+</span><span id="__span-3-11"><a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a>    <span class="p">(</span><span class="s2">&quot;s&quot;</span><span class="p">,</span> <span class="s2">&quot;2022/23&quot;</span><span class="p">,</span> <span class="s2">&quot;adult&quot;</span><span class="p">,</span>   <span class="mf">40.0</span><span class="p">),</span>
+</span><span id="__span-3-12"><a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a>    <span class="p">(</span><span class="s2">&quot;s&quot;</span><span class="p">,</span> <span class="s2">&quot;2022/23&quot;</span><span class="p">,</span> <span class="s2">&quot;elderly&quot;</span><span class="p">,</span> <span class="mf">40.0</span><span class="p">),</span>
+</span><span id="__span-3-13"><a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a>    <span class="p">(</span><span class="s2">&quot;m&quot;</span><span class="p">,</span> <span class="s2">&quot;2023/24&quot;</span><span class="p">,</span> <span class="s2">&quot;youth&quot;</span><span class="p">,</span>   <span class="o">-</span><span class="mf">0.525</span><span class="p">),</span>
+</span><span id="__span-3-14"><a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a>    <span class="p">(</span><span class="s2">&quot;m&quot;</span><span class="p">,</span> <span class="s2">&quot;2023/24&quot;</span><span class="p">,</span> <span class="s2">&quot;adult&quot;</span><span class="p">,</span>    <span class="mf">0.53</span><span class="p">),</span>
+</span><span id="__span-3-15"><a id="__codelineno-3-15" name="__codelineno-3-15" href="#__codelineno-3-15"></a>    <span class="p">(</span><span class="s2">&quot;m&quot;</span><span class="p">,</span> <span class="s2">&quot;2023/24&quot;</span><span class="p">,</span> <span class="s2">&quot;elderly&quot;</span><span class="p">,</span>  <span class="mf">1.235</span><span class="p">),</span>
+</span><span id="__span-3-16"><a id="__codelineno-3-16" name="__codelineno-3-16" href="#__codelineno-3-16"></a>    <span class="p">(</span><span class="s2">&quot;r&quot;</span><span class="p">,</span> <span class="s2">&quot;2023/24&quot;</span><span class="p">,</span> <span class="s2">&quot;youth&quot;</span><span class="p">,</span>   <span class="o">-</span><span class="mf">3.1</span><span class="p">),</span>
+</span><span id="__span-3-17"><a id="__codelineno-3-17" name="__codelineno-3-17" href="#__codelineno-3-17"></a>    <span class="p">(</span><span class="s2">&quot;r&quot;</span><span class="p">,</span> <span class="s2">&quot;2023/24&quot;</span><span class="p">,</span> <span class="s2">&quot;adult&quot;</span><span class="p">,</span>   <span class="o">-</span><span class="mf">3.1</span><span class="p">),</span>
+</span><span id="__span-3-18"><a id="__codelineno-3-18" name="__codelineno-3-18" href="#__codelineno-3-18"></a>    <span class="p">(</span><span class="s2">&quot;r&quot;</span><span class="p">,</span> <span class="s2">&quot;2023/24&quot;</span><span class="p">,</span> <span class="s2">&quot;elderly&quot;</span><span class="p">,</span> <span class="o">-</span><span class="mf">3.1</span><span class="p">),</span>
+</span><span id="__span-3-19"><a id="__codelineno-3-19" name="__codelineno-3-19" href="#__codelineno-3-19"></a>    <span class="p">(</span><span class="s2">&quot;s&quot;</span><span class="p">,</span> <span class="s2">&quot;2023/24&quot;</span><span class="p">,</span> <span class="s2">&quot;youth&quot;</span><span class="p">,</span>   <span class="mf">42.0</span><span class="p">),</span>
+</span><span id="__span-3-20"><a id="__codelineno-3-20" name="__codelineno-3-20" href="#__codelineno-3-20"></a>    <span class="p">(</span><span class="s2">&quot;s&quot;</span><span class="p">,</span> <span class="s2">&quot;2023/24&quot;</span><span class="p">,</span> <span class="s2">&quot;adult&quot;</span><span class="p">,</span>   <span class="mf">42.0</span><span class="p">),</span>
+</span><span id="__span-3-21"><a id="__codelineno-3-21" name="__codelineno-3-21" href="#__codelineno-3-21"></a>    <span class="p">(</span><span class="s2">&quot;s&quot;</span><span class="p">,</span> <span class="s2">&quot;2023/24&quot;</span><span class="p">,</span> <span class="s2">&quot;elderly&quot;</span><span class="p">,</span> <span class="mf">42.0</span><span class="p">),</span>
+</span><span id="__span-3-22"><a id="__codelineno-3-22" name="__codelineno-3-22" href="#__codelineno-3-22"></a>    <span class="p">(</span><span class="s2">&quot;m&quot;</span><span class="p">,</span> <span class="s2">&quot;2024/25&quot;</span><span class="p">,</span> <span class="s2">&quot;youth&quot;</span><span class="p">,</span>   <span class="o">-</span><span class="mf">0.51</span><span class="p">),</span>
+</span><span id="__span-3-23"><a id="__codelineno-3-23" name="__codelineno-3-23" href="#__codelineno-3-23"></a>    <span class="p">(</span><span class="s2">&quot;m&quot;</span><span class="p">,</span> <span class="s2">&quot;2024/25&quot;</span><span class="p">,</span> <span class="s2">&quot;adult&quot;</span><span class="p">,</span>    <span class="mf">0.52</span><span class="p">),</span>
+</span><span id="__span-3-24"><a id="__codelineno-3-24" name="__codelineno-3-24" href="#__codelineno-3-24"></a>    <span class="p">(</span><span class="s2">&quot;m&quot;</span><span class="p">,</span> <span class="s2">&quot;2024/25&quot;</span><span class="p">,</span> <span class="s2">&quot;elderly&quot;</span><span class="p">,</span>  <span class="mf">1.22</span><span class="p">),</span>
+</span><span id="__span-3-25"><a id="__codelineno-3-25" name="__codelineno-3-25" href="#__codelineno-3-25"></a>    <span class="p">(</span><span class="s2">&quot;r&quot;</span><span class="p">,</span> <span class="s2">&quot;2024/25&quot;</span><span class="p">,</span> <span class="s2">&quot;youth&quot;</span><span class="p">,</span>   <span class="o">-</span><span class="mf">3.0</span><span class="p">),</span>
+</span><span id="__span-3-26"><a id="__codelineno-3-26" name="__codelineno-3-26" href="#__codelineno-3-26"></a>    <span class="p">(</span><span class="s2">&quot;r&quot;</span><span class="p">,</span> <span class="s2">&quot;2024/25&quot;</span><span class="p">,</span> <span class="s2">&quot;adult&quot;</span><span class="p">,</span>   <span class="o">-</span><span class="mf">3.0</span><span class="p">),</span>
+</span><span id="__span-3-27"><a id="__codelineno-3-27" name="__codelineno-3-27" href="#__codelineno-3-27"></a>    <span class="p">(</span><span class="s2">&quot;r&quot;</span><span class="p">,</span> <span class="s2">&quot;2024/25&quot;</span><span class="p">,</span> <span class="s2">&quot;elderly&quot;</span><span class="p">,</span> <span class="o">-</span><span class="mf">3.0</span><span class="p">),</span>
+</span><span id="__span-3-28"><a id="__codelineno-3-28" name="__codelineno-3-28" href="#__codelineno-3-28"></a>    <span class="p">(</span><span class="s2">&quot;s&quot;</span><span class="p">,</span> <span class="s2">&quot;2024/25&quot;</span><span class="p">,</span> <span class="s2">&quot;youth&quot;</span><span class="p">,</span>   <span class="mf">44.0</span><span class="p">),</span>
+</span><span id="__span-3-29"><a id="__codelineno-3-29" name="__codelineno-3-29" href="#__codelineno-3-29"></a>    <span class="p">(</span><span class="s2">&quot;s&quot;</span><span class="p">,</span> <span class="s2">&quot;2024/25&quot;</span><span class="p">,</span> <span class="s2">&quot;adult&quot;</span><span class="p">,</span>   <span class="mf">44.0</span><span class="p">),</span>
+</span><span id="__span-3-30"><a id="__codelineno-3-30" name="__codelineno-3-30" href="#__codelineno-3-30"></a>    <span class="p">(</span><span class="s2">&quot;s&quot;</span><span class="p">,</span> <span class="s2">&quot;2024/25&quot;</span><span class="p">,</span> <span class="s2">&quot;elderly&quot;</span><span class="p">,</span> <span class="mf">44.0</span><span class="p">),</span>
+</span><span id="__span-3-31"><a id="__codelineno-3-31" name="__codelineno-3-31" href="#__codelineno-3-31"></a><span class="p">]</span>
+</span><span id="__span-3-32"><a id="__codelineno-3-32" name="__codelineno-3-32" href="#__codelineno-3-32"></a><span class="n">sample_observations</span> <span class="o">=</span> <span class="n">sample_dataset</span><span class="p">(</span>
+</span><span id="__span-3-33"><a id="__codelineno-3-33" name="__codelineno-3-33" href="#__codelineno-3-33"></a>    <span class="n">logistic_curve</span><span class="p">,</span>
+</span><span id="__span-3-34"><a id="__codelineno-3-34" name="__codelineno-3-34" href="#__codelineno-3-34"></a>    <span class="n">seasons</span><span class="p">,</span>
+</span><span id="__span-3-35"><a id="__codelineno-3-35" name="__codelineno-3-35" href="#__codelineno-3-35"></a>    <span class="n">dates</span><span class="p">,</span>
+</span><span id="__span-3-36"><a id="__codelineno-3-36" name="__codelineno-3-36" href="#__codelineno-3-36"></a>    <span class="p">[</span><span class="n">age_covariate</span><span class="p">],</span>
+</span><span id="__span-3-37"><a id="__codelineno-3-37" name="__codelineno-3-37" href="#__codelineno-3-37"></a>    <span class="n">parameters</span><span class="p">,</span>
+</span><span id="__span-3-38"><a id="__codelineno-3-38" name="__codelineno-3-38" href="#__codelineno-3-38"></a>    <span class="mf">0.0005</span><span class="p">,</span>
+</span><span id="__span-3-39"><a id="__codelineno-3-39" name="__codelineno-3-39" href="#__codelineno-3-39"></a>    <span class="n">random_seed</span><span class="o">=</span><span class="mi">42</span><span class="p">,</span>
+</span><span id="__span-3-40"><a id="__codelineno-3-40" name="__codelineno-3-40" href="#__codelineno-3-40"></a><span class="p">)</span>
+</span></code></pre></div>
 <h2 id="defining-a-model">Defining A Model<a class="headerlink" href="#defining-a-model" title="Permanent link">&para;</a></h2>
 <p>Now that many of the building blocks of the model have been defined we can
 create a model represented by the
@@ -1080,53 +1246,53 @@ the priors are used to inform the model about reasonable ranges for these
 parameters. For more information on model details and how to inform prior
 distributions please refer to the <a href="../model-details/">model-details</a> section of
 the documentation.</p>
-<pre><code class="language-python">from vaxflux.covariates import GaussianCovariate, PooledCovariate
-from vaxflux.uptake import SeasonalUptakeModel
-
-covariates = [
-    PooledCovariate(
-        parameter=&quot;m&quot;,
-        covariate=None,
-        distribution=&quot;Normal&quot;,
-        distribution_kwargs={
-            &quot;mu&quot;: -0.5,
-            &quot;sigma&quot;: 0.25,
-        },
-    ),
-    PooledCovariate(
-        parameter=&quot;r&quot;,
-        covariate=None,
-        distribution=&quot;Normal&quot;,
-        distribution_kwargs={
-            &quot;mu&quot;: -3.0,
-            &quot;sigma&quot;: 0.5,
-        },
-    ),
-    PooledCovariate(
-        parameter=&quot;s&quot;,
-        covariate=None,
-        distribution=&quot;Normal&quot;,
-        distribution_kwargs={
-            &quot;mu&quot;: 45.0,
-            &quot;sigma&quot;: 10.0,
-        },
-    ),
-    GaussianCovariate(
-        parameter=&quot;m&quot;,
-        covariate=&quot;age&quot;,
-        mu=[0.8, 1.6],
-        sigma=2 * [0.25],
-    ),
-]
-model = SeasonalUptakeModel(
-    logistic_curve,
-    covariates,
-    observations=sample_observations,
-    covariate_categories=[age_covariate],
-    season_ranges=seasons,
-    date_ranges=dates,
-)
-</code></pre>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">vaxflux.covariates</span><span class="w"> </span><span class="kn">import</span> <span class="n">GaussianCovariate</span><span class="p">,</span> <span class="n">PooledCovariate</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">vaxflux.uptake</span><span class="w"> </span><span class="kn">import</span> <span class="n">SeasonalUptakeModel</span>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="n">covariates</span> <span class="o">=</span> <span class="p">[</span>
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>    <span class="n">PooledCovariate</span><span class="p">(</span>
+</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>        <span class="n">parameter</span><span class="o">=</span><span class="s2">&quot;m&quot;</span><span class="p">,</span>
+</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>        <span class="n">covariate</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+</span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>        <span class="n">distribution</span><span class="o">=</span><span class="s2">&quot;Normal&quot;</span><span class="p">,</span>
+</span><span id="__span-4-9"><a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>        <span class="n">distribution_kwargs</span><span class="o">=</span><span class="p">{</span>
+</span><span id="__span-4-10"><a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a>            <span class="s2">&quot;mu&quot;</span><span class="p">:</span> <span class="o">-</span><span class="mf">0.5</span><span class="p">,</span>
+</span><span id="__span-4-11"><a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a>            <span class="s2">&quot;sigma&quot;</span><span class="p">:</span> <span class="mf">0.25</span><span class="p">,</span>
+</span><span id="__span-4-12"><a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a>        <span class="p">},</span>
+</span><span id="__span-4-13"><a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a>    <span class="p">),</span>
+</span><span id="__span-4-14"><a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a>    <span class="n">PooledCovariate</span><span class="p">(</span>
+</span><span id="__span-4-15"><a id="__codelineno-4-15" name="__codelineno-4-15" href="#__codelineno-4-15"></a>        <span class="n">parameter</span><span class="o">=</span><span class="s2">&quot;r&quot;</span><span class="p">,</span>
+</span><span id="__span-4-16"><a id="__codelineno-4-16" name="__codelineno-4-16" href="#__codelineno-4-16"></a>        <span class="n">covariate</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+</span><span id="__span-4-17"><a id="__codelineno-4-17" name="__codelineno-4-17" href="#__codelineno-4-17"></a>        <span class="n">distribution</span><span class="o">=</span><span class="s2">&quot;Normal&quot;</span><span class="p">,</span>
+</span><span id="__span-4-18"><a id="__codelineno-4-18" name="__codelineno-4-18" href="#__codelineno-4-18"></a>        <span class="n">distribution_kwargs</span><span class="o">=</span><span class="p">{</span>
+</span><span id="__span-4-19"><a id="__codelineno-4-19" name="__codelineno-4-19" href="#__codelineno-4-19"></a>            <span class="s2">&quot;mu&quot;</span><span class="p">:</span> <span class="o">-</span><span class="mf">3.0</span><span class="p">,</span>
+</span><span id="__span-4-20"><a id="__codelineno-4-20" name="__codelineno-4-20" href="#__codelineno-4-20"></a>            <span class="s2">&quot;sigma&quot;</span><span class="p">:</span> <span class="mf">0.5</span><span class="p">,</span>
+</span><span id="__span-4-21"><a id="__codelineno-4-21" name="__codelineno-4-21" href="#__codelineno-4-21"></a>        <span class="p">},</span>
+</span><span id="__span-4-22"><a id="__codelineno-4-22" name="__codelineno-4-22" href="#__codelineno-4-22"></a>    <span class="p">),</span>
+</span><span id="__span-4-23"><a id="__codelineno-4-23" name="__codelineno-4-23" href="#__codelineno-4-23"></a>    <span class="n">PooledCovariate</span><span class="p">(</span>
+</span><span id="__span-4-24"><a id="__codelineno-4-24" name="__codelineno-4-24" href="#__codelineno-4-24"></a>        <span class="n">parameter</span><span class="o">=</span><span class="s2">&quot;s&quot;</span><span class="p">,</span>
+</span><span id="__span-4-25"><a id="__codelineno-4-25" name="__codelineno-4-25" href="#__codelineno-4-25"></a>        <span class="n">covariate</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+</span><span id="__span-4-26"><a id="__codelineno-4-26" name="__codelineno-4-26" href="#__codelineno-4-26"></a>        <span class="n">distribution</span><span class="o">=</span><span class="s2">&quot;Normal&quot;</span><span class="p">,</span>
+</span><span id="__span-4-27"><a id="__codelineno-4-27" name="__codelineno-4-27" href="#__codelineno-4-27"></a>        <span class="n">distribution_kwargs</span><span class="o">=</span><span class="p">{</span>
+</span><span id="__span-4-28"><a id="__codelineno-4-28" name="__codelineno-4-28" href="#__codelineno-4-28"></a>            <span class="s2">&quot;mu&quot;</span><span class="p">:</span> <span class="mf">45.0</span><span class="p">,</span>
+</span><span id="__span-4-29"><a id="__codelineno-4-29" name="__codelineno-4-29" href="#__codelineno-4-29"></a>            <span class="s2">&quot;sigma&quot;</span><span class="p">:</span> <span class="mf">10.0</span><span class="p">,</span>
+</span><span id="__span-4-30"><a id="__codelineno-4-30" name="__codelineno-4-30" href="#__codelineno-4-30"></a>        <span class="p">},</span>
+</span><span id="__span-4-31"><a id="__codelineno-4-31" name="__codelineno-4-31" href="#__codelineno-4-31"></a>    <span class="p">),</span>
+</span><span id="__span-4-32"><a id="__codelineno-4-32" name="__codelineno-4-32" href="#__codelineno-4-32"></a>    <span class="n">GaussianCovariate</span><span class="p">(</span>
+</span><span id="__span-4-33"><a id="__codelineno-4-33" name="__codelineno-4-33" href="#__codelineno-4-33"></a>        <span class="n">parameter</span><span class="o">=</span><span class="s2">&quot;m&quot;</span><span class="p">,</span>
+</span><span id="__span-4-34"><a id="__codelineno-4-34" name="__codelineno-4-34" href="#__codelineno-4-34"></a>        <span class="n">covariate</span><span class="o">=</span><span class="s2">&quot;age&quot;</span><span class="p">,</span>
+</span><span id="__span-4-35"><a id="__codelineno-4-35" name="__codelineno-4-35" href="#__codelineno-4-35"></a>        <span class="n">mu</span><span class="o">=</span><span class="p">[</span><span class="mf">0.8</span><span class="p">,</span> <span class="mf">1.6</span><span class="p">],</span>
+</span><span id="__span-4-36"><a id="__codelineno-4-36" name="__codelineno-4-36" href="#__codelineno-4-36"></a>        <span class="n">sigma</span><span class="o">=</span><span class="mi">2</span> <span class="o">*</span> <span class="p">[</span><span class="mf">0.25</span><span class="p">],</span>
+</span><span id="__span-4-37"><a id="__codelineno-4-37" name="__codelineno-4-37" href="#__codelineno-4-37"></a>    <span class="p">),</span>
+</span><span id="__span-4-38"><a id="__codelineno-4-38" name="__codelineno-4-38" href="#__codelineno-4-38"></a><span class="p">]</span>
+</span><span id="__span-4-39"><a id="__codelineno-4-39" name="__codelineno-4-39" href="#__codelineno-4-39"></a><span class="n">model</span> <span class="o">=</span> <span class="n">SeasonalUptakeModel</span><span class="p">(</span>
+</span><span id="__span-4-40"><a id="__codelineno-4-40" name="__codelineno-4-40" href="#__codelineno-4-40"></a>    <span class="n">logistic_curve</span><span class="p">,</span>
+</span><span id="__span-4-41"><a id="__codelineno-4-41" name="__codelineno-4-41" href="#__codelineno-4-41"></a>    <span class="n">covariates</span><span class="p">,</span>
+</span><span id="__span-4-42"><a id="__codelineno-4-42" name="__codelineno-4-42" href="#__codelineno-4-42"></a>    <span class="n">observations</span><span class="o">=</span><span class="n">sample_observations</span><span class="p">,</span>
+</span><span id="__span-4-43"><a id="__codelineno-4-43" name="__codelineno-4-43" href="#__codelineno-4-43"></a>    <span class="n">covariate_categories</span><span class="o">=</span><span class="p">[</span><span class="n">age_covariate</span><span class="p">],</span>
+</span><span id="__span-4-44"><a id="__codelineno-4-44" name="__codelineno-4-44" href="#__codelineno-4-44"></a>    <span class="n">season_ranges</span><span class="o">=</span><span class="n">seasons</span><span class="p">,</span>
+</span><span id="__span-4-45"><a id="__codelineno-4-45" name="__codelineno-4-45" href="#__codelineno-4-45"></a>    <span class="n">date_ranges</span><span class="o">=</span><span class="n">dates</span><span class="p">,</span>
+</span><span id="__span-4-46"><a id="__codelineno-4-46" name="__codelineno-4-46" href="#__codelineno-4-46"></a><span class="p">)</span>
+</span></code></pre></div>
 <h2 id="fitting-the-model">Fitting The Model<a class="headerlink" href="#fitting-the-model" title="Permanent link">&para;</a></h2>
 <p>Finally, we can fit the model to the sample dataset using the
 <a href="../api/uptake/#vaxflux.uptake.SeasonalUptakeModel.build"><code>vaxflux.uptake.SeasonalUptakeModel.build</code></a>
@@ -1141,9 +1307,9 @@ method, which returns a Pandas DataFrame containing the sampled incidence data.<
 <p><strong>If you are following along with this tutorial with a REPL or notebook please
 note that the following code will take anywhere from a few seconds to a few
 minutes to run. Adjust the arguments to <code>sample</code> appropriately.</strong></p>
-<pre><code class="language-python">model.build().sample(tune=2_000, draws=1_000, chains=2)
-sample_incidence = model.dataframe()
-</code></pre>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="n">model</span><span class="o">.</span><span class="n">build</span><span class="p">()</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">tune</span><span class="o">=</span><span class="mi">2_000</span><span class="p">,</span> <span class="n">draws</span><span class="o">=</span><span class="mi">1_000</span><span class="p">,</span> <span class="n">chains</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="n">sample_incidence</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">dataframe</span><span class="p">()</span>
+</span></code></pre></div>
 <h2 id="conclusion">Conclusion<a class="headerlink" href="#conclusion" title="Permanent link">&para;</a></h2>
 <p>In this tutorial, we have covered the basic steps to get started with the
 <code>vaxflux</code> package and the key building blocks that are used to create a model.
@@ -1208,10 +1374,10 @@ are:</p>
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": [], "search": "../assets/javascripts/workers/search.7a47a382.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["content.code.copy"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
     
     
-      <script src="../assets/javascripts/bundle.e71a0d61.min.js"></script>
+      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
       
         <script src="../javascripts/katex.js"></script>
       
