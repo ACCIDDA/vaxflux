@@ -36,18 +36,19 @@ dev = [
     "yamllint>=1.37.1",
 ]
 
+[project.optional-dependencies]
+demo = [
+    "graphviz>=0.21",
+    "ipykernel>=7.1.0",
+    "jupyter>=1.1.1",
+    "matplotlib>=3.10.8",
+    "nbconvert>=7.16.6",
+    "seaborn>=0.13.2",
+]
+
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
-
-[project.optional-dependencies]
-demo = [
-    "matplotlib>=3.9.2",
-    "seaborn>=0.13.2",
-    "ipykernel>=6.29.5",
-    "graphviz>=0.20.3",
-    "jupyter>=1.1.1",
-]
 
 [tool.pytest.ini_options]
 testpaths = [
@@ -97,6 +98,7 @@ max-args = 8  # Default is 5
 
 [tool.mypy]
 plugins = ["numpy.typing.mypy_plugin"]
+exclude = "demos/*"
 
 [[tool.mypy.overrides]]
 module = ["pymc.*"]

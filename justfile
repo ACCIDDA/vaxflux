@@ -3,6 +3,7 @@ rm    := "rm -f"
 rmdir := "rm -rf"
 cp    := "cp"
 mv    := "mv"
+mkdir := "mkdir -vp"
 
 # Default recipe: run all tasks
 default: dev lint docs
@@ -18,8 +19,11 @@ lint: cspell prettier yamllint
 [group('clean')]
 clean-docs:
     {{rmdir}} docs/api
+    {{rmdir}} docs/demos
     {{rmdir}} site
     {{rm}} docs/changelog.md
+    {{rm}} docs/contributing.md
+    {{rm}} docs/index.md
 
 # Clean all build artifacts and caches
 [unix]
@@ -36,45 +40,77 @@ clean: clean-docs
 # Generate API reference documentation
 [unix]
 [group('docs')]
-api-reference:
+api-reference: venv
     uv run python scripts/api-reference.py
     {{cp}} CHANGELOG.md docs/changelog.md
     {{cp}} CONTRIBUTING.md docs/contributing.md
     {{cp}} README.md docs/index.md
 
+# Generate demo documentation
+[unix]
+[group('docs')]
+demos: venv
+    {{mkdir}} docs/demos/
+    {{cp}} demos/*.ipynb docs/demos/
+    uv run jupyter nbconvert --to markdown docs/demos/*.ipynb
+    {{rm}} docs/demos/*.ipynb
+
 # Build complete documentation
 [group('docs')]
-docs: api-reference
+docs: venv api-reference demos
     uv run mkdocs build --verbose --strict
 
 # Serve documentation locally
 [group('docs')]
-serve: docs
+serve: venv docs
     uv run mkdocs serve
+
+# Setup the venv
+[group('dev')]
+venv:
+    uv sync --all-extras
 
 # Format code with ruff
 [group('dev')]
-format:
+format: venv
     uv run ruff format
 
 # Check and fix code issues with ruff
 [group('dev')]
-check:
+check: venv
     uv run ruff check --fix --unsafe-fixes
 
 # Run mypy type checking
 [group('dev')]
-mypy:
+mypy: venv
     uv run mypy --strict .
 
 # Run pytest tests
 [group('dev')]
-pytest:
+pytest: venv
     uv run pytest --doctest-modules
+
+# Run demo tests
+[unix]
+[group('dev')]
+demo-test:
+    #!/usr/bin/env bash
+    set -e # Exit immediately if a command exits with a non-zero status.
+    echo "Setting up demo tests"
+    {{rmdir}} demos/scripts/
+    {{mkdir}} demos/scripts/
+    uv run jupyter nbconvert --to script demos/*.ipynb
+    {{mv}} demos/*.py demos/scripts/
+    echo "Running demo test scripts"
+    for file in demos/scripts/*.py; do
+        echo "Running $file"
+        time uv run python "$file"
+    done
+    echo "All demo scripts passed."
 
 # Run CI checks (non-interactive)
 [group('ci')]
-ci:
+ci: venv
     uv run ruff format --check
     uv run ruff check --no-fix
     uv run mypy --strict .
@@ -106,5 +142,5 @@ cspell: npm-install
 
 # Run yamllint on YAML files
 [group('lint')]
-yamllint:
-    uvx yamllint --strict .
+yamllint: venv
+    uv run yamllint --strict .
