@@ -21,7 +21,9 @@ Added:
   site outlining how to get started as a developer and contribute, see
   [#75](https://github.com/ACCIDDA/vaxflux/issues/75).
 - Added versioned documentation site hosted by GitHub pages at
-  [accidda.github.io/vaxflux/](https://accidda.github.io/vaxflux/), see
+  [accidda.github.io/vaxflux/](https://accidda.github.io/vaxflux/) that
+  incorporates jupyter notebook demos, see
+  [#14](https://github.com/ACCIDDA/vaxflux/issues/14),
   [#62](https://github.com/ACCIDDA/vaxflux/issues/62).
 - Added `VaxfluxModel` and new `Curve` classes that are based on
   `jax`/`numpyro`. See [#105](https://github.com/ACCIDDA/vaxflux/issues/105),
