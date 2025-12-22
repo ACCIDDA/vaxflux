@@ -50,7 +50,7 @@ Removed:
 
 Fixed:
 
-- ...
+- Corrected typo in the word "introduction" in the documentation navigation bar.
 
 Security:
 
