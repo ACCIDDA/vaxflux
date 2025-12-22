@@ -62,7 +62,7 @@ markdown_extensions:
 # Navigation structure
 nav:
   - Home: index.md
-  - Introdution: introduction.md
+  - Introduction: introduction.md
   - Installation: installation.md
   - Getting Started: getting-started.md
   - Model Details: model-details.md
