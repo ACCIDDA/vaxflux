@@ -13,6 +13,11 @@ from numpyro.infer import MCMC, NUTS, Predictive
 
 from vaxflux._covariates import Covariate
 from vaxflux._curves import Curve
+from vaxflux._interventions import (
+    Implementation,
+    Intervention,
+    _check_interventions_and_implementations,
+)
 from vaxflux._util import (
     _collect_args,
     _coord_name,
@@ -42,6 +47,8 @@ class VaxfluxModel:
         self._covariate_categories: list[CovariateCategories] = []
         self._covariates: list[Covariate] = []
         self._observations: pd.DataFrame | None = None
+        self._interventions: list[Intervention] = []
+        self._implementations: list[Implementation] = []
 
     def add_seasons(self, *args: SeasonRange | list[SeasonRange]) -> Self:
         """
@@ -214,6 +221,46 @@ class VaxfluxModel:
         self._covariates.extend(covariates)
         return self
 
+    def add_interventions(self, *args: Intervention | list[Intervention]) -> Self:
+        """
+        Add one or more interventions to the model.
+
+        Args:
+            *args: One or more `Intervention` objects or sequences of `Intervention`
+                objects.
+
+        Returns:
+            The model instance for method chaining.
+
+        Raises:
+            TypeError: If any argument is not an `Intervention` or a sequence of
+                `Intervention` objects.
+
+        """
+        interventions = _collect_args(args, Intervention, "Intervention")
+        self._interventions.extend(interventions)
+        return self
+
+    def add_implementations(self, *args: Implementation | list[Implementation]) -> Self:
+        """
+        Add one or more implementations to the model.
+
+        Args:
+            *args: One or more `Implementation` objects or sequences of
+                `Implementation` objects.
+
+        Returns:
+            The model instance for method chaining.
+
+        Raises:
+            TypeError: If any argument is not an `Implementation` or a sequence of
+                `Implementation` objects.
+
+        """
+        implementations = _collect_args(args, Implementation, "Implementation")
+        self._implementations.extend(implementations)
+        return self
+
     def add_observations(self, observations: pd.DataFrame) -> Self:
         """
         Add observations to the model.
@@ -296,9 +343,23 @@ class VaxfluxModel:
         necessary attributes for the model to run correctly.
 
         """
+        _check_interventions_and_implementations(
+            self._interventions,
+            self._implementations,
+            self._seasons,
+            self._covariate_categories,
+        )
         self._season_names = [season.season for season in self._seasons]
         self._season_name_indices = {
             name: idx for idx, name in enumerate(self._season_names)
+        }
+        self._season_map = {season.season: season for season in self._seasons}
+        self._season_day_counts = {
+            season.season: (season.end_date - season.start_date).days + 1
+            for season in self._seasons
+        }
+        self._season_tokens = {
+            season_name: _coord_name(season_name) for season_name in self._season_names
         }
         self._covariate_categories_map = {
             category.covariate: category.categories
@@ -328,11 +389,21 @@ class VaxfluxModel:
             param: [cov for cov in self._covariates if cov.parameter == param]
             for param in self._curve.parameters
         }
+        self._interventions_by_name = {
+            intervention.name: [
+                implementation
+                for implementation in self._implementations
+                if implementation.intervention == intervention.name
+            ]
+            for intervention in self._interventions
+        }
 
     def _model(self) -> None:
         """Define the model for inference."""
         covariate_values = self._model_sample_covariates()
-        self._model_summed_parameters(covariate_values)
+        summed_parameters = self._model_summed_parameters(covariate_values)
+        daily_summed_parameters = self._model_daily_summed_parameters(summed_parameters)
+        self._model_apply_interventions(daily_summed_parameters)
 
     def _model_sample_covariate(self, covariate: Covariate) -> jnp.ndarray:
         """
@@ -446,6 +517,107 @@ class VaxfluxModel:
                         else jnp.asarray(0.0),
                     )
         return summed_parameters
+
+    def _model_daily_summed_parameters(
+        self, summed_parameters: dict[str, jnp.ndarray]
+    ) -> dict[str, jnp.ndarray]:
+        """
+        Calculate daily summed parameters for each date range.
+
+        Args:
+            summed_parameters: A dictionary mapping (parameter, season,
+                covariate-category combo) strings to their summed covariate effects.
+
+        Returns:
+            A dictionary mapping daily parameter names to daily summed values.
+
+        """
+        daily_summed_parameters: dict[str, jnp.ndarray] = {}
+        for name, value in summed_parameters.items():
+            matched_season: str | None = None
+            for season_name, season_token in self._season_tokens.items():
+                if f"_{season_token}_" in name or name.endswith(f"_{season_token}"):
+                    matched_season = season_name
+                    break
+            if matched_season is None:
+                msg = f"Could not determine season for summed parameter '{name}'."
+                raise ValueError(msg)
+            daily_name = _coord_name(name, "daily")
+            daily_summed_parameters[daily_name] = numpyro.deterministic(
+                daily_name,
+                jnp.repeat(value, self._season_day_counts[matched_season]),
+            )
+        return daily_summed_parameters
+
+    def _model_apply_interventions(
+        self, daily_summed_parameters: dict[str, jnp.ndarray]
+    ) -> dict[str, jnp.ndarray]:
+        """
+        Apply interventions to daily summed parameters.
+
+        Args:
+            daily_summed_parameters: A dictionary mapping daily parameter names to
+                daily summed values.
+
+        Returns:
+            A dictionary mapping daily parameter names to adjusted values.
+
+        """
+        if not self._interventions or not self._implementations:
+            return daily_summed_parameters
+        updated_parameters = dict(daily_summed_parameters)
+        for intervention in self._interventions:
+            intervention_implementations = self._interventions_by_name.get(
+                intervention.name,
+                [],
+            )
+            if not intervention_implementations:
+                continue
+            plate_name = _coord_name(
+                "intervention",
+                intervention.name,
+                "implementations",
+            )
+            with numpyro.plate(
+                f"{plate_name}_plate", len(intervention_implementations)
+            ):
+                intervention_values = intervention.sample(plate_name)
+            for idx, implementation in enumerate(intervention_implementations):
+                if implementation.season not in self._season_map:
+                    continue
+                season_range = self._season_map[implementation.season]
+                start_date = implementation.start_date or season_range.start_date
+                end_date = implementation.end_date or season_range.end_date
+                start_idx = (start_date - season_range.start_date).days
+                end_idx = (end_date - season_range.start_date).days
+                n_days = (season_range.end_date - season_range.start_date).days + 1
+                mask = (jnp.arange(n_days) >= start_idx) & (
+                    jnp.arange(n_days) <= end_idx
+                )
+                for category_combo in self._category_combinations:
+                    if implementation.covariate_categories is not None:
+                        combo_map = dict(
+                            zip(self._covariate_names, category_combo, strict=False)
+                        )
+                        if not all(
+                            combo_map.get(covariate) == category
+                            for covariate, category in implementation.covariate_categories.items()  # noqa: E501
+                        ):
+                            continue
+                    daily_name = _coord_name(
+                        _coord_name(
+                            intervention.parameter,
+                            implementation.season,
+                            *self._category_combo_with_name(category_combo),
+                        ),
+                        "daily",
+                    )
+                    if daily_name not in updated_parameters:
+                        continue
+                    updated_parameters[daily_name] = (
+                        updated_parameters[daily_name] + intervention_values[idx] * mask
+                    )
+        return updated_parameters
 
     def _category_combo_with_name(
         self, category_combo: tuple[str, ...]
