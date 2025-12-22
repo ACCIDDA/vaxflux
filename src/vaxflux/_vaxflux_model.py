@@ -1,16 +1,18 @@
 __all__: list[str] = []
 
 import itertools
+from itertools import chain
 from typing import Any, Self, cast
 
 import jax.numpy as jnp
 import numpyro
+from jax import Array as JaxArray
 from jax.random import key
-from numpyro.infer import MCMC, NUTS
+from numpyro.infer import MCMC, NUTS, Predictive
 
 from vaxflux._covariates import Covariate
 from vaxflux._curves import Curve
-from vaxflux._util import _collect_args
+from vaxflux._util import _collect_args, _coord_name
 from vaxflux.covariates import CovariateCategories
 from vaxflux.dates import (
     DateRange,
@@ -206,6 +208,33 @@ class VaxfluxModel:
         self._covariates.extend(covariates)
         return self
 
+    def prior_predictive(
+        self,
+        samples: int,
+        random_seed: int = 1,
+        *,
+        predictive_args: dict[str, Any] | None = None,
+    ) -> dict[str, JaxArray]:
+        """
+        Sample from the prior predictive distribution.
+
+        Args:
+            samples: Number of samples to draw.
+            random_seed: Seed for the random number generator.
+            predictive_args: Additional arguments for the `Predictive` sampler.
+
+        Returns:
+            The prior predictive samples.
+        """
+        predictive_args = predictive_args or {}
+        self._pre_model()
+        prior_predictive = Predictive(
+            self._model, num_samples=samples, **predictive_args
+        )
+        rng_key = key(random_seed)
+        with numpyro.handlers.seed(numpyro.handlers.trace(self._model), rng_key):
+            return cast("dict[str, JaxArray]", prior_predictive(rng_key))
+
     def sample(
         self,
         warmup: int,
@@ -224,12 +253,14 @@ class VaxfluxModel:
             random_seed: Seed for the random number generator.
             mcmc_args: Additional arguments for the MCMC sampler.
             nuts_args: Additional arguments for the NUTS kernel.
+
         """
-        self._kernel = NUTS(self._model, **nuts_args)
-        self._mcmc = MCMC(self._kernel, **mcmc_args)
-        self._rng_key = key(random_seed)
-        with numpyro.handlers.seed(numpyro.handlers.trace(self._model), self._rng_key):
-            self._mcmc.run(self._rng_key, num_warmup=warmup, num_samples=samples)
+        self._pre_model()
+        kernel = NUTS(self._model, **nuts_args)
+        mcmc = MCMC(kernel, **mcmc_args)
+        rng_key = key(random_seed)
+        with numpyro.handlers.seed(numpyro.handlers.trace(self._model), rng_key):
+            mcmc.run(rng_key, num_warmup=warmup, num_samples=samples)
 
     def _pre_model(self) -> None:
         """
@@ -286,6 +317,7 @@ class VaxfluxModel:
 
         Returns:
             The sampled covariate values.
+
         """
         covariate_categories: list[str]
         if covariate.covariate is None:
@@ -308,7 +340,7 @@ class VaxfluxModel:
             covariate_categories = list(possible_covariate_categories)
             plate_size = len(covariate_categories) - 1
         # Sample from the covariate and store the sampled values in a
-        # deterministic site.
+        # deterministic site, optionally padding for non-seasonal covariates.
         covariate.presample()
         with numpyro.plate(f"covariate_{covariate.prefix}", plate_size):
             sampled_values = covariate.sample()
@@ -316,7 +348,9 @@ class VaxfluxModel:
             "jnp.ndarray",
             numpyro.deterministic(
                 f"covariate_values_{covariate.prefix}",
-                jnp.pad(sampled_values, (1, 0), mode="empty"),
+                sampled_values
+                if covariate.covariate is None
+                else jnp.pad(sampled_values, (1, 0), mode="empty"),
             ),
         )
 
@@ -326,6 +360,7 @@ class VaxfluxModel:
 
         Returns:
             A dictionary mapping covariate prefixes to their sampled values.
+
         """
         # Loop over the covariates and sample from them
         covariate_values: dict[str, jnp.ndarray] = {}
@@ -335,7 +370,7 @@ class VaxfluxModel:
 
     def _model_summed_parameters(
         self, covariate_values: dict[str, jnp.ndarray]
-    ) -> dict[tuple[str, str, tuple[str, ...]], jnp.ndarray]:
+    ) -> dict[str, jnp.ndarray]:
         """
         Calculate the summed parameters for parameter/season/covariate categories.
 
@@ -344,13 +379,14 @@ class VaxfluxModel:
                 values.
 
         Returns:
-            A dictionary mapping (parameter, season, covariate-category combo) tuples
+            A dictionary mapping (parameter, season, covariate-category combo) strings
             to their summed covariate effects.
+
         """
         # Now calculate the sums of the covariate values for all of the categories
         # Keys are (parameter, season, covariate-category combo) and values are the
         # summed covariate effects for that combination.
-        summed_parameters: dict[tuple[str, str, tuple[str, ...]], jnp.ndarray] = {}
+        summed_parameters: dict[str, jnp.ndarray] = {}
         for param in self._curve.parameters:
             for season in self._season_names:
                 for category_combo in self._category_combinations:
@@ -374,9 +410,32 @@ class VaxfluxModel:
                         components.append(values[category_index])
                     # Sum the components (or use zero when none apply) for this
                     # parameter/season/category combination.
-                    summed_parameters[(param, season, category_combo)] = (
+                    summed_name = _coord_name(
+                        param, season, *self._category_combo_with_name(category_combo)
+                    )
+                    summed_parameters[summed_name] = numpyro.deterministic(
+                        summed_name,
                         jnp.sum(jnp.stack(components))
                         if components
-                        else jnp.asarray(0.0)
+                        else jnp.asarray(0.0),
                     )
         return summed_parameters
+
+    def _category_combo_with_name(
+        self, category_combo: tuple[str, ...]
+    ) -> tuple[str, ...]:
+        """
+        Generate a name for a covariate category combination.
+
+        Args:
+            category_combo: A tuple of covariate category names.
+
+        Returns:
+            A tuple representing the full name of the covariate category combination.
+
+        """
+        return tuple(
+            chain.from_iterable(
+                zip(self._covariate_names, category_combo, strict=False)
+            )
+        )

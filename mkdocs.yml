@@ -71,6 +71,7 @@ nav:
       - Synthetic Data Daily: demos/synthetic-data-daily.md
       - Synthetic Data: demos/synthetic-data.md
       - Uptake Model: demos/uptake-model.md
+      - Vaxflux Model: demos/vaxflux-model.md
   - API Reference:
       - Vaxflux: api/vaxflux.md
       - Covariates: api/covariates.md
