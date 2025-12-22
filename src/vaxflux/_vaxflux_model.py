@@ -6,13 +6,18 @@ from typing import Any, Self, cast
 
 import jax.numpy as jnp
 import numpyro
+import pandas as pd
 from jax import Array as JaxArray
 from jax.random import key
 from numpyro.infer import MCMC, NUTS, Predictive
 
 from vaxflux._covariates import Covariate
 from vaxflux._curves import Curve
-from vaxflux._util import _collect_args, _coord_name
+from vaxflux._util import (
+    _collect_args,
+    _coord_name,
+    _validate_and_format_observations,
+)
 from vaxflux.covariates import CovariateCategories
 from vaxflux.dates import (
     DateRange,
@@ -36,6 +41,7 @@ class VaxfluxModel:
         self._dates: list[DateRange] = []
         self._covariate_categories: list[CovariateCategories] = []
         self._covariates: list[Covariate] = []
+        self._observations: pd.DataFrame | None = None
 
     def add_seasons(self, *args: SeasonRange | list[SeasonRange]) -> Self:
         """
@@ -206,6 +212,26 @@ class VaxfluxModel:
         """  # noqa: E501
         covariates = _collect_args(args, Covariate, "Covariate")  # type: ignore[type-abstract]
         self._covariates.extend(covariates)
+        return self
+
+    def add_observations(self, observations: pd.DataFrame) -> Self:
+        """
+        Add observations to the model.
+
+        Args:
+            observations: The observations to add to the model.
+
+        Returns:
+            The model instance for method chaining.
+
+        Raises:
+            ValueError: If observations were already added to the model.
+
+        """
+        if self._observations is not None:
+            msg = "Observations have already been added to the model."
+            raise ValueError(msg)
+        self._observations = _validate_and_format_observations(observations)
         return self
 
     def prior_predictive(
