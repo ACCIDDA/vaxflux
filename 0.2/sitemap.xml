@@ -2,74 +2,78 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
          <loc>https://accidda.github.io/vaxflux/0.2/</loc>
-         <lastmod>2025-12-19</lastmod>
+         <lastmod>2025-12-22</lastmod>
     </url>
     <url>
          <loc>https://accidda.github.io/vaxflux/0.2/changelog/</loc>
-         <lastmod>2025-12-19</lastmod>
+         <lastmod>2025-12-22</lastmod>
     </url>
     <url>
          <loc>https://accidda.github.io/vaxflux/0.2/contributing/</loc>
-         <lastmod>2025-12-19</lastmod>
+         <lastmod>2025-12-22</lastmod>
     </url>
     <url>
          <loc>https://accidda.github.io/vaxflux/0.2/getting-started/</loc>
-         <lastmod>2025-12-19</lastmod>
+         <lastmod>2025-12-22</lastmod>
     </url>
     <url>
          <loc>https://accidda.github.io/vaxflux/0.2/installation/</loc>
-         <lastmod>2025-12-19</lastmod>
+         <lastmod>2025-12-22</lastmod>
     </url>
     <url>
          <loc>https://accidda.github.io/vaxflux/0.2/introduction/</loc>
-         <lastmod>2025-12-19</lastmod>
+         <lastmod>2025-12-22</lastmod>
     </url>
     <url>
          <loc>https://accidda.github.io/vaxflux/0.2/model-details/</loc>
-         <lastmod>2025-12-19</lastmod>
+         <lastmod>2025-12-22</lastmod>
     </url>
     <url>
          <loc>https://accidda.github.io/vaxflux/0.2/api/covariates/</loc>
-         <lastmod>2025-12-19</lastmod>
+         <lastmod>2025-12-22</lastmod>
     </url>
     <url>
          <loc>https://accidda.github.io/vaxflux/0.2/api/curves/</loc>
-         <lastmod>2025-12-19</lastmod>
+         <lastmod>2025-12-22</lastmod>
     </url>
     <url>
          <loc>https://accidda.github.io/vaxflux/0.2/api/data/</loc>
-         <lastmod>2025-12-19</lastmod>
+         <lastmod>2025-12-22</lastmod>
     </url>
     <url>
          <loc>https://accidda.github.io/vaxflux/0.2/api/dates/</loc>
-         <lastmod>2025-12-19</lastmod>
+         <lastmod>2025-12-22</lastmod>
     </url>
     <url>
          <loc>https://accidda.github.io/vaxflux/0.2/api/interventions/</loc>
-         <lastmod>2025-12-19</lastmod>
+         <lastmod>2025-12-22</lastmod>
     </url>
     <url>
          <loc>https://accidda.github.io/vaxflux/0.2/api/uptake/</loc>
-         <lastmod>2025-12-19</lastmod>
+         <lastmod>2025-12-22</lastmod>
     </url>
     <url>
          <loc>https://accidda.github.io/vaxflux/0.2/api/vaxflux/</loc>
-         <lastmod>2025-12-19</lastmod>
+         <lastmod>2025-12-22</lastmod>
     </url>
     <url>
          <loc>https://accidda.github.io/vaxflux/0.2/demos/idd-demo/</loc>
-         <lastmod>2025-12-19</lastmod>
+         <lastmod>2025-12-22</lastmod>
     </url>
     <url>
          <loc>https://accidda.github.io/vaxflux/0.2/demos/synthetic-data-daily/</loc>
-         <lastmod>2025-12-19</lastmod>
+         <lastmod>2025-12-22</lastmod>
     </url>
     <url>
          <loc>https://accidda.github.io/vaxflux/0.2/demos/synthetic-data/</loc>
-         <lastmod>2025-12-19</lastmod>
+         <lastmod>2025-12-22</lastmod>
     </url>
     <url>
          <loc>https://accidda.github.io/vaxflux/0.2/demos/uptake-model/</loc>
-         <lastmod>2025-12-19</lastmod>
+         <lastmod>2025-12-22</lastmod>
+    </url>
+    <url>
+         <loc>https://accidda.github.io/vaxflux/0.2/demos/vaxflux-model/</loc>
+         <lastmod>2025-12-22</lastmod>
     </url>
 </urlset>
