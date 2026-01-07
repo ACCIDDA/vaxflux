@@ -50,6 +50,15 @@ class VaxfluxModel:
         self._interventions: list[Intervention] = []
         self._implementations: list[Implementation] = []
 
+    def __repr__(self) -> str:
+        """
+        Return a string representation of the model.
+
+        Returns:
+            A string representation of the `VaxfluxModel` instance.
+        """
+        return f"<vaxflux.VaxfluxModel object at {hex(id(self))}>"
+
     def add_seasons(self, *args: SeasonRange | list[SeasonRange]) -> Self:
         """
         Add one or more seasons to the model.
@@ -69,14 +78,15 @@ class VaxfluxModel:
             >>> from vaxflux._curves import LogisticCurve
             >>> from vaxflux.dates import SeasonRange
             >>> model = VaxfluxModel(curve=LogisticCurve())
-            >>> result = model.add_seasons(
+            >>> model.add_seasons(
             ...     SeasonRange(
             ...         season="2023/2024",
             ...         start_date="2023-12-01",
             ...         end_date="2024-03-31",
             ...     )
             ... )
-            >>> result = model.add_seasons(
+            <vaxflux.VaxfluxModel object at ...>
+            >>> model.add_seasons(
             ...     SeasonRange(
             ...         season="2024/2025",
             ...         start_date="2024-12-01",
@@ -88,7 +98,8 @@ class VaxfluxModel:
             ...         end_date="2026-03-31",
             ...     ),
             ... )
-            >>> result = model.add_seasons(
+            <vaxflux.VaxfluxModel object at ...>
+            >>> model.add_seasons(
             ...     [
             ...         SeasonRange(
             ...             season="2026/2027",
@@ -102,6 +113,7 @@ class VaxfluxModel:
             ...         ),
             ...     ]
             ... )
+            <vaxflux.VaxfluxModel object at ...>
             >>> model.add_seasons("invalid_argument")
             Traceback (most recent call last):
                 ...
@@ -131,9 +143,17 @@ class VaxfluxModel:
 
         Examples:
             >>> from vaxflux._curves import LogisticCurve
-            >>> from vaxflux.dates import DateRange
+            >>> from vaxflux.dates import DateRange, SeasonRange
             >>> model = VaxfluxModel(curve=LogisticCurve())
-            >>> result = model.add_dates(
+            >>> model.add_seasons(
+            ...     SeasonRange(
+            ...         season="2023/2024",
+            ...         start_date="2023-12-01",
+            ...         end_date="2024-03-31",
+            ...     )
+            ... )
+            <vaxflux.VaxfluxModel object at ...>
+            >>> model.add_dates(
             ...     DateRange(
             ...         season="2023/2024",
             ...         start_date="2023-12-01",
@@ -141,6 +161,7 @@ class VaxfluxModel:
             ...         report_date="2023-12-08",
             ...     )
             ... )
+            <vaxflux.VaxfluxModel object at ...>
             >>> model.add_dates("invalid_argument")
             Traceback (most recent call last):
                 ...
@@ -148,6 +169,14 @@ class VaxfluxModel:
 
         """  # noqa: E501
         dates = _collect_ranges(args, DateRange, "DateRange")
+        if missing_seasons := {date.season for date in dates} - {
+            season.season for season in self._seasons
+        }:
+            msg = (
+                "The following date range seasons have not been added "
+                f"to the model: {sorted(missing_seasons)}."
+            )
+            raise ValueError(msg)
         _validate_ranges(dates, self._dates)
         self._dates.extend(dates)
         return self
@@ -194,7 +223,7 @@ class VaxfluxModel:
             >>> from vaxflux._covariates import PartiallyPooledGaussianCovariate
             >>> from vaxflux._curves import LogisticCurve
             >>> model = VaxfluxModel(curve=LogisticCurve())
-            >>> result = model.add_covariates(
+            >>> model.add_covariates(
             ...     PartiallyPooledGaussianCovariate(
             ...         parameter="m",
             ...         covariate="age",
@@ -202,7 +231,8 @@ class VaxfluxModel:
             ...         sigma=0.2,
             ...     )
             ... )
-            >>> result = model.add_covariates(
+            <vaxflux.VaxfluxModel object at ...>
+            >>> model.add_covariates(
             ...     [
             ...         PartiallyPooledGaussianCovariate(
             ...             parameter="sigma",
@@ -211,6 +241,7 @@ class VaxfluxModel:
             ...         ),
             ...     ]
             ... )
+            <vaxflux.VaxfluxModel object at ...>
             >>> model.add_covariates("invalid_argument")
             Traceback (most recent call last):
                 ...
@@ -255,9 +286,19 @@ class VaxfluxModel:
         Raises:
             TypeError: If any argument is not an `Implementation` or a sequence of
                 `Implementation` objects.
+            ValueError: If an implementation's intervention has not been added to the
+                model.
 
         """
         implementations = _collect_args(args, Implementation, "Implementation")
+        if missing_interventions := {
+            implementation.intervention for implementation in implementations
+        } - {intervention.name for intervention in self._interventions}:
+            msg = (
+                "The following implementation interventions have not been added "
+                f"to the model: {sorted(missing_interventions)}."
+            )
+            raise ValueError(msg)
         self._implementations.extend(implementations)
         return self
 

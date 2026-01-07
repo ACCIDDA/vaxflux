@@ -6,14 +6,26 @@ import pytest
 
 from vaxflux._curves import LogisticCurve
 from vaxflux._vaxflux_model import VaxfluxModel
-from vaxflux.dates import DateRange
+from vaxflux.dates import DateRange, SeasonRange
+
+SEASON_2023_2024 = SeasonRange(
+    season="2023/2024",
+    start_date=date(2023, 10, 1),
+    end_date=date(2024, 2, 1),
+)
+SEASON_2024_2025 = SeasonRange(
+    season="2024/2025",
+    start_date=date(2024, 10, 1),
+    end_date=date(2025, 2, 1),
+)
 
 
 @pytest.mark.parametrize(
-    ("args_factory", "expected_count"),
+    ("season_ranges", "args_factory", "expected_count"),
     [
         # Single date range
         (
+            [SEASON_2023_2024],
             lambda: (
                 DateRange(
                     season="2023/2024",
@@ -26,6 +38,7 @@ from vaxflux.dates import DateRange
         ),
         # Multiple date ranges as args
         (
+            [SEASON_2023_2024],
             lambda: (
                 DateRange(
                     season="2023/2024",
@@ -50,6 +63,7 @@ from vaxflux.dates import DateRange
         ),
         # List of date ranges
         (
+            [SEASON_2023_2024],
             lambda: (
                 [
                     DateRange(
@@ -70,6 +84,7 @@ from vaxflux.dates import DateRange
         ),
         # Tuple of date ranges
         (
+            [SEASON_2023_2024],
             lambda: (
                 (
                     DateRange(
@@ -90,6 +105,7 @@ from vaxflux.dates import DateRange
         ),
         # Mixed args and sequences
         (
+            [SEASON_2023_2024],
             lambda: (
                 DateRange(
                     season="2023/2024",
@@ -121,11 +137,12 @@ from vaxflux.dates import DateRange
             4,
         ),
         # Empty call
-        (lambda: (), 0),
+        ([], lambda: (), 0),
         # Empty list
-        (lambda: ([],), 0),
+        ([], lambda: ([],), 0),
         # Adjacent date ranges (no overlap) - end date + 1 = next start date
         (
+            [SEASON_2023_2024],
             lambda: (
                 DateRange(
                     season="2023/2024",
@@ -144,6 +161,7 @@ from vaxflux.dates import DateRange
         ),
         # Non-overlapping date ranges from different seasons
         (
+            [SEASON_2023_2024, SEASON_2024_2025],
             lambda: (
                 DateRange(
                     season="2023/2024",
@@ -162,9 +180,15 @@ from vaxflux.dates import DateRange
         ),
     ],
 )
-def test_add_dates_input_variations(args_factory: object, expected_count: int) -> None:
+def test_add_dates_input_variations(
+    season_ranges: list[SeasonRange],
+    args_factory: object,
+    expected_count: int,
+) -> None:
     """Test adding date ranges with various input patterns."""
     model = VaxfluxModel(curve=LogisticCurve())
+    if season_ranges:
+        model.add_seasons(season_ranges)
     args = args_factory()  # type: ignore[operator]
     result = model.add_dates(*args)
 
@@ -177,6 +201,7 @@ def test_add_dates_input_variations(args_factory: object, expected_count: int) -
 def test_add_dates_preserves_existing_dates() -> None:
     """Test that add_dates preserves previously added date ranges."""
     model = VaxfluxModel(curve=LogisticCurve())
+    model.add_seasons(SEASON_2023_2024)
     dr1 = DateRange(
         season="2023/2024",
         start_date=date(2023, 12, 1),
@@ -212,6 +237,7 @@ def test_add_dates_preserves_existing_dates() -> None:
 def test_add_dates_exact_duplicate_in_single_call() -> None:
     """Test ValueError is raised when duplicate date ranges are in a single call."""
     model = VaxfluxModel(curve=LogisticCurve())
+    model.add_seasons(SEASON_2023_2024)
     dr = DateRange(
         season="2023/2024",
         start_date=date(2023, 12, 1),
@@ -229,6 +255,7 @@ def test_add_dates_exact_duplicate_in_single_call() -> None:
 def test_add_dates_exact_duplicate_across_calls() -> None:
     """Test ValueError is raised when adding an exact duplicate date range."""
     model = VaxfluxModel(curve=LogisticCurve())
+    model.add_seasons(SEASON_2023_2024)
     dr = DateRange(
         season="2023/2024",
         start_date=date(2023, 12, 1),
@@ -373,6 +400,7 @@ def test_add_dates_overlapping_errors(
 ) -> None:
     """Test ValueError is raised for various overlapping date range scenarios."""
     model = VaxfluxModel(curve=LogisticCurve())
+    model.add_seasons(SEASON_2023_2024, SEASON_2024_2025)
 
     # Add setup dates if provided (for testing across calls)
     if setup_dates:
@@ -383,3 +411,22 @@ def test_add_dates_overlapping_errors(
 
     with pytest.raises(ValueError, match=match_pattern):
         model.add_dates(*test_dates)
+
+
+def test_add_dates_raises_when_season_missing() -> None:
+    """Adding date ranges for missing seasons raises a `ValueError`."""
+    model = VaxfluxModel(curve=LogisticCurve())
+    date_range = DateRange(
+        season="2023/2024",
+        start_date=date(2023, 12, 1),
+        end_date=date(2023, 12, 7),
+        report_date=date(2023, 12, 8),
+    )
+    with pytest.raises(
+        ValueError,
+        match=(
+            r"^The following date range seasons have not been added "
+            r"to the model: .*.$"
+        ),
+    ):
+        model.add_dates(date_range)
