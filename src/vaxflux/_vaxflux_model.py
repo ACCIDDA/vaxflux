@@ -2,7 +2,7 @@ __all__: list[str] = []
 
 import itertools
 from itertools import chain
-from typing import Any, Self, cast
+from typing import Any, Literal, Self, cast
 
 import jax.numpy as jnp
 import numpyro
@@ -28,6 +28,7 @@ from vaxflux.dates import (
     DateRange,
     SeasonRange,
     _collect_ranges,
+    _infer_ranges_from_observations,
     _validate_ranges,
 )
 
@@ -49,6 +50,10 @@ class VaxfluxModel:
         self._observations: pd.DataFrame | None = None
         self._interventions: list[Intervention] = []
         self._implementations: list[Implementation] = []
+        self._observation_process_kind: None | Literal["normal"] = None
+        self._observation_process_noise: float = 0.05
+        self._observation_process_partially_pool_by_season: bool = True
+        self._observation_process_partially_pool_by_covariate: bool = False
 
     def __repr__(self) -> str:
         """
@@ -322,6 +327,46 @@ class VaxfluxModel:
         self._observations = _validate_and_format_observations(observations)
         return self
 
+    def add_observation_process(
+        self,
+        kind: Literal["normal"],
+        noise: float,
+        *,
+        partially_pool_by_season: bool = True,
+        partially_pool_by_covariate: bool = False,
+    ) -> Self:
+        """
+        Add an observation process to the model based on the added observations.
+
+        Args:
+            kind: The kind of observation process to add.
+            noise: The observation noise parameter.
+            partially_pool_by_season: Whether to partially pool observation noise by
+                season.
+            partially_pool_by_covariate: Whether to partially pool observation noise by
+                covariate.
+
+        Returns:
+            The model instance for method chaining.
+
+        Raises:
+            ValueError: If no observations have been added to the model.
+
+        """
+        if self._observations is None:
+            msg = "No observations have been added to the model, nothing to observe."
+            raise ValueError(msg)
+        if kind != "normal":
+            msg = f"Unsupported observation process kind: {kind}."
+            raise ValueError(msg)
+        self._observation_process_kind = kind
+        self._observation_process_noise = noise
+        self._observation_process_partially_pool_by_season = partially_pool_by_season
+        self._observation_process_partially_pool_by_covariate = (
+            partially_pool_by_covariate
+        )
+        return self
+
     def prior_predictive(
         self,
         samples: int,
@@ -390,6 +435,18 @@ class VaxfluxModel:
             self._seasons,
             self._covariate_categories,
         )
+        if self._observations is not None:
+            if self._observation_process_kind is None:
+                msg = (
+                    "Observation process kind must be specified if observations are "
+                    "added to the model."
+                )
+                raise ValueError(msg)
+            self._dates = _infer_ranges_from_observations(
+                self._observations,
+                self._dates,
+                "date",
+            )
         self._season_names = [season.season for season in self._seasons]
         self._season_name_indices = {
             name: idx for idx, name in enumerate(self._season_names)
@@ -426,6 +483,9 @@ class VaxfluxModel:
             if self._covariate_names
             else [()]
         )
+        self._category_combo_indices = {
+            combo: idx for idx, combo in enumerate(self._category_combinations)
+        }
         self._covariates_by_parameter = {
             param: [cov for cov in self._covariates if cov.parameter == param]
             for param in self._curve.parameters
@@ -444,7 +504,11 @@ class VaxfluxModel:
         covariate_values = self._model_sample_covariates()
         summed_parameters = self._model_summed_parameters(covariate_values)
         daily_summed_parameters = self._model_daily_summed_parameters(summed_parameters)
-        self._model_apply_interventions(daily_summed_parameters)
+        daily_summed_parameters = self._model_apply_interventions(
+            daily_summed_parameters
+        )
+        observations = self._model_observations(daily_summed_parameters)
+        self._model_observation_process(observations)
 
     def _model_sample_covariate(self, covariate: Covariate) -> jnp.ndarray:
         """
@@ -659,6 +723,176 @@ class VaxfluxModel:
                         updated_parameters[daily_name] + intervention_values[idx] * mask
                     )
         return updated_parameters
+
+    def _model_observations(
+        self, daily_summed_parameters: dict[str, jnp.ndarray]
+    ) -> dict[str, jnp.ndarray]:
+        """
+        Calculate incidence values for each date range.
+
+        Args:
+            daily_summed_parameters: A dictionary mapping daily parameter names to
+                daily summed values.
+
+        Returns:
+            A dictionary mapping date range names to incidence values.
+
+        """
+        if not self._dates:
+            return {}
+        incidence_by_date_range: dict[str, jnp.ndarray] = {}
+        for date_range in self._dates:
+            season_range = self._season_map[date_range.season]
+            start_idx = (date_range.start_date - season_range.start_date).days
+            end_idx = (date_range.end_date - season_range.start_date).days
+            date_indices = list(range(start_idx, end_idx + 1))
+            for category_combo in self._category_combinations:
+                daily_params: dict[str, jnp.ndarray] = {}
+                for param in self._curve.parameters:
+                    base_name = _coord_name(
+                        param,
+                        date_range.season,
+                        *self._category_combo_with_name(category_combo),
+                    )
+                    daily_name = _coord_name(base_name, "daily")
+                    daily_params[param] = daily_summed_parameters[daily_name]
+                daily_incidence = jnp.stack(
+                    [
+                        self._curve.incidence(
+                            jnp.asarray([day_idx], dtype=jnp.float32),
+                            **{
+                                param: daily_params[param][day_idx]
+                                for param in self._curve.parameters
+                            },
+                        )[0]
+                        for day_idx in date_indices
+                    ]
+                )
+                incidence_name = _coord_name(
+                    "incidence",
+                    date_range.season,
+                    *self._category_combo_with_name(category_combo),
+                    date_range.start_date.isoformat(),
+                    date_range.end_date.isoformat(),
+                )
+                incidence_by_date_range[incidence_name] = numpyro.deterministic(
+                    incidence_name,
+                    jnp.sum(daily_incidence),
+                )
+        return incidence_by_date_range
+
+    def _model_observation_process(self, observations: dict[str, jnp.ndarray]) -> None:
+        """
+        Fit the observation process to the model observations.
+
+        Args:
+            observations: A dictionary mapping observation names to incidence values.
+
+        """
+        if self._observations is None:
+            return
+        sigma = self._model_observation_process_sigma()
+        for obs_idx, row in self._observations.iterrows():
+            if self._covariate_names:
+                category_combo = tuple(
+                    str(row[covariate_name]) for covariate_name in self._covariate_names
+                )
+            else:
+                category_combo = ()
+            category_name = self._category_combo_with_name(category_combo)
+            start_date = pd.to_datetime(row["start_date"]).date()
+            end_date = pd.to_datetime(row["end_date"]).date()
+            observation_name = _coord_name(
+                "incidence",
+                row["season"],
+                *category_name,
+                start_date.isoformat(),
+                end_date.isoformat(),
+            )
+            if observation_name not in observations:
+                msg = f"Observation key '{observation_name}' not found in model output."
+                raise ValueError(msg)
+            num_days = (end_date - start_date).days + 1
+            if (
+                self._observation_process_partially_pool_by_season
+                and self._observation_process_partially_pool_by_covariate
+            ):
+                sigma_value = sigma[
+                    self._season_name_indices[row["season"]],
+                    self._category_combo_indices[category_combo],
+                ]
+            elif self._observation_process_partially_pool_by_season:
+                sigma_value = sigma[self._season_name_indices[row["season"]]]
+            elif self._observation_process_partially_pool_by_covariate:
+                sigma_value = sigma[self._category_combo_indices[category_combo]]
+            else:
+                sigma_value = sigma
+            scaled_sigma = sigma_value * jnp.sqrt(num_days)
+            numpyro.sample(
+                f"observation_{obs_idx}",
+                numpyro.distributions.Normal(
+                    observations[observation_name],
+                    scaled_sigma,
+                ),
+                obs=row["value"],
+            )
+
+    def _model_observation_process_sigma(self) -> jnp.ndarray:
+        """
+        Sample the observation noise scale for the observation process.
+
+        Returns:
+            The sampled observation noise scale, optionally pooled.
+
+        """
+        noise_rate = 1.0 / self._observation_process_noise
+        if (
+            self._observation_process_partially_pool_by_season
+            and self._observation_process_partially_pool_by_covariate
+        ):
+            # Noise parameter is partially pooled by season and covariate category
+            with numpyro.plate_stack(
+                "observation_sigma",
+                (len(self._season_names), len(self._category_combinations)),
+            ):
+                return cast(
+                    "jnp.ndarray",
+                    numpyro.sample(
+                        "observation_sigma",
+                        numpyro.distributions.Exponential(noise_rate),
+                    ),
+                )
+        if self._observation_process_partially_pool_by_season:
+            # Noise parameter is partially pooled by season
+            with numpyro.plate("observation_sigma_season", len(self._season_names)):
+                return cast(
+                    "jnp.ndarray",
+                    numpyro.sample(
+                        "observation_sigma",
+                        numpyro.distributions.Exponential(noise_rate),
+                    ),
+                )
+        if self._observation_process_partially_pool_by_covariate:
+            # Noise parameter is partially pooled by covariate category combination
+            with numpyro.plate(
+                "observation_sigma_covariate",
+                len(self._category_combinations),
+            ):
+                return cast(
+                    "jnp.ndarray",
+                    numpyro.sample(
+                        "observation_sigma",
+                        numpyro.distributions.Exponential(noise_rate),
+                    ),
+                )
+        # One completely pooled noise parameter
+        return cast(
+            "jnp.ndarray",
+            numpyro.sample(
+                "observation_sigma",
+                numpyro.distributions.Exponential(noise_rate),
+            ),
+        )
 
     def _category_combo_with_name(
         self, category_combo: tuple[str, ...]
