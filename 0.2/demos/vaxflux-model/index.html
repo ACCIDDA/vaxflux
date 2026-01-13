@@ -1024,7 +1024,7 @@ version.
 </span><span id="__span-6-12"><a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a><span class="p">)</span>
 </span><span id="__span-6-13"><a id="__codelineno-6-13" name="__codelineno-6-13" href="#__codelineno-6-13"></a><span class="n">model</span>
 </span></code></pre></div>
-<div class="language-text highlight"><pre><span></span><code>&lt;vaxflux.VaxfluxModel object at 0x307da7cd0&gt;
+<div class="language-text highlight"><pre><span></span><code>&lt;vaxflux.VaxfluxModel object at 0x13a8c3450&gt;
 </code></pre></div>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="n">prior_predictive</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">prior_predictive</span><span class="p">(</span><span class="n">samples</span><span class="o">=</span><span class="mi">150</span><span class="p">)</span>
 </span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="n">pprint</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">prior_predictive</span><span class="o">.</span><span class="n">keys</span><span class="p">()))</span>
@@ -1263,7 +1263,11 @@ version.
  &#39;s_season_mu&#39;,
  &#39;s_season_sigma&#39;]
 </code></pre></div>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="n">model</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">warmup</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span> <span class="n">samples</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span>
+</span></code></pre></div>
+<div class="language-text highlight"><pre><span></span><code>sample: 100%|██████████| 1500/1500 [00:14&lt;00:00, 106.53it/s, 63 steps of size 6.84e-02. acc. prob=0.85]
+</code></pre></div>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>
 </span></code></pre></div>
 
 
