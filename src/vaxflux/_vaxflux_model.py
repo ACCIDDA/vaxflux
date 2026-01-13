@@ -1,6 +1,7 @@
 __all__: list[str] = []
 
 import itertools
+from collections import Counter
 from itertools import chain
 from typing import Any, Literal, Self, cast
 
@@ -223,6 +224,7 @@ class VaxfluxModel:
         Raises:
             TypeError: If any argument is not a `Covariate` or a sequence of
                 `Covariate` objects.
+            ValueError: If duplicate parameter/covariate pairs are provided.
 
         Examples:
             >>> from vaxflux._covariates import PartiallyPooledGaussianCovariate
@@ -254,6 +256,21 @@ class VaxfluxModel:
 
         """  # noqa: E501
         covariates = _collect_args(args, Covariate, "Covariate")  # type: ignore[type-abstract]
+        existing_pairs = Counter(
+            (cov.parameter, cov.covariate) for cov in self._covariates
+        )
+        new_pairs = Counter((cov.parameter, cov.covariate) for cov in covariates)
+        duplicate_pairs = [
+            pair
+            for pair, count in new_pairs.items()
+            if count + existing_pairs.get(pair, 0) > 1
+        ]
+        if duplicate_pairs:
+            msg = (
+                "Duplicate covariate parameter/covariate pairs found: "
+                f"{duplicate_pairs}."
+            )
+            raise ValueError(msg)
         self._covariates.extend(covariates)
         return self
 
