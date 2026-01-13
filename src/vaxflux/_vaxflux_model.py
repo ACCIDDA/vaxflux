@@ -399,9 +399,8 @@ class VaxfluxModel:
         warmup: int,
         samples: int,
         random_seed: int = 1,
-        *,
-        mcmc_args: dict[str, Any],
-        nuts_args: dict[str, Any],
+        mcmc_args: dict[str, Any] | None = None,
+        nuts_args: dict[str, Any] | None = None,
     ) -> None:
         """
         Sample from the model using MCMC with NUTS.
@@ -414,12 +413,14 @@ class VaxfluxModel:
             nuts_args: Additional arguments for the NUTS kernel.
 
         """
+        mcmc_args = mcmc_args or {}
+        nuts_args = nuts_args or {}
         self._pre_model()
         kernel = NUTS(self._model, **nuts_args)
-        mcmc = MCMC(kernel, **mcmc_args)
+        mcmc = MCMC(kernel, num_warmup=warmup, num_samples=samples, **mcmc_args)
         rng_key = key(random_seed)
         with numpyro.handlers.seed(numpyro.handlers.trace(self._model), rng_key):
-            mcmc.run(rng_key, num_warmup=warmup, num_samples=samples)
+            mcmc.run(rng_key)
 
     def _pre_model(self) -> None:
         """
