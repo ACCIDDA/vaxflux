@@ -1,0 +1,8 @@
+# Normalize all text files to use LF line endings
+*        text=auto eol=lf
+*.bat    text eol=crlf
+*.cmd    text eol=crlf
+
+# Treat jupyter notebooks as binary files
+*.ipynb  -text -diff -merge
+*.ipynb  linguist-generated
