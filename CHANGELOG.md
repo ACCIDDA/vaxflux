@@ -28,6 +28,9 @@ Added:
 - Added `VaxfluxModel` and new `Curve` classes that are based on
   `jax`/`numpyro`. See the
   [Model Refactor milestone](https://github.com/ACCIDDA/vaxflux/milestone/3).
+- Added `VaxfluxInferenceData` class that inherits from
+  [`arviz.InferenceData`](https://python.arviz.org/en/stable/api/inference_data.html).
+  See [#111](https://github.com/ACCIDDA/vaxflux/issues/111).
 
 Changed:
 

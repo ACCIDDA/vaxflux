@@ -8,8 +8,7 @@ from typing import Any, Literal, Self, cast
 import jax.numpy as jnp
 import numpyro
 import pandas as pd
-from jax import Array as JaxArray
-from jax.random import key
+from jax.random import key, split
 from numpyro.infer import MCMC, NUTS, Predictive
 
 from vaxflux._covariates import Covariate
@@ -24,6 +23,7 @@ from vaxflux._util import (
     _coord_name,
     _validate_and_format_observations,
 )
+from vaxflux._vaxflux_inference_data import VaxfluxInferenceData
 from vaxflux.covariates import CovariateCategories
 from vaxflux.dates import (
     DateRange,
@@ -384,60 +384,90 @@ class VaxfluxModel:
         )
         return self
 
-    def prior_predictive(
+    def sample(  # noqa: PLR0913
         self,
-        samples: int,
-        random_seed: int = 1,
-        *,
-        predictive_args: dict[str, Any] | None = None,
-    ) -> dict[str, JaxArray]:
-        """
-        Sample from the prior predictive distribution.
-
-        Args:
-            samples: Number of samples to draw.
-            random_seed: Seed for the random number generator.
-            predictive_args: Additional arguments for the `Predictive` sampler.
-
-        Returns:
-            The prior predictive samples.
-        """
-        predictive_args = predictive_args or {}
-        self._pre_model()
-        prior_predictive = Predictive(
-            self._model, num_samples=samples, **predictive_args
-        )
-        rng_key = key(random_seed)
-        with numpyro.handlers.seed(numpyro.handlers.trace(self._model), rng_key):
-            return cast("dict[str, JaxArray]", prior_predictive(rng_key))
-
-    def sample(
-        self,
-        warmup: int,
-        samples: int,
+        prior_samples: int | None = None,
+        warmup: int | None = None,
+        samples: int | None = None,
+        chains: int = 1,
         random_seed: int = 1,
         mcmc_args: dict[str, Any] | None = None,
         nuts_args: dict[str, Any] | None = None,
-    ) -> None:
+        prior_predictive_args: dict[str, Any] | None = None,
+        posterior_predictive_args: dict[str, Any] | None = None,
+        arviz_args: dict[str, Any] | None = None,
+    ) -> VaxfluxInferenceData:
         """
-        Sample from the model using MCMC with NUTS.
+        Sample from the prior predictive, posterior, and posterior predictive.
 
         Args:
+            prior_samples: Number of prior predictive samples to draw. When `None`,
+                prior predictive sampling is skipped.
             warmup: Number of warmup (burn-in) steps.
-            samples: Number of samples to draw.
+            samples: Number of posterior samples to draw. When `None`, posterior and
+                posterior predictive sampling are skipped.
+            chains: Number of MCMC chains to run.
             random_seed: Seed for the random number generator.
             mcmc_args: Additional arguments for the MCMC sampler.
             nuts_args: Additional arguments for the NUTS kernel.
+            prior_predictive_args: Additional arguments for the prior predictive
+                sampler.
+            posterior_predictive_args: Additional arguments for the posterior
+                predictive sampler.
+            arviz_args: Additional arguments for ArviZ's `from_numpyro`.
+
+        Returns:
+            The inference data containing whichever sampling stages were requested.
 
         """
+        if prior_samples is None and samples is None:
+            msg = "At least one of `prior_samples` or `samples` must be provided."
+            raise ValueError(msg)
+
+        # Prepare arguments
         mcmc_args = mcmc_args or {}
         nuts_args = nuts_args or {}
+        prior_predictive_args = prior_predictive_args or {}
+        posterior_predictive_args = posterior_predictive_args or {}
+        from_numpyro_kwargs = dict(arviz_args or {})
+
+        # Prepare the model
         self._pre_model()
-        kernel = NUTS(self._model, **nuts_args)
-        mcmc = MCMC(kernel, num_warmup=warmup, num_samples=samples, **mcmc_args)
         rng_key = key(random_seed)
-        with numpyro.handlers.seed(numpyro.handlers.trace(self._model), rng_key):
-            mcmc.run(rng_key)
+        prior_key, mcmc_key, posterior_key = split(rng_key, num=3)
+
+        # Sample from prior predictive if requested
+        if prior_samples is not None:
+            prior_predictive = Predictive(
+                self._model, num_samples=prior_samples, **prior_predictive_args
+            )
+            from_numpyro_kwargs["prior"] = prior_predictive(prior_key)
+
+        # Sample from posterior/posterior predictive if requested
+        if samples is not None:
+            kernel = NUTS(self._model, **nuts_args)
+            mcmc = MCMC(
+                kernel,
+                num_warmup=warmup,
+                num_samples=samples,
+                num_chains=chains,
+                **mcmc_args,
+            )
+            mcmc_key = split(mcmc_key, num=chains) if chains > 1 else mcmc_key
+            mcmc.run(mcmc_key)
+
+            posterior_samples = mcmc.get_samples()
+            posterior_predictive = Predictive(
+                self._model,
+                posterior_samples=posterior_samples,
+                **posterior_predictive_args,
+            )
+            from_numpyro_kwargs["posterior_predictive"] = posterior_predictive(
+                posterior_key
+            )
+            from_numpyro_kwargs["posterior"] = mcmc
+
+        return VaxfluxInferenceData.from_numpyro(**from_numpyro_kwargs)
 
     def _pre_model(self) -> None:
         """
