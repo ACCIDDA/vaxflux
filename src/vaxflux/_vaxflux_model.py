@@ -2,6 +2,7 @@ __all__: list[str] = []
 
 import itertools
 from collections import Counter
+from datetime import timedelta
 from itertools import chain
 from typing import Any, Literal, Self, cast
 
@@ -435,6 +436,12 @@ class VaxfluxModel:
         self._pre_model()
         rng_key = key(random_seed)
         prior_key, mcmc_key, posterior_key = split(rng_key, num=3)
+        coords, dims = self._coords_and_dims(
+            base_coords=from_numpyro_kwargs.get("coords"),
+            base_dims=from_numpyro_kwargs.get("dims"),
+        )
+        from_numpyro_kwargs["coords"] = coords
+        from_numpyro_kwargs["dims"] = dims
 
         # Sample from prior predictive if requested
         if prior_samples is not None:
@@ -468,6 +475,269 @@ class VaxfluxModel:
             from_numpyro_kwargs["posterior"] = mcmc
 
         return VaxfluxInferenceData.from_numpyro(**from_numpyro_kwargs)
+
+    def _coords_and_dims(
+        self,
+        *,
+        base_coords: dict[str, list[str]] | None = None,
+        base_dims: dict[str, list[str]] | None = None,
+    ) -> tuple[dict[str, list[str]], dict[str, list[str]]]:
+        """
+        Build ArviZ coordinates and dimensions for model outputs.
+
+        Args:
+            base_coords: Optional starting coordinates to extend.
+            base_dims: Optional starting dimensions to extend.
+
+        Returns:
+            A tuple of (coords, dims) dictionaries.
+
+        """
+        coords = dict(base_coords or {})
+        dims = dict(base_dims or {})
+        for func_short_name in [
+            "date_ranges",
+            "incidence",
+            "days",
+            "daily_params",
+            "covariates",
+            "interventions",
+            "observation_sigma",
+        ]:
+            coord_block, dim_block = getattr(
+                self, f"_coords_and_dims_for_{func_short_name}"
+            )(coords, dims)
+            if coord_block:
+                coords.update(coord_block)
+            if dim_block:
+                dims.update(dim_block)
+        return coords, dims
+
+    def _coords_and_dims_for_date_ranges(
+        self,
+        coords: dict[str, list[str]],
+        dims: dict[str, list[str]],  # noqa: ARG002
+    ) -> tuple[dict[str, list[str]] | None, dict[str, list[str]] | None]:
+        """
+        Add date range coordinates.
+
+        Adds per-season date-range coordinates like `date_ranges_{season}` with
+        `YYYY-MM-DD_YYYY-MM-DD` labels for each range.
+
+        Args:
+            coords: Existing coordinates to extend.
+            dims: Existing dimension mappings (unused).
+
+        Returns:
+            A `(coords, dims)` tuple where only `coords` is populated.
+
+        """
+        new_coords: dict[str, list[str]] = {}
+        for season_name, labels in self._date_range_coord_labels.items():
+            if not labels:
+                continue
+            coord_key = self._date_range_coord_keys[season_name]
+            if coord_key not in coords:
+                new_coords[coord_key] = labels
+        return new_coords or None, None
+
+    def _coords_and_dims_for_incidence(
+        self,
+        coords: dict[str, list[str]],  # noqa: ARG002
+        dims: dict[str, list[str]],
+    ) -> tuple[dict[str, list[str]] | None, dict[str, list[str]] | None]:
+        """
+        Add incidence dimensions.
+
+        Maps incidence deterministic values to their per-season date-range coordinates.
+        See `_coords_and_dims_for_date_ranges` for formatting of the values, but the
+        keys are formatted as "incidence_{season}_{category_combination}".
+
+        Args:
+            coords: Existing coordinates (unused).
+            dims: Existing dimension mappings to extend.
+
+        Returns:
+            A `(coords, dims)` tuple where only `dims` is populated.
+
+        """
+        new_dims: dict[str, list[str]] = {}
+        for season_name, incidence_names in self._incidence_names_by_season.items():
+            if not incidence_names:
+                continue
+            coord_key = self._date_range_coord_keys[season_name]
+            for incidence_name in incidence_names:
+                if incidence_name not in dims:
+                    new_dims[incidence_name] = [coord_key]
+        return None, new_dims or None
+
+    def _coords_and_dims_for_days(
+        self,
+        coords: dict[str, list[str]],
+        dims: dict[str, list[str]],  # noqa: ARG002
+    ) -> tuple[dict[str, list[str]] | None, dict[str, list[str]] | None]:
+        """
+        Add day coordinates.
+
+        Adds per-season coordinates like `days_{season}` with `YYYY-MM-DD` labels
+        for each day in the season.
+
+        Args:
+            coords: Existing coordinates to extend.
+            dims: Existing dimension mappings (unused).
+
+        Returns:
+            A `(coords, dims)` tuple where only `coords` is populated.
+
+        """
+        new_coords: dict[str, list[str]] = {}
+        for season_name, labels in self._days_coord_labels.items():
+            if not labels:
+                continue
+            coord_key = self._days_coord_keys[season_name]
+            if coord_key not in coords:
+                new_coords[coord_key] = labels
+        return new_coords or None, None
+
+    def _coords_and_dims_for_daily_params(
+        self,
+        coords: dict[str, list[str]],  # noqa: ARG002
+        dims: dict[str, list[str]],
+    ) -> tuple[dict[str, list[str]] | None, dict[str, list[str]] | None]:
+        """
+        Add daily parameter dimensions.
+
+        Maps daily parameter deterministic values to the `days_{season}` coordinates.
+
+        Args:
+            coords: Existing coordinates (unused).
+            dims: Existing dimension mappings to extend.
+
+        Returns:
+            A `(coords, dims)` tuple where only `dims` is populated.
+
+        """
+        new_dims: dict[str, list[str]] = {}
+        for season_name, daily_names in self._daily_param_names_by_season.items():
+            if not daily_names:
+                continue
+            coord_key = self._days_coord_keys[season_name]
+            for daily_name in daily_names:
+                if daily_name not in dims:
+                    new_dims[daily_name] = [coord_key]
+        return None, new_dims or None
+
+    def _coords_and_dims_for_covariates(
+        self,
+        coords: dict[str, list[str]],
+        dims: dict[str, list[str]],
+    ) -> tuple[dict[str, list[str]] | None, dict[str, list[str]] | None]:
+        """
+        Add Covariate Coordinates and Dimensions.
+
+        Adds `{covariate}_categories` and `{covariate}_categories_short` coordinates
+        and maps covariate draws to those dimensions, with seasonal covariates mapped
+        to the `season` coordinate.
+
+        Args:
+            coords: Existing coordinates to extend.
+            dims: Existing dimension mappings to extend.
+
+        Returns:
+            A `(coords, dims)` tuple with any new covariate coordinates and dims.
+
+        """
+        new_coords: dict[str, list[str]] = {}
+        new_dims: dict[str, list[str]] = {}
+        for covariate_name, categories in self._covariate_categories_map.items():
+            full_key, short_key = self._covariate_category_coord_keys[covariate_name]
+            if full_key not in coords:
+                new_coords[full_key] = list(categories)
+            if short_key not in coords:
+                new_coords[short_key] = list(categories[1:])
+        if "season" not in coords:
+            new_coords["season"] = list(self._season_names)
+        for covariate in self._covariates:
+            if covariate.covariate is None:
+                if covariate.prefix not in dims:
+                    new_dims[covariate.prefix] = ["season"]
+                values_name = f"covariate_values_{covariate.prefix}"
+                if values_name not in dims:
+                    new_dims[values_name] = ["season"]
+                continue
+            full_key, short_key = self._covariate_category_coord_keys[
+                covariate.covariate
+            ]
+            if covariate.prefix not in dims:
+                new_dims[covariate.prefix] = [short_key]
+            values_name = f"covariate_values_{covariate.prefix}"
+            if values_name not in dims:
+                new_dims[values_name] = [full_key]
+        return new_coords or None, new_dims or None
+
+    def _coords_and_dims_for_observation_sigma(
+        self,
+        coords: dict[str, list[str]],
+        dims: dict[str, list[str]],
+    ) -> tuple[dict[str, list[str]] | None, dict[str, list[str]] | None]:
+        """
+        Add Observation Sigma Coordinates and Dimensions.
+
+        When partially pooled, maps `observation_sigma` onto `season` and/or
+        covariate-category combination coordinates.
+
+        Args:
+            coords: Existing coordinates to extend.
+            dims: Existing dimension mappings to extend.
+
+        Returns:
+            A `(coords, dims)` tuple with any new observation sigma metadata.
+
+        """
+        if self._observations is None or self._observation_process_kind is None:
+            return None, None
+        if "observation_sigma" in dims:
+            return None, None
+        new_coords: dict[str, list[str]] = {}
+        if self._covariate_combo_coord_key not in coords:
+            new_coords[self._covariate_combo_coord_key] = self._covariate_combo_labels
+        sigma_dims: list[str] = []
+        if self._observation_process_partially_pool_by_season:
+            sigma_dims.append("season")
+        if self._observation_process_partially_pool_by_covariate:
+            sigma_dims.append(self._covariate_combo_coord_key)
+        new_dims = {"observation_sigma": sigma_dims} if sigma_dims else None
+        return new_coords or None, new_dims
+
+    def _coords_and_dims_for_interventions(
+        self,
+        coords: dict[str, list[str]],
+        dims: dict[str, list[str]],
+    ) -> tuple[dict[str, list[str]] | None, dict[str, list[str]] | None]:
+        """
+        Add intervention coordinates and dimensions.
+
+        Maps intervention samples to their implementation dimensions with labels
+        like `implementation_0`.
+
+        Args:
+            coords: Existing coordinates to extend.
+            dims: Existing dimension mappings to extend.
+
+        Returns:
+            A `(coords, dims)` tuple with any new intervention metadata.
+
+        """
+        new_coords: dict[str, list[str]] = {}
+        new_dims: dict[str, list[str]] = {}
+        for name, coord_key in self._intervention_impl_coord_keys.items():
+            labels = self._intervention_impl_coord_labels.get(name, [])
+            if labels and coord_key not in coords:
+                new_coords[coord_key] = labels
+            intervention_name = _coord_name("intervention", name)
+            if intervention_name not in dims and coord_key:
+                new_dims[intervention_name] = [coord_key]
+        return new_coords or None, new_dims or None
 
     def _pre_model(self) -> None:
         """
@@ -504,6 +774,39 @@ class VaxfluxModel:
             season.season: (season.end_date - season.start_date).days + 1
             for season in self._seasons
         }
+        self._date_ranges_by_season = {
+            season: [
+                date_range for date_range in self._dates if date_range.season == season
+            ]
+            for season in self._season_names
+        }
+        self._date_range_indices_by_season = {
+            season: {
+                (date_range.start_date, date_range.end_date): idx
+                for idx, date_range in enumerate(date_ranges)
+            }
+            for season, date_ranges in self._date_ranges_by_season.items()
+        }
+        self._date_range_coord_keys = {
+            season: _coord_name("date_ranges", season) for season in self._season_names
+        }
+        self._date_range_coord_labels = {
+            season: [
+                f"{date_range.start_date.isoformat()}_{date_range.end_date.isoformat()}"
+                for date_range in date_ranges
+            ]
+            for season, date_ranges in self._date_ranges_by_season.items()
+        }
+        self._days_coord_keys = {
+            season: _coord_name("days", season) for season in self._season_names
+        }
+        self._days_coord_labels = {
+            season: [
+                (season_range.start_date + timedelta(days=offset)).isoformat()
+                for offset in range(self._season_day_counts[season])
+            ]
+            for season, season_range in self._season_map.items()
+        }
         self._season_tokens = {
             season_name: _coord_name(season_name) for season_name in self._season_names
         }
@@ -538,6 +841,49 @@ class VaxfluxModel:
             param: [cov for cov in self._covariates if cov.parameter == param]
             for param in self._curve.parameters
         }
+        self._incidence_names_by_season = {
+            season: [
+                _coord_name(
+                    "incidence",
+                    season,
+                    *self._category_combo_with_name(category_combo),
+                )
+                for category_combo in self._category_combinations
+            ]
+            for season in self._season_names
+        }
+        self._daily_param_names_by_season = {
+            season: [
+                _coord_name(
+                    _coord_name(
+                        param,
+                        season,
+                        *self._category_combo_with_name(category_combo),
+                    ),
+                    "daily",
+                )
+                for param in self._curve.parameters
+                for category_combo in self._category_combinations
+            ]
+            for season in self._season_names
+        }
+        self._covariate_category_coord_keys = {
+            covariate_name: (
+                _coord_name(covariate_name, "categories"),
+                _coord_name(covariate_name, "categories", "short"),
+            )
+            for covariate_name in self._covariate_categories_map
+        }
+        self._covariate_combo_coord_key = _coord_name(
+            "covariate", "category", "combinations"
+        )
+        self._covariate_combo_labels = [
+            "_".join(parts) if parts else "all"
+            for parts in (
+                self._category_combo_with_name(combo)
+                for combo in self._category_combinations
+            )
+        ]
         self._interventions_by_name = {
             intervention.name: [
                 implementation
@@ -545,6 +891,17 @@ class VaxfluxModel:
                 if implementation.intervention == intervention.name
             ]
             for intervention in self._interventions
+        }
+        self._intervention_impl_coord_keys = {
+            name: _coord_name("intervention", name, "implementations")
+            for name in self._interventions_by_name
+        }
+        self._intervention_impl_coord_labels = {
+            name: [
+                f"implementation_{idx}"
+                for idx in range(len(self._interventions_by_name[name]))
+            ]
+            for name in self._interventions_by_name
         }
 
     def _model(self) -> None:
@@ -726,15 +1083,10 @@ class VaxfluxModel:
             )
             if not intervention_implementations:
                 continue
-            plate_name = _coord_name(
-                "intervention",
-                intervention.name,
-                "implementations",
-            )
-            with numpyro.plate(
-                f"{plate_name}_plate", len(intervention_implementations)
-            ):
-                intervention_values = intervention.sample(plate_name)
+            intervention_name = _coord_name("intervention", intervention.name)
+            plate_name = _coord_name(intervention_name, "implementations")
+            with numpyro.plate(plate_name, len(intervention_implementations)):
+                intervention_values = intervention.sample(intervention_name)
             for idx, implementation in enumerate(intervention_implementations):
                 if implementation.season not in self._season_map:
                     continue
@@ -783,49 +1135,53 @@ class VaxfluxModel:
                 daily summed values.
 
         Returns:
-            A dictionary mapping date range names to incidence values.
+            A dictionary mapping season/category names to arrays of incidence values
+            aligned to that season's date range order.
 
         """
         if not self._dates:
             return {}
         incidence_by_date_range: dict[str, jnp.ndarray] = {}
-        for date_range in self._dates:
-            season_range = self._season_map[date_range.season]
-            start_idx = (date_range.start_date - season_range.start_date).days
-            end_idx = (date_range.end_date - season_range.start_date).days
-            date_indices = list(range(start_idx, end_idx + 1))
+        for season_name, date_ranges in self._date_ranges_by_season.items():
+            if not date_ranges:
+                continue
             for category_combo in self._category_combinations:
                 daily_params: dict[str, jnp.ndarray] = {}
                 for param in self._curve.parameters:
                     base_name = _coord_name(
                         param,
-                        date_range.season,
+                        season_name,
                         *self._category_combo_with_name(category_combo),
                     )
                     daily_name = _coord_name(base_name, "daily")
                     daily_params[param] = daily_summed_parameters[daily_name]
-                daily_incidence = jnp.stack(
-                    [
-                        self._curve.incidence(
-                            jnp.asarray([day_idx], dtype=jnp.float32),
-                            **{
-                                param: daily_params[param][day_idx]
-                                for param in self._curve.parameters
-                            },
-                        )[0]
-                        for day_idx in date_indices
-                    ]
-                )
+                incidence_values: list[jnp.ndarray] = []
+                for date_range in date_ranges:
+                    season_range = self._season_map[date_range.season]
+                    start_idx = (date_range.start_date - season_range.start_date).days
+                    end_idx = (date_range.end_date - season_range.start_date).days
+                    date_indices = list(range(start_idx, end_idx + 1))
+                    daily_incidence = jnp.stack(
+                        [
+                            self._curve.incidence(
+                                jnp.asarray([day_idx], dtype=jnp.float32),
+                                **{
+                                    param: daily_params[param][day_idx]
+                                    for param in self._curve.parameters
+                                },
+                            )[0]
+                            for day_idx in date_indices
+                        ]
+                    )
+                    incidence_values.append(jnp.sum(daily_incidence))
                 incidence_name = _coord_name(
                     "incidence",
-                    date_range.season,
+                    season_name,
                     *self._category_combo_with_name(category_combo),
-                    date_range.start_date.isoformat(),
-                    date_range.end_date.isoformat(),
                 )
                 incidence_by_date_range[incidence_name] = numpyro.deterministic(
                     incidence_name,
-                    jnp.sum(daily_incidence),
+                    jnp.stack(incidence_values),
                 )
         return incidence_by_date_range
 
@@ -854,11 +1210,18 @@ class VaxfluxModel:
                 "incidence",
                 row["season"],
                 *category_name,
-                start_date.isoformat(),
-                end_date.isoformat(),
             )
             if observation_name not in observations:
                 msg = f"Observation key '{observation_name}' not found in model output."
+                raise ValueError(msg)
+            date_range_index = self._date_range_indices_by_season.get(
+                row["season"], {}
+            ).get((start_date, end_date))
+            if date_range_index is None:
+                msg = (
+                    "Observation date range not found in model output for season "
+                    f"'{row['season']}' with dates {start_date} to {end_date}."
+                )
                 raise ValueError(msg)
             num_days = (end_date - start_date).days + 1
             if (
@@ -879,7 +1242,7 @@ class VaxfluxModel:
             numpyro.sample(
                 f"observation_{obs_idx}",
                 numpyro.distributions.Normal(
-                    observations[observation_name],
+                    observations[observation_name][date_range_index],
                     scaled_sigma,
                 ),
                 obs=row["value"],
