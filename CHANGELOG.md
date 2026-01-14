@@ -29,8 +29,9 @@ Added:
   `jax`/`numpyro`. See the
   [Model Refactor milestone](https://github.com/ACCIDDA/vaxflux/milestone/3).
 - Added `VaxfluxInferenceData` class that inherits from
-  [`arviz.InferenceData`](https://python.arviz.org/en/stable/api/inference_data.html).
-  See [#111](https://github.com/ACCIDDA/vaxflux/issues/111).
+  [`arviz.InferenceData`](https://python.arviz.org/en/stable/api/inference_data.html)
+  and takes advantage of coords/dims to make the output easier to align and
+  manipulate. See [#111](https://github.com/ACCIDDA/vaxflux/issues/111).
 
 Changed:
 
