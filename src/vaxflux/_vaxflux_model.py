@@ -5,7 +5,7 @@ import math
 from collections import Counter
 from datetime import timedelta
 from itertools import chain
-from typing import Any, Literal, Self, cast
+from typing import Any, Final, Literal, Self, cast
 
 import jax.numpy as jnp
 import numpyro
@@ -42,6 +42,17 @@ except ImportError:
     from numpyro.contrib.render import render_model as _render_model
 
 
+_SUPPORTED_OBSERVATION_PROCESS_KINDS = Literal[
+    "normal", "heteroscedastic-normal", "square-normal", "sqrt-normal"
+]
+_SUPPORTED_OBSERVATION_PROCESS_KINDS_SET: Final[set[str]] = {
+    "normal",
+    "heteroscedastic-normal",
+    "square-normal",
+    "sqrt-normal",
+}
+
+
 class VaxfluxModel:
     def __init__(self, curve: Curve) -> None:
         """
@@ -59,7 +70,9 @@ class VaxfluxModel:
         self._observations: pd.DataFrame | None = None
         self._interventions: list[Intervention] = []
         self._implementations: list[Implementation] = []
-        self._observation_process_kind: None | Literal["normal"] = None
+        self._observation_process_kind: _SUPPORTED_OBSERVATION_PROCESS_KINDS | None = (
+            None
+        )
         self._observation_process_noise: float = 0.05
         self._observation_process_partially_pool_by_season: bool = True
         self._observation_process_partially_pool_by_covariate: bool = False
@@ -356,7 +369,7 @@ class VaxfluxModel:
 
     def add_observation_process(
         self,
-        kind: Literal["normal"],
+        kind: _SUPPORTED_OBSERVATION_PROCESS_KINDS,
         noise: float,
         *,
         partially_pool_by_season: bool = True,
@@ -367,7 +380,8 @@ class VaxfluxModel:
         Add an observation process to the model based on the added observations.
 
         Args:
-            kind: The kind of observation process to add.
+            kind: The kind of observation process to add. Use
+                `"heteroscedastic-normal"` to scale noise by the modeled incidence.
             noise: The observation noise parameter.
             partially_pool_by_season: Whether to partially pool observation noise by
                 season.
@@ -385,11 +399,46 @@ class VaxfluxModel:
             ValueError: If an unsupported observation process kind is provided.
             ValueError: If the prevalence penalty is negative.
 
+        Notes:
+            The observation process is only applied if observations have been added to
+            the model via `add_observations`. The `kind` and `noise` parameters define
+            how the observation noise is modeled and the `partially_pool_by_season` and
+            `partially_pool_by_covariate` control the hierarchical structure of the
+            noise parameter(s). The `noise` parameter represents the mean of the noise
+            distribution which is modeled by an exponential distribution. The pooling
+            options have the following effects:
+
+            - If `partially_pool_by_season` is `True`, a separate noise parameter is
+                sampled for each season.
+            - If `partially_pool_by_covariate` is `True`, a separate noise parameter is
+                sampled for each covariate combination.
+            - If both are `True`, noise parameters are sampled for each season and
+                covariate combination.
+            - If both are `False`, a single global noise parameter is used.
+
+            The observation process kind affects the distribution of the observations.
+            The kinds correspond to the following:
+
+            - `normal`: Observations are modeled using a normal distribution with
+                with a mean from the incidence curve and a constant standard deviation
+                defined by the `noise` parameter.
+            - `heteroscedastic-normal`: Observations are modeled using an
+                heteroscedastic normal distribution with a mean from the incidence curve
+                and a standard deviation that scales with the incidence value, allowing
+                for variability that changes with the level of incidence.
+            - `square-normal`: Observations are modeled using a normal distribution
+                with a mean from the incidence curve and variance is proportional to the
+                incidence, allowing for larger variability at higher incidence levels.
+            - `sqrt-normal`: Observations are modeled using a normal distribution with a
+                mean from the incidence curve and standard deviation proportional to
+                the square root of the incidence, allowing for moderate variability at
+                higher incidence levels.
+
         """
         if self._observations is None:
             msg = "No observations have been added to the model, nothing to observe."
             raise ValueError(msg)
-        if kind not in {"normal"}:
+        if kind not in _SUPPORTED_OBSERVATION_PROCESS_KINDS_SET:
             msg = f"Unsupported observation process kind: {kind}."
             raise ValueError(msg)
         if prevalence_penalty < 0:
@@ -1328,9 +1377,15 @@ class VaxfluxModel:
                 sigma_value = sigma[self._category_combo_indices[category_combo]]
             else:
                 sigma_value = sigma
-            scaled_sigma = sigma_value * jnp.sqrt(num_days)
             obs_means.append(observations[observation_name][date_range_index])
-            obs_scales.append(scaled_sigma)
+            obs_scales.append(
+                self._model_observation_process_scaled_sigma(
+                    sigma_value,
+                    observations[observation_name][date_range_index],
+                    num_days,
+                    self._observation_process_kind,  # type: ignore[arg-type]
+                )
+            )
             obs_values.append(float(row["value"]))
         if not obs_means:
             return
@@ -1344,6 +1399,35 @@ class VaxfluxModel:
                 numpyro.distributions.Normal(obs_mean_array, obs_scale_array),
                 obs=obs_value_array,
             )
+
+    @staticmethod
+    def _model_observation_process_scaled_sigma(
+        sigma_value: jnp.ndarray,
+        observations: jnp.ndarray,
+        num_days: int,
+        observation_process_kind: _SUPPORTED_OBSERVATION_PROCESS_KINDS,
+    ) -> jnp.ndarray:
+        """
+        Scale the observation process sigma based on the observation kind.
+        
+        Args:
+            sigma_value: The base sigma value.
+            observations: The model observations.
+            num_days: The number of days in the observation period.
+            observation_process_kind: The kind of observation process.
+
+        Returns:
+            The scaled sigma value.
+
+        """
+        scaled_sigma = sigma_value * jnp.sqrt(num_days)
+        if observation_process_kind == "heteroscedastic-normal":
+            scaled_sigma = scaled_sigma * observations
+        elif observation_process_kind == "square-normal":
+            scaled_sigma = scaled_sigma * (observations**2.0)
+        elif observation_process_kind == "sqrt-normal":
+            scaled_sigma = scaled_sigma * jnp.sqrt(observations)
+        return jnp.maximum(scaled_sigma, 1e-6)
 
     def _model_observation_process_sigma(self) -> jnp.ndarray:
         """
