@@ -351,16 +351,20 @@ def sample_dataset(
             season_range = season_ranges_map[date_range.season]
             kwargs = {}
             for parameter in parameters:
-                if list(parameter)[1:-1] == [
-                    season_range.season,
-                    *category_prod.values(),
-                ]:
+                param_parts = list(parameter)[1:-1]
+                if param_parts == [season_range.season, *category_prod.values()]:
                     kwargs[str(parameter[0])] = np.array(float(parameter[-1]))
+                elif param_parts == [season_range.season]:
+                    kwargs.setdefault(
+                        str(parameter[0]),
+                        np.array(float(parameter[-1])),
+                    )
             t_start = (date_range.start_date - season_range.start_date).days
             t_end = (date_range.end_date - season_range.start_date).days + 1.0
             t0 = np.array([float(i) for i in range(int(t_start), int(t_end))])
             t1 = t0 + 1.0
-            y = curve.prevalence_difference(t0, t1, **kwargs).eval()
+            y = curve.prevalence_difference(t0, t1, **kwargs)
+            y = y.eval() if hasattr(y, "eval") else np.asarray(y)  # type: ignore[assignment]
             if epsilon > 0:
                 y = generator.gamma(
                     shape=np.power(y / epsilon, 2.0),
