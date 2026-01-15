@@ -76,6 +76,27 @@ class Curve(ABC):
         """
         return cast("jax.Array", self._grad_prevalence(*((t, *tuple(kwargs.values())))))
 
+    def prevalence_difference(
+        self,
+        t0: NumericalArrayLike,
+        t1: NumericalArrayLike,
+        **kwargs: NumericalArrayLike,
+    ) -> jax.Array:
+        """
+        Compute prevalence differences between two time arrays.
+
+        Args:
+            t0: The start time steps for the interval.
+            t1: The end time steps for the interval.
+            **kwargs: Additional parameters required by the prevalence model.
+
+        Returns:
+            The prevalence difference for each interval.
+        """
+        return self.prevalence(jnp.asarray(t1), **kwargs) - self.prevalence(
+            jnp.asarray(t0), **kwargs
+        )
+
 
 class LogisticCurve(Curve):
     r"""
