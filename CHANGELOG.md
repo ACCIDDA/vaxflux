@@ -31,7 +31,8 @@ Added:
 - Added `VaxfluxInferenceData` class that inherits from
   [`arviz.InferenceData`](https://python.arviz.org/en/stable/api/inference_data.html)
   and takes advantage of coords/dims to make the output easier to align and
-  manipulate. See [#111](https://github.com/ACCIDDA/vaxflux/issues/111).
+  manipulate. See [#111](https://github.com/ACCIDDA/vaxflux/issues/111),
+  [#141](https://github.com/ACCIDDA/vaxflux/issues/141).
 - Added demonstration of `VaxfluxModel` class in the `demos/vaxflux-model.ipynb`
   notebook using synthetic data.
 

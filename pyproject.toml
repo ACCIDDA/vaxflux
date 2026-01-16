@@ -43,7 +43,6 @@ demo = [
     "jupyter>=1.1.1",
     "matplotlib>=3.10.8",
     "nbconvert>=7.16.6",
-    "plotnine>=0.15.2",
     "seaborn>=0.13.2",
 ]
 

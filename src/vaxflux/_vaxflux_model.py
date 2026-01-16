@@ -655,6 +655,8 @@ class VaxfluxModel:
                 new_coords[full_key] = list(categories)
             if short_key not in coords:
                 new_coords[short_key] = list(categories[1:])
+        if "covariate_names" not in coords and self._covariate_names:
+            new_coords["covariate_names"] = list(self._covariate_names)
         if "season" not in coords:
             new_coords["season"] = list(self._season_names)
         for covariate in self._covariates:
