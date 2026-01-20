@@ -54,12 +54,12 @@ drawn from a normal distribution, but `vaxflux` allows for any distribution to
 be used. The inflection point can be defined as:
 
 $$
-\begin{align}
+\begin{aligned}
 s^{\mathrm{season}}_{i}&\sim\mathcal{N}\left(\mu^{\mathrm{season}},\sigma^{\mathrm{season}^2}\right) \\
 s^{\mathrm{age}}_{i,j}&\sim\mathcal{N}\left(\boldsymbol{\mu}^{\mathrm{age}},\Sigma^{\mathrm{age}^2}\right) \\
 s^{\mathrm{density}}_{i,k}&\sim\mathcal{N}\left({\mu}^{\mathrm{density}},\sigma^{\mathrm{density}^2}\right) \\
 s_{i,j,k} &= s^{\mathrm{season}}_{i} + s^{\mathrm{age}}_{i,j} + s^{\mathrm{density}}_{i,k}
-\end{align}
+\end{aligned}
 $$
 
 Where $i$ is the season index, $j$ is the age category index, and $k$ is the
@@ -96,10 +96,10 @@ For each day in a season, $i$, we model the observed incidence of vaccinations
 on that day as:
 
 $$
-\begin{align}
+\begin{aligned}
 \varepsilon_i&\sim\mathrm{Exponential}\left(\epsilon^{-1}\right) \\
 I_{t,i}&\sim\mathrm{Gamma}\left(f(t+1\vert\theta_1,\dots,\theta_n)-f(t\vert\theta_1,\dots,\theta_n),\varepsilon_i\right)
-\end{align}
+\end{aligned}
 $$
 
 Where the gamma distribution is mean-variance parameterized, $I_{t,i}$ is the
