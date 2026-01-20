@@ -1,6 +1,7 @@
 __all__: list[str] = []
 
 import itertools
+import math
 from collections import Counter
 from datetime import timedelta
 from itertools import chain
@@ -56,6 +57,7 @@ class VaxfluxModel:
         self._observation_process_noise: float = 0.05
         self._observation_process_partially_pool_by_season: bool = True
         self._observation_process_partially_pool_by_covariate: bool = False
+        self._observation_process_prevalence_penalty: float = 0.0
 
     def __repr__(self) -> str:
         """
@@ -352,6 +354,7 @@ class VaxfluxModel:
         *,
         partially_pool_by_season: bool = True,
         partially_pool_by_covariate: bool = False,
+        prevalence_penalty: float = 0.0,
     ) -> Self:
         """
         Add an observation process to the model based on the added observations.
@@ -363,19 +366,27 @@ class VaxfluxModel:
                 season.
             partially_pool_by_covariate: Whether to partially pool observation noise by
                 covariate.
+            prevalence_penalty: Penalty to apply when modeled prevalence exceeds 1. The
+                penalty is applied as `-prevalence_penalty * excess^2` where `excess`
+                is the excess prevalence. Use `math.inf` for a hard constraint.
 
         Returns:
             The model instance for method chaining.
 
         Raises:
             ValueError: If no observations have been added to the model.
+            ValueError: If an unsupported observation process kind is provided.
+            ValueError: If the prevalence penalty is negative.
 
         """
         if self._observations is None:
             msg = "No observations have been added to the model, nothing to observe."
             raise ValueError(msg)
-        if kind != "normal":
+        if kind not in {"normal"}:
             msg = f"Unsupported observation process kind: {kind}."
+            raise ValueError(msg)
+        if prevalence_penalty < 0:
+            msg = "prevalence_penalty must be non-negative."
             raise ValueError(msg)
         self._observation_process_kind = kind
         self._observation_process_noise = noise
@@ -383,6 +394,7 @@ class VaxfluxModel:
         self._observation_process_partially_pool_by_covariate = (
             partially_pool_by_covariate
         )
+        self._observation_process_prevalence_penalty = prevalence_penalty
         return self
 
     def sample(  # noqa: PLR0913
@@ -1181,9 +1193,22 @@ class VaxfluxModel:
                     season_name,
                     *self._category_combo_with_name(category_combo),
                 )
+                incidence_series = jnp.stack(incidence_values)
+                prevalence_penalty = self._observation_process_prevalence_penalty
+                if not math.isclose(prevalence_penalty, 0.0):
+                    penalty_name = _coord_name(incidence_name, "prevalence_penalty")
+                    excess = jnp.maximum(jnp.sum(incidence_series) - 1.0, 0.0)
+                    if math.isinf(prevalence_penalty):
+                        numpyro.factor(
+                            penalty_name, jnp.where(excess > 0.0, -jnp.inf, 0.0)
+                        )
+                    else:
+                        numpyro.factor(
+                            penalty_name, -prevalence_penalty * jnp.square(excess)
+                        )
                 incidence_by_date_range[incidence_name] = numpyro.deterministic(
                     incidence_name,
-                    jnp.stack(incidence_values),
+                    incidence_series,
                 )
         return incidence_by_date_range
 

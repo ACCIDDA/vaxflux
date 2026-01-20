@@ -28,6 +28,11 @@ Added:
 - Added `VaxfluxModel` and new `Curve` classes that are based on
   `jax`/`numpyro`. See the
   [Model Refactor milestone](https://github.com/ACCIDDA/vaxflux/milestone/3).
+  - Added a custom and configurable prevalence penalty to decrease the
+    likelihood of prevalence values beyond 1 from being sampled. This is
+    configured via the `prevalence_penalty` argument to
+    `add_observation_process`. See
+    [#148](https://github.com/ACCIDDA/vaxflux/issues/148).
 - Added `VaxfluxInferenceData` class that inherits from
   [`arviz.InferenceData`](https://python.arviz.org/en/stable/api/inference_data.html)
   and takes advantage of coords/dims to make the output easier to align and
