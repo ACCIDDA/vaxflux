@@ -847,6 +847,11 @@ and this project adheres to
 <li>Added <code>VaxfluxModel</code> and new <code>Curve</code> classes that are based on
   <code>jax</code>/<code>numpyro</code>. See the
   <a href="https://github.com/ACCIDDA/vaxflux/milestone/3">Model Refactor milestone</a>.</li>
+<li>Added a custom and configurable prevalence penalty to decrease the
+    likelihood of prevalence values beyond 1 from being sampled. This is
+    configured via the <code>prevalence_penalty</code> argument to
+    <code>add_observation_process</code>. See
+    <a href="https://github.com/ACCIDDA/vaxflux/issues/148">#148</a>.</li>
 <li>Added <code>VaxfluxInferenceData</code> class that inherits from
   <a href="https://python.arviz.org/en/stable/api/inference_data.html"><code>arviz.InferenceData</code></a>
   and takes advantage of coords/dims to make the output easier to align and
