@@ -57,6 +57,11 @@ Removed:
 Fixed:
 
 - Corrected typo in the word "introduction" in the documentation navigation bar.
+- Fixed the display of equations in the documentation, see
+  [#123](https://github.com/ACCIDDA/vaxflux/issues/123).
+- Fixed the display of the demo notebooks in the documentation using
+  `mkdocs-jupyter` instead of converting notebooks to markdown files, see
+  [#146](https://github.com/ACCIDDA/vaxflux/issues/146).
 
 Security:
 

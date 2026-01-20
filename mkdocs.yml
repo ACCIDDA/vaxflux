@@ -27,6 +27,8 @@ extra_css:
 plugins:
   - search
   - autorefs
+  - mkdocs-jupyter:
+      execute: false
   - mkdocstrings:
       handlers:
         python:
@@ -67,11 +69,11 @@ nav:
   - Getting Started: getting-started.md
   - Model Details: model-details.md
   - Demos:
-      - IDD Demo: demos/idd-demo.md
-      - Synthetic Data Daily: demos/synthetic-data-daily.md
-      - Synthetic Data: demos/synthetic-data.md
-      - Uptake Model: demos/uptake-model.md
-      - Vaxflux Model: demos/vaxflux-model.md
+      - IDD Demo: demos/idd-demo.ipynb
+      - Synthetic Data Daily: demos/synthetic-data-daily.ipynb
+      - Synthetic Data: demos/synthetic-data.ipynb
+      - Uptake Model: demos/uptake-model.ipynb
+      - Vaxflux Model: demos/vaxflux-model.ipynb
   - API Reference:
       - Vaxflux: api/vaxflux.md
       - Covariates: api/covariates.md

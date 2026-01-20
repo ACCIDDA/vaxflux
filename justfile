@@ -52,8 +52,6 @@ api-reference: venv
 demos: venv
     {{mkdir}} docs/demos/
     {{cp}} demos/*.ipynb docs/demos/
-    uv run jupyter nbconvert --to markdown docs/demos/*.ipynb
-    {{rm}} docs/demos/*.ipynb
 
 # Build complete documentation
 [group('docs')]

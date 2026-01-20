@@ -70,11 +70,11 @@ class PartiallyPooledGaussianCovariate(Covariate):
     r"""
     Covariate model using a pooled Gaussian approach.
 
-    $$ \\mu_i \\sim \\mathrm{Normal}(\\mu_0, \\mu_1) $$
-
-    $$ \\sigma_i \\sim \\mathrm{Half}\\text{-}\\mathrm{Normal}(\\sigma) $$
-
-    $$ x_i \\sim \\mathrm{Normal}(\\mu_i, \\sigma_i) $$
+    $$ \begin{aligned}
+    \mu_i &\sim \mathrm{Normal}(\mu_0, \mu_1) \\\\
+    \sigma_i &\sim \mathrm{HalfNormal}(\sigma) \\\\
+    x_i &\sim \mathrm{Normal}(\mu_i, \sigma_i)
+    \end{aligned} $$
 
     Attributes:
         mu: A tuple representing the location and scale of the partially pooled mean.
