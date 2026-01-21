@@ -33,6 +33,11 @@ Added:
     configured via the `prevalence_penalty` argument to
     `add_observation_process`. See
     [#148](https://github.com/ACCIDDA/vaxflux/issues/148).
+  - Added `render_model` method to wrap
+    [`numpyro.render_model`](https://num.pyro.ai/en/stable/utilities.html#render-model)
+    to produce a graphic of the underlying model. Added an example of its usage
+    to the `demos/vaxflux-model.ipynb` notebook. See
+    [#156](https://github.com/ACCIDDA/vaxflux/issues/156).
 - Added `VaxfluxInferenceData` class that inherits from
   [`arviz.InferenceData`](https://python.arviz.org/en/stable/api/inference_data.html)
   and takes advantage of coords/dims to make the output easier to align and
