@@ -58,6 +58,7 @@ class VaxfluxModel:
         self._observation_process_partially_pool_by_season: bool = True
         self._observation_process_partially_pool_by_covariate: bool = False
         self._observation_process_prevalence_penalty: float = 0.0
+        self._observation_labels: list[str] = []
 
     def __repr__(self) -> str:
         """
@@ -514,6 +515,7 @@ class VaxfluxModel:
             "daily_params",
             "covariates",
             "interventions",
+            "observations",
             "observation_sigma",
         ]:
             coord_block, dim_block = getattr(
@@ -723,6 +725,37 @@ class VaxfluxModel:
         new_dims = {"observation_sigma": sigma_dims} if sigma_dims else None
         return new_coords or None, new_dims
 
+    def _coords_and_dims_for_observations(
+        self,
+        coords: dict[str, list[str]],
+        dims: dict[str, list[str]],
+    ) -> tuple[dict[str, list[str]] | None, dict[str, list[str]] | None]:
+        """
+        Add observation coordinates and dimensions.
+
+        Adds an `observation` coordinate with labels describing each observation
+        and maps observation-related variables to that dimension.
+
+        Args:
+            coords: Existing coordinates to extend.
+            dims: Existing dimension mappings to extend.
+
+        Returns:
+            A `(coords, dims)` tuple with any new observation metadata.
+
+        """
+        if self._observations is None or not self._observation_labels:
+            return None, None
+        new_coords: dict[str, list[str]] = {}
+        new_dims: dict[str, list[str]] = {}
+        if "observation" not in coords:
+            new_coords["observation"] = list(self._observation_labels)
+        if "observation" not in dims:
+            new_dims["observation"] = ["observation"]
+        if "observation_mean" not in dims:
+            new_dims["observation_mean"] = ["observation"]
+        return new_coords or None, new_dims or None
+
     def _coords_and_dims_for_interventions(
         self,
         coords: dict[str, list[str]],
@@ -836,6 +869,11 @@ class VaxfluxModel:
             name: {category: idx for idx, category in enumerate(categories)}
             for name, categories in self._covariate_categories_map.items()
         }
+        if self._observations is not None:
+            self._observation_labels = [
+                self._format_observation_label(row)
+                for _, row in self._observations.iterrows()
+            ]
         self._category_combinations = (
             list(
                 itertools.product(
@@ -1223,7 +1261,10 @@ class VaxfluxModel:
         if self._observations is None:
             return
         sigma = self._model_observation_process_sigma()
-        for obs_idx, row in self._observations.iterrows():
+        obs_means: list[jnp.ndarray] = []
+        obs_scales: list[jnp.ndarray] = []
+        obs_values: list[float] = []
+        for _, row in self._observations.iterrows():
             if self._covariate_names:
                 category_combo = tuple(
                     str(row[covariate_name]) for covariate_name in self._covariate_names
@@ -1266,13 +1307,20 @@ class VaxfluxModel:
             else:
                 sigma_value = sigma
             scaled_sigma = sigma_value * jnp.sqrt(num_days)
+            obs_means.append(observations[observation_name][date_range_index])
+            obs_scales.append(scaled_sigma)
+            obs_values.append(float(row["value"]))
+        if not obs_means:
+            return
+        obs_mean_array = jnp.stack(obs_means)
+        obs_scale_array = jnp.stack(obs_scales)
+        obs_value_array = jnp.asarray(obs_values)
+        numpyro.deterministic("observation_mean", obs_mean_array)
+        with numpyro.plate("observation_plate", len(obs_values)):
             numpyro.sample(
-                f"observation_{obs_idx}",
-                numpyro.distributions.Normal(
-                    observations[observation_name][date_range_index],
-                    scaled_sigma,
-                ),
-                obs=row["value"],
+                "observation",
+                numpyro.distributions.Normal(obs_mean_array, obs_scale_array),
+                obs=obs_value_array,
             )
 
     def _model_observation_process_sigma(self) -> jnp.ndarray:
@@ -1350,3 +1398,13 @@ class VaxfluxModel:
                 zip(self._covariate_names, category_combo, strict=False)
             )
         )
+
+    def _format_observation_label(self, row: pd.Series) -> str:
+        start_date = pd.to_datetime(row["start_date"]).date().isoformat()
+        end_date = pd.to_datetime(row["end_date"]).date().isoformat()
+        parts = [str(row["season"]), start_date, end_date]
+        parts.extend(
+            f"{covariate_name}={row[covariate_name]}"
+            for covariate_name in self._covariate_names
+        )
+        return "|".join(parts)
