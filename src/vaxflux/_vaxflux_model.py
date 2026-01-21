@@ -35,6 +35,12 @@ from vaxflux.dates import (
     _validate_ranges,
 )
 
+try:
+    from numpyro import render_model as _render_model
+except ImportError:
+    # Fallback for older NumPyro
+    from numpyro.contrib.render import render_model as _render_model
+
 
 class VaxfluxModel:
     def __init__(self, curve: Curve) -> None:
@@ -397,6 +403,20 @@ class VaxfluxModel:
         )
         self._observation_process_prevalence_penalty = prevalence_penalty
         return self
+
+    def render_model(self, **kwargs: Any) -> Any:  # noqa: ANN401
+        """
+        Render the model graph using NumPyro's rendering utilities.
+
+        Args:
+            **kwargs: Keyword arguments forwarded to `numpyro.render_model`.
+
+        Returns:
+            The rendered model object (typically a Graphviz object).
+
+        """
+        self._pre_model()
+        return _render_model(self._model, **kwargs)
 
     def sample(  # noqa: PLR0913
         self,
