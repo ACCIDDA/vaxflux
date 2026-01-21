@@ -852,6 +852,11 @@ and this project adheres to
     configured via the <code>prevalence_penalty</code> argument to
     <code>add_observation_process</code>. See
     <a href="https://github.com/ACCIDDA/vaxflux/issues/148">#148</a>.</li>
+<li>Added <code>render_model</code> method to wrap
+    <a href="https://num.pyro.ai/en/stable/utilities.html#render-model"><code>numpyro.render_model</code></a>
+    to produce a graphic of the underlying model. Added an example of its usage
+    to the <code>demos/vaxflux-model.ipynb</code> notebook. See
+    <a href="https://github.com/ACCIDDA/vaxflux/issues/156">#156</a>.</li>
 <li>Added <code>VaxfluxInferenceData</code> class that inherits from
   <a href="https://python.arviz.org/en/stable/api/inference_data.html"><code>arviz.InferenceData</code></a>
   and takes advantage of coords/dims to make the output easier to align and
