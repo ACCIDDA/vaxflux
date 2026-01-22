@@ -1,3 +1,4 @@
+from collections.abc import Sequence
 from functools import cached_property
 from itertools import product
 from typing import Any, cast
@@ -5,8 +6,22 @@ from typing import Any, cast
 import arviz as az
 import pandas as pd
 import xarray as xr
+from matplotlib.figure import Figure
 
-from vaxflux._util import _coord_name
+try:
+    from matplotlib.lines import Line2D
+    from matplotlib.patches import Rectangle
+except ImportError:
+    Line2D = Any  # type: ignore[misc,assignment]
+    Rectangle = Any  # type: ignore[misc,assignment]
+
+from vaxflux._plot import (
+    _calculate_shaded_quantiles_from_intervals,
+    _check_matplotlib_available,
+    _init_predictive_axes,
+    _plot_predictive_panel,
+)
+from vaxflux._util import _compute_quantiles_and_max, _coord_name
 
 
 class VaxfluxInferenceData(az.InferenceData):
@@ -20,6 +35,8 @@ class VaxfluxInferenceData(az.InferenceData):
     providing vaxflux-specific methods and attributes.
 
     """
+
+    observations: pd.DataFrame | None = None
 
     @classmethod
     def from_numpyro(cls, *args: Any, **kwargs: Any) -> "VaxfluxInferenceData":
@@ -37,8 +54,13 @@ class VaxfluxInferenceData(az.InferenceData):
             A `VaxfluxInferenceData` instance populated from NumPyro results.
 
         """
-        idata = cast("az.InferenceData", az.from_numpyro(*args, **kwargs))  # type: ignore[no-untyped-call]
+        observations = cast("pd.DataFrame | None", kwargs.pop("observations", None))
+        idata = cast(
+            "az.InferenceData",
+            az.from_numpyro(*args, **kwargs),  # type: ignore[no-untyped-call]
+        )
         idata.__class__ = cls
+        idata.observations = observations.copy() if observations is not None else None  # type: ignore[attr-defined]
         return cast("VaxfluxInferenceData", idata)
 
     @cached_property
@@ -162,6 +184,74 @@ class VaxfluxInferenceData(az.InferenceData):
         """
         return self._observations_from_dataset(self.merged_posterior)
 
+    def plot_prior_predictive(
+        self,
+        *,
+        intervals: Sequence[float] = (0.5, 0.8, 0.95),
+        plot_incidence: bool = True,
+        plot_prevalence: bool = True,
+        plot_observations: bool | None = None,
+        figsize: tuple[float, float] | None = None,
+    ) -> Figure:
+        """
+        Plot prior predictive checks with shaded intervals.
+
+        Args:
+            intervals: Central predictive intervals to plot.
+            plot_incidence: Whether to plot incidence panels.
+            plot_prevalence: Whether to plot prevalence panels.
+            plot_observations: Whether to plot observed data points. When `None`,
+                uses `self.observations` availability.
+            figsize: Optional figure size override.
+
+        Returns:
+            The Matplotlib figure.
+
+        """
+        return self._plot_predictive(
+            data=self.prior_observations,
+            title="Prior Predictive Checks",
+            intervals=intervals,
+            plot_incidence=plot_incidence,
+            plot_prevalence=plot_prevalence,
+            plot_observations=plot_observations,
+            figsize=figsize,
+        )
+
+    def plot_posterior_predictive(
+        self,
+        *,
+        intervals: Sequence[float] = (0.5, 0.8, 0.95),
+        plot_incidence: bool = True,
+        plot_prevalence: bool = True,
+        plot_observations: bool | None = None,
+        figsize: tuple[float, float] | None = None,
+    ) -> Figure:
+        """
+        Plot posterior predictive checks with shaded intervals.
+
+        Args:
+            intervals: Central predictive intervals to plot.
+            plot_incidence: Whether to plot incidence panels.
+            plot_prevalence: Whether to plot prevalence panels.
+            plot_observations: Whether to plot observed data points. When `None`,
+                uses `self.observations` availability.
+            figsize: Optional figure size override.
+
+        Returns:
+            The Matplotlib figure.
+
+        """
+        return self._plot_predictive(
+            data=self.posterior_observations,
+            title="Posterior Predictive Checks",
+            intervals=intervals,
+            plot_incidence=plot_incidence,
+            plot_prevalence=plot_prevalence,
+            plot_observations=plot_observations,
+            figsize=figsize,
+        )
+
     def _observations_from_dataset(self, dataset: xr.Dataset) -> pd.DataFrame:
         """
         Build an observations DataFrame from an ArviZ dataset.
@@ -270,3 +360,349 @@ class VaxfluxInferenceData(az.InferenceData):
                 "value",
             ]
         ]
+
+    def _plot_predictive(
+        self,
+        *,
+        data: pd.DataFrame,
+        title: str,
+        intervals: Sequence[float],
+        plot_incidence: bool,
+        plot_prevalence: bool,
+        plot_observations: bool | None,
+        figsize: tuple[float, float] | None,
+    ) -> Figure:
+        """
+        Plot predictive checks with shaded intervals.
+
+        Args:
+            data: The prior/posterior observations DataFrame to plot.
+            title: The plot title.
+            intervals: Central predictive intervals to plot.
+            plot_incidence: Whether to plot incidence panels.
+            plot_prevalence: Whether to plot prevalence panels.
+            plot_observations: Whether to plot observed data points. When `None`,
+                uses `self.observations` availability.
+            figsize: Optional figure size override.
+
+        Returns:
+            The Matplotlib figure.
+
+        Raises:
+            ValueError: If neither incidence nor prevalence is selected for plotting.
+            ValueError: If `plot_observations` is `True` but no observations are set.
+
+        """
+        # Input validation
+        _check_matplotlib_available()
+        if not plot_incidence and not plot_prevalence:
+            msg = (
+                "At least one of `plot_incidence` or `plot_prevalence` must be `True`."
+            )
+            raise ValueError(msg)
+
+        plot_data, seasons, categories, colors = self._prepare_predictive_plot_data(
+            data
+        )
+        plot_observations, obs_plot_data = self._resolve_plot_observations(
+            plot_observations=plot_observations
+        )
+
+        fig, axes = _init_predictive_axes(
+            n_rows=len(seasons),
+            n_cols=(1 if plot_incidence else 0) + (1 if plot_prevalence else 0),
+            figsize=figsize,
+        )
+
+        quantiles, alphas = _calculate_shaded_quantiles_from_intervals(intervals)
+
+        quantile_levels = [q for pair in quantiles for q in pair] + [0.5]
+
+        quantile_map, max_inc, max_prev = self._prepare_predictive_quantiles(
+            plot_data=plot_data,
+            obs_plot_data=obs_plot_data,
+            seasons=seasons,
+            categories=categories,
+            quantile_levels=quantile_levels,
+            plot_incidence=plot_incidence,
+            plot_prevalence=plot_prevalence,
+        )
+
+        for row_idx, season in enumerate(seasons):
+            row_axes = axes[row_idx]
+            self._plot_predictive_season_row(
+                row_axes=row_axes,
+                season=season,
+                categories=categories,
+                colors=colors,
+                quantile_map=quantile_map,
+                quantile_pairs=quantiles,
+                alphas=alphas,
+                plot_incidence=plot_incidence,
+                plot_prevalence=plot_prevalence,
+            )
+
+            for label in [
+                *row_axes[0].get_xticklabels(),
+                *row_axes[-1].get_xticklabels(),
+            ]:
+                label.set_rotation(30)
+
+        self._apply_shared_ylim(
+            axes=axes,
+            max_inc=max_inc,
+            max_prev=max_prev,
+            plot_incidence=plot_incidence,
+            plot_prevalence=plot_prevalence,
+        )
+
+        legend_handles: list[Any] = [
+            Line2D([0], [0], color=colors[cat], lw=2, label=cat) for cat in categories
+        ]
+        legend_handles.append(
+            Line2D([0], [0], color="black", lw=2, linestyle="-", label="Median")
+        )
+        for interval, alpha in zip(intervals, alphas, strict=False):
+            legend_handles.append(
+                Rectangle(
+                    (0, 0),
+                    1,
+                    1,
+                    color="black",
+                    alpha=alpha,
+                    label=f"{int(interval * 100)}% interval",
+                )
+            )
+        fig.legend(handles=legend_handles, loc="center left", bbox_to_anchor=(1.0, 0.5))
+        fig.suptitle(title, fontsize=14)
+        fig.tight_layout()
+        return fig
+
+    def _resolve_plot_observations(
+        self,
+        *,
+        plot_observations: bool | None,
+    ) -> tuple[bool, pd.DataFrame | None]:
+        """
+        Resolve observation plotting flags and data.
+
+        Args:
+            plot_observations: Whether to plot observations, or `None` to infer from
+                availability.
+
+        Returns:
+            A tuple of the resolved plotting flag and the prepared observations data.
+
+        Raises:
+            ValueError: If plotting is requested but no observations are available.
+
+        """
+        plot_observations = (
+            (self.observations is not None)
+            if plot_observations is None
+            else plot_observations
+        )
+        if plot_observations and self.observations is None:
+            msg = "plot_observations=True requires observations to be set."
+            raise ValueError(msg)
+        if plot_observations and self.observations is not None:
+            obs_plot_data, _, _, _ = self._prepare_predictive_plot_data(
+                self.observations
+            )
+            return plot_observations, obs_plot_data
+        return plot_observations, None
+
+    def _prepare_predictive_quantiles(
+        self,
+        *,
+        plot_data: pd.DataFrame,
+        obs_plot_data: pd.DataFrame | None,
+        seasons: Sequence[str],
+        categories: Sequence[str],
+        quantile_levels: Sequence[float],
+        plot_incidence: bool,
+        plot_prevalence: bool,
+    ) -> tuple[dict[tuple[str, str], dict[str, pd.DataFrame | None]], float, float]:
+        """
+        Compute predictive quantiles and maxima for plotting.
+
+        Args:
+            plot_data: Prepared predictive data for plotting.
+            obs_plot_data: Prepared observation data for plotting, if available.
+            seasons: Seasons present in the data.
+            categories: Category labels to plot.
+            quantile_levels: Quantiles to compute for intervals and median.
+            plot_incidence: Whether incidence quantiles are needed.
+            plot_prevalence: Whether prevalence quantiles are needed.
+
+        Returns:
+            A mapping of season/category to quantiles and observations plus maxima for
+            incidence and prevalence.
+
+        """
+        quantile_map: dict[tuple[str, str], dict[str, pd.DataFrame | None]] = {}
+        max_inc = 0.0
+        max_prev = 0.0
+
+        for season in seasons:
+            season_obs = plot_data[plot_data["season"] == season]
+            for category in categories:
+                cat_obs = season_obs[season_obs["category_label"] == category]
+                obs_cat = None
+                if obs_plot_data is not None:
+                    obs_cat = obs_plot_data[
+                        (obs_plot_data["season"] == season)
+                        & (obs_plot_data["category_label"] == category)
+                    ]
+                value_quantiles = pd.DataFrame()
+                prev_quantiles = pd.DataFrame()
+                if plot_incidence:
+                    value_quantiles, max_inc = _compute_quantiles_and_max(
+                        cat_obs,
+                        "value",
+                        quantile_levels,
+                        max_inc,
+                    )
+                if plot_prevalence:
+                    prev_quantiles, max_prev = _compute_quantiles_and_max(
+                        cat_obs,
+                        "prevalence",
+                        quantile_levels,
+                        max_prev,
+                    )
+                quantile_map[(season, category)] = {
+                    "value": value_quantiles,
+                    "prevalence": prev_quantiles,
+                    "obs": obs_cat,
+                }
+        return quantile_map, max_inc, max_prev
+
+    def _plot_predictive_season_row(  # noqa: PLR0913
+        self,
+        *,
+        row_axes: list[Any],
+        season: str,
+        categories: Sequence[str],
+        colors: dict[str, str],
+        quantile_map: dict[tuple[str, str], dict[str, pd.DataFrame | None]],
+        quantile_pairs: list[tuple[float, float]],
+        alphas: list[float],
+        plot_incidence: bool,
+        plot_prevalence: bool,
+    ) -> None:
+        """
+        Plot predictive panels for a single season row.
+
+        Args:
+            row_axes: Axes for the season row.
+            season: Season label for titles.
+            categories: Category labels to plot.
+            colors: Category color mapping.
+            quantile_map: Precomputed quantiles and observations by season/category.
+            quantile_pairs: Lower/upper quantile pairs for shaded intervals.
+            alphas: Alpha values for shaded intervals.
+            plot_incidence: Whether to plot incidence panels.
+            plot_prevalence: Whether to plot prevalence panels.
+
+        """
+        for category in categories:
+            entry = quantile_map[(season, category)]
+            obs_cat = entry["obs"]
+            col_idx = 0
+            if plot_incidence:
+                ax_inc = row_axes[col_idx]
+                col_idx += 1
+                _plot_predictive_panel(
+                    ax=ax_inc,
+                    quantiles_df=(
+                        entry["value"] if entry["value"] is not None else pd.DataFrame()
+                    ),
+                    obs_dates=obs_cat["mid_date"] if obs_cat is not None else None,
+                    obs_values=obs_cat["value"] if obs_cat is not None else None,
+                    color=colors.get(category, "C0"),
+                    title=f"{season} incidence",
+                    ylabel="Incidence",
+                    y_max=1.0,
+                    quantile_pairs=quantile_pairs,
+                    alphas=alphas,
+                )
+
+            if plot_prevalence:
+                ax_prev = row_axes[col_idx]
+                _plot_predictive_panel(
+                    ax=ax_prev,
+                    quantiles_df=(
+                        entry["prevalence"]
+                        if entry["prevalence"] is not None
+                        else pd.DataFrame()
+                    ),
+                    obs_dates=obs_cat["mid_date"] if obs_cat is not None else None,
+                    obs_values=obs_cat["prevalence"] if obs_cat is not None else None,
+                    color=colors.get(category, "C0"),
+                    title=f"{season} prevalence",
+                    ylabel="Prevalence",
+                    y_max=1.0,
+                    quantile_pairs=quantile_pairs,
+                    alphas=alphas,
+                )
+
+    def _apply_shared_ylim(
+        self,
+        *,
+        axes: list[list[Any]],
+        max_inc: float,
+        max_prev: float,
+        plot_incidence: bool,
+        plot_prevalence: bool,
+    ) -> None:
+        """
+        Apply shared y-axis limits across panels.
+
+        Args:
+            axes: Axes grid for the figure.
+            max_inc: Maximum incidence value across quantiles.
+            max_prev: Maximum prevalence value across quantiles.
+            plot_incidence: Whether incidence panels are present.
+            plot_prevalence: Whether prevalence panels are present.
+
+        """
+        if plot_incidence:
+            inc_ylim = max_inc * 1.15 if max_inc > 0 else 1.0
+            for row_axes in axes:
+                row_axes[0].set_ylim(0, inc_ylim)
+        if plot_prevalence:
+            prev_ylim = max_prev * 1.15 if max_prev > 0 else 1.0
+            for row_axes in axes:
+                row_axes[-1].set_ylim(0, prev_ylim)
+
+    def _prepare_predictive_plot_data(
+        self,
+        data: pd.DataFrame,
+    ) -> tuple[pd.DataFrame, list[str], list[str], dict[str, str]]:
+        plot_data = data.copy()
+        plot_data["start_date"] = pd.to_datetime(plot_data["start_date"])
+        plot_data["end_date"] = pd.to_datetime(plot_data["end_date"])
+        plot_data["mid_date"] = (
+            plot_data["start_date"]
+            + (plot_data["end_date"] - plot_data["start_date"]) / 2
+        )
+        plot_data = plot_data.sort_values("mid_date")
+        group_cols = [
+            col for col in ["chain", "draw", "season"] if col in plot_data.columns
+        ]
+        covariate_names = sorted(self.covariate_categories)
+        if covariate_names:
+            group_cols.extend(covariate_names)
+            label_cols = covariate_names
+        else:
+            label_cols = []
+        plot_data["prevalence"] = plot_data.groupby(group_cols)["value"].cumsum()
+        plot_data["category_label"] = (
+            plot_data[label_cols].astype(str).agg("|".join, axis=1)
+            if label_cols
+            else "all"
+        )
+        seasons = sorted(plot_data["season"].unique())
+        categories = sorted(plot_data["category_label"].unique())
+        colors = {cat: f"C{idx}" for idx, cat in enumerate(categories)}
+        return plot_data, seasons, categories, colors
