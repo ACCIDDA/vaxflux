@@ -5,6 +5,8 @@ import re
 from collections.abc import Callable, Sequence
 from typing import Annotated, Any, Final, TypeVar, overload
 
+import numpy as np
+import numpy.typing as npt
 import pandas as pd
 from pandas.api.types import is_datetime64_any_dtype
 from pydantic import BeforeValidator
@@ -430,3 +432,35 @@ def _validate_and_format_observations(
             msg,
         )
     return observations
+
+
+def _compute_quantiles_and_max(
+    data: pd.DataFrame,
+    value_column: str,
+    quantile_levels: Sequence[float] | npt.NDArray[np.float64],
+    current_max: float,
+) -> tuple[pd.DataFrame, float]:
+    """
+    Compute quantiles for a value column and update the max.
+
+    Args:
+        data: DataFrame containing a `mid_date` column and the target values.
+        value_column: Column name to compute quantiles for.
+        quantile_levels: Quantile levels to compute.
+        current_max: Current maximum value to update.
+
+    Returns:
+        A tuple of the quantiles DataFrame and the updated maximum value.
+    """
+    if data.empty:
+        return pd.DataFrame(), current_max
+    quantile_values = np.array(quantile_levels, dtype=float)
+    quantiles = (
+        data.groupby("mid_date")[value_column]
+        .quantile(quantile_values)
+        .reset_index()
+        .pivot_table(index="mid_date", columns="level_1", values=value_column)
+    )
+    if not quantiles.empty:
+        current_max = max(current_max, float(quantiles.max().max()))
+    return quantiles, current_max

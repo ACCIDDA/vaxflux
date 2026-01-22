@@ -475,6 +475,8 @@ class VaxfluxModel:
         )
         from_numpyro_kwargs["coords"] = coords
         from_numpyro_kwargs["dims"] = dims
+        if self._observations is not None:
+            from_numpyro_kwargs["observations"] = self._observations.copy()
 
         # Sample from prior predictive if requested
         if prior_samples is not None:

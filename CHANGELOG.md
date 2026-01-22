@@ -43,6 +43,9 @@ Added:
   and takes advantage of coords/dims to make the output easier to align and
   manipulate. See [#111](https://github.com/ACCIDDA/vaxflux/issues/111),
   [#141](https://github.com/ACCIDDA/vaxflux/issues/141).
+  - Added `plot_prior_predictive` and `plot_posterior_predictive` methods to
+    easily plot the results of a model with sensible defaults for visualization.
+    See [#159](https://github.com/ACCIDDA/vaxflux/issues/159).
 - Added demonstration of `VaxfluxModel` class in the `demos/vaxflux-model.ipynb`
   notebook using synthetic data.
 

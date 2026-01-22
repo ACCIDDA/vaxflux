@@ -25,6 +25,8 @@
     "doctests",
     "dtype",
     "expit",
+    "figsize",
+    "fontsize",
     "groupby",
     "hyperprior",
     "inferencedata",
@@ -33,6 +35,7 @@
     "ipynb",
     "kwargs",
     "levelname",
+    "linestyle",
     "logit",
     "mathcal",
     "mathrm",
@@ -49,8 +52,13 @@
     "pymc",
     "pytensor",
     "pytest",
+    "sharex",
+    "suptitle",
     "vaxflux",
     "venv",
-    "vmap"
+    "vmap",
+    "xticklabels",
+    "ylabel",
+    "ylim"
   ]
 }
