@@ -76,6 +76,11 @@
          <changefreq>daily</changefreq>
     </url>
     <url>
+         <loc>https://accidda.github.io/vaxflux/0.2/demos/season-only-vaxflux-model/</loc>
+         <lastmod>2026-01-23</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
          <loc>https://accidda.github.io/vaxflux/0.2/demos/synthetic-data-daily/</loc>
          <lastmod>2026-01-23</lastmod>
          <changefreq>daily</changefreq>
