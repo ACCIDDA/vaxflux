@@ -46,6 +46,7 @@ plot = [
 ]
 demo = [
     "vaxflux[plot]",
+    "arviz-plots[matplotlib]>=0.5.0",
     "graphviz>=0.21",
     "ipykernel>=7.1.0",
     "jupyter>=1.1.1",
