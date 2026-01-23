@@ -349,6 +349,15 @@ version.
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#optional-dependencies" class="md-nav__link">
+    <span class="md-ellipsis">
+      Optional Dependencies
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -826,6 +835,15 @@ version.
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#optional-dependencies" class="md-nav__link">
+    <span class="md-ellipsis">
+      Optional Dependencies
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -858,8 +876,24 @@ from GitHub. Run the following commands in your terminal:</p>
 </span></code></pre></div>
 <h2 id="using-uv">Using <code>uv</code><a class="headerlink" href="#using-uv" title="Permanent link">&para;</a></h2>
 <p>To add vaxflux to your uv environment, you can use the following command:</p>
-<div class="language-shell highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>uv<span class="w"> </span>add<span class="w"> </span>vaxflux<span class="w"> </span>git+https://github.com/ACCIDDA/vaxflux.git
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>uv<span class="w"> </span>add<span class="w"> </span>git+https://github.com/ACCIDDA/vaxflux.git
 </span></code></pre></div>
+<h2 id="optional-dependencies">Optional Dependencies<a class="headerlink" href="#optional-dependencies" title="Permanent link">&para;</a></h2>
+<p>The vaxflux package also provides two optional dependency groups:</p>
+<ul>
+<li><code>plot</code>: This adds additional dependencies that enable plotting functionality,
+  without it you can still use the package to construct and fit models but will
+  not be able to plot the results with built in functionality. It's recommended
+  for local use that you include this optional dependency group, but it is not
+  recommended for production usage (e.g. in an HPC environment).</li>
+<li><code>demo</code>: This adds additional dependencies that are needed for running the
+  jupyter notebooks in the <code>demos/</code> directory. This optional dependency group is
+  generally not needed unless you are learning the package and want to run those
+  demos locally yourself.</li>
+</ul>
+<p>To install these optional dependency groups you can change the installation urls
+above to <code>git+https://github.com/ACCIDDA/vaxflux.git[plot]</code> or
+<code>git+https://github.com/ACCIDDA/vaxflux.git[demo]</code>.</p>
 
 
 
