@@ -7,6 +7,7 @@ __all__ = (
     "Intervention",
     "LogisticCurve",
     "PartiallyPooledGaussianCovariate",
+    "PooledGaussianCovariate",
     "VaxfluxInferenceData",
     "VaxfluxModel",
     "covariates",
@@ -27,7 +28,11 @@ from vaxflux import (
     interventions,
     uptake,
 )
-from vaxflux._covariates import Covariate, PartiallyPooledGaussianCovariate
+from vaxflux._covariates import (
+    Covariate,
+    PartiallyPooledGaussianCovariate,
+    PooledGaussianCovariate,
+)
 from vaxflux._curves import Curve, LogisticCurve
 from vaxflux._interventions import Implementation, Intervention
 from vaxflux._vaxflux_inference_data import VaxfluxInferenceData

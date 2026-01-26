@@ -66,15 +66,49 @@ class Covariate(ABC, BaseModel):
         return v
 
 
+class PooledGaussianCovariate(Covariate):
+    r"""
+    Covariate model using a pooled Gaussian approach.
+
+    $$
+    \begin{aligned}
+    x_i &\sim \mathrm{Normal}(\mu, \sigma)
+    \end{aligned}
+    $$
+
+    Attributes:
+        mu: The mean of the Gaussian distribution.
+        sigma: The standard deviation of the Gaussian distribution.
+
+    """
+
+    mu: float
+    sigma: float = Field(gt=0.0)
+
+    def sample(self) -> NumericalArrayLike:
+        """
+        Sample values from a Gaussian distribution defined by the mean and stddev.
+
+        Returns:
+            A numerical array-like structure containing the sampled covariate values.
+        """
+        return cast(
+            "NumericalArrayLike",
+            numpyro.sample(self.prefix, dist.Normal(self.mu, self.sigma)),
+        )
+
+
 class PartiallyPooledGaussianCovariate(Covariate):
     r"""
     Covariate model using a pooled Gaussian approach.
 
-    $$ \begin{aligned}
+    $$
+    \begin{aligned}
     \mu_i &\sim \mathrm{Normal}(\mu_0, \mu_1) \\\\
     \sigma_i &\sim \mathrm{HalfNormal}(\sigma) \\\\
     x_i &\sim \mathrm{Normal}(\mu_i, \sigma_i)
-    \end{aligned} $$
+    \end{aligned}
+    $$
 
     Attributes:
         mu: A tuple representing the location and scale of the partially pooled mean.
