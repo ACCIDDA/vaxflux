@@ -922,6 +922,10 @@ and this project adheres to
 <li>Fixed the display of the demo notebooks in the documentation using
   <code>mkdocs-jupyter</code> instead of converting notebooks to markdown files, see
   <a href="https://github.com/ACCIDDA/vaxflux/issues/146">#146</a>.</li>
+<li>Addressed warning from <code>pd.Categorical</code> call in private utility about non-null
+  values being given that might not be in the <code>categories</code>. The fix was moving
+  the validation of these values up before constructing the series. See
+  <a href="https://github.com/ACCIDDA/vaxflux/issues/154">#154</a>.</li>
 </ul>
 <p>Security:</p>
 <ul>
