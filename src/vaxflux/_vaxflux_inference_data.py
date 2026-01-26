@@ -184,6 +184,145 @@ class VaxfluxInferenceData(az.InferenceData):
         """
         return self._observations_from_dataset(self.merged_posterior)
 
+    def prior_prevalence_scenarios(
+        self,
+        scenarios: dict[str, tuple[float, float]],
+    ) -> pd.DataFrame:
+        """
+        Summarize prior end-of-season prevalence scenarios.
+
+        Args:
+            scenarios: Mapping of scenario name to (low, high) quantile bounds.
+
+        Returns:
+            A DataFrame with scenario quantiles and prevalence bounds.
+
+        """
+        return self._prevalence_scenarios_from_observations(
+            observations=self.prior_observations,
+            scenarios=scenarios,
+        )
+
+    def posterior_prevalence_scenarios(
+        self,
+        scenarios: dict[str, tuple[float, float]],
+    ) -> pd.DataFrame:
+        """
+        Summarize posterior end-of-season prevalence scenarios.
+
+        Args:
+            scenarios: Mapping of scenario name to (low, high) quantile bounds.
+
+        Returns:
+            A DataFrame with scenario quantiles and prevalence bounds.
+
+        """
+        return self._prevalence_scenarios_from_observations(
+            observations=self.posterior_observations,
+            scenarios=scenarios,
+        )
+
+    def _prevalence_scenarios_from_observations(
+        self,
+        *,
+        observations: pd.DataFrame,
+        scenarios: dict[str, tuple[float, float]],
+    ) -> pd.DataFrame:
+        """
+        Build prevalence scenario summaries from an observations DataFrame.
+
+        Args:
+            observations: Observations data with incidence values.
+            scenarios: Mapping of scenario name to (low, high) quantile bounds.
+
+        Returns:
+            A DataFrame with scenario quantiles and prevalence bounds.
+
+        Raises:
+            ValueError: If scenarios are empty or contain invalid quantiles.
+            ValueError: If any of the scenario quantiles are out of the range [0, 1].
+            ValueError: If any of the scenario quantiles do not satisfy low < high.
+
+        """
+        if not scenarios:
+            msg = "scenarios must not be empty."
+            raise ValueError(msg)
+
+        standard_cols = {
+            "chain",
+            "draw",
+            "season",
+            "season_start_date",
+            "season_end_date",
+            "start_date",
+            "end_date",
+            "report_date",
+            "type",
+            "value",
+        }
+        covariate_cols = [
+            col for col in observations.columns if col not in standard_cols
+        ]
+        group_cols = ["chain", "draw", "season", *covariate_cols]
+        end_prevalence = observations.groupby(group_cols)["value"].sum().reset_index()
+        summary_group_cols = ["season", *covariate_cols]
+
+        invalid_range = [
+            scenario
+            for scenario, (low_q, high_q) in scenarios.items()
+            if not (0.0 <= low_q <= 1.0 and 0.0 <= high_q <= 1.0)
+        ]
+        if invalid_range:
+            msg = (
+                "Scenario quantiles must be within [0, 1]. "
+                f"Invalid scenarios: {', '.join(sorted(invalid_range))}."
+            )
+            raise ValueError(msg)
+        invalid_order = [
+            scenario
+            for scenario, (low_q, high_q) in scenarios.items()
+            if high_q <= low_q
+        ]
+        if invalid_order:
+            msg = (
+                "Scenario quantiles must satisfy low < high. "
+                f"Invalid scenarios: {', '.join(sorted(invalid_order))}."
+            )
+            raise ValueError(msg)
+
+        rows: list[dict[str, str | float]] = []
+        for scenario, (low_q, high_q) in scenarios.items():
+            for group_keys, group_data in end_prevalence.groupby(summary_group_cols):
+                key_tuple = (
+                    group_keys if isinstance(group_keys, tuple) else (group_keys,)
+                )
+                row: dict[str, float | str] = {
+                    "scenario": scenario,
+                    "low_quantile": low_q,
+                    "high_quantile": high_q,
+                    "low_prevalence": float(group_data["value"].quantile(low_q)),
+                    "high_prevalence": float(group_data["value"].quantile(high_q)),
+                }
+                row.update(
+                    cast(
+                        "dict[str, float | str]",
+                        dict(zip(summary_group_cols, key_tuple, strict=False)),
+                    )
+                )
+                rows.append(row)
+
+        df = pd.DataFrame(rows)
+        ordered_cols = [
+            "season",
+            *covariate_cols,
+            "scenario",
+            "low_quantile",
+            "high_quantile",
+            "low_prevalence",
+            "high_prevalence",
+        ]
+        return df[ordered_cols]
+
     def plot_prior_predictive(
         self,
         *,

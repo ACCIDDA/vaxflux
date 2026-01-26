@@ -49,6 +49,10 @@ Added:
   - Added `plot_prior_predictive` and `plot_posterior_predictive` methods to
     easily plot the results of a model with sensible defaults for visualization.
     See [#159](https://github.com/ACCIDDA/vaxflux/issues/159).
+  - Added `prior_prevalence_scenarios` and `posterior_prevalence_scenarios`
+    methods to produce a human readable set of projections for end of season
+    prevalence ranges. See
+    [#150](https://github.com/ACCIDDA/vaxflux/issues/150).
 - Added demonstration of `VaxfluxModel` class in the `demos/vaxflux-model.ipynb`
   notebook using synthetic data.
 
