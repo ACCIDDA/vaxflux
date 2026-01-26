@@ -372,9 +372,7 @@ def _validate_and_format_observations(
             "The observations DataFrame is missing "
             f"required columns: {missing_columns}."
         )
-        raise ValueError(
-            msg,
-        )
+        raise ValueError(msg)
     observations = observations.copy()
     observations["season"] = observations["season"].astype(str)
     observations["value"] = pd.to_numeric(observations["value"])
@@ -382,36 +380,30 @@ def _validate_and_format_observations(
         msg = (
             "The observations DataFrame contains invalid values in the 'value' column."
         )
-        raise ValueError(
-            msg,
-        )
+        raise ValueError(msg)
     if observations["value"].lt(0).any():
         msg = (
             "The observations DataFrame contains negative values in the 'value' column."
         )
-        raise ValueError(
-            msg,
-        )
-    observations["type"] = pd.Categorical(
-        observations["type"].astype(str),
-        categories=_OBSERVATION_TYPE_CATEGORIES,
-    )
-    if observations["type"].isna().any():
+        raise ValueError(msg)
+    type_values = observations["type"].astype(str)
+    invalid_types = ~type_values.isin(_OBSERVATION_TYPE_CATEGORIES)
+    if invalid_types.any():
         msg = (
             "The observations DataFrame contains invalid values in the "
             f"'type' column, must be one of {_OBSERVATION_TYPE_CATEGORIES}."
         )
-        raise ValueError(
-            msg,
-        )
+        raise ValueError(msg)
+    observations["type"] = pd.Categorical(
+        type_values,
+        categories=_OBSERVATION_TYPE_CATEGORIES,
+    )
     if {"incidence"} != set(observations["type"].unique().tolist()):
         msg = (
             "Only 'incidence' data is supported, 'prevalence' and count equivalents "
             "are planned."
         )
-        raise NotImplementedError(
-            msg,
-        )
+        raise NotImplementedError(msg)
     for col in {"start_date", "end_date", "report_date"}.intersection(
         observation_columns,
     ):
@@ -428,9 +420,7 @@ def _validate_and_format_observations(
             "Observations with differing report dates were provided, "
             "nowcasting is not currently supported but planned."
         )
-        raise NotImplementedError(
-            msg,
-        )
+        raise NotImplementedError(msg)
     return observations
 
 

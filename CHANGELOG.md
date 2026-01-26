@@ -82,6 +82,10 @@ Fixed:
 - Fixed the display of the demo notebooks in the documentation using
   `mkdocs-jupyter` instead of converting notebooks to markdown files, see
   [#146](https://github.com/ACCIDDA/vaxflux/issues/146).
+- Addressed warning from `pd.Categorical` call in private utility about non-null
+  values being given that might not be in the `categories`. The fix was moving
+  the validation of these values up before constructing the series. See
+  [#154](https://github.com/ACCIDDA/vaxflux/issues/154).
 
 Security:
 
