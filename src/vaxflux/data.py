@@ -317,6 +317,7 @@ def sample_dataset(
     covariate_categories: list[CovariateCategories],
     parameters: list[tuple[str | float, ...]],
     epsilon: float,
+    noise: Literal["gamma", "normal"] = "gamma",
     random_seed: int = 1,
 ) -> pd.DataFrame:
     """
@@ -332,6 +333,7 @@ def sample_dataset(
             following being the covariate categories and the last element being the
             value.
         epsilon: The standard deviation to use in the resulting observations.
+        noise: The noise distribution to apply to the daily incidence values.
         random_seed: The random seed to use for reproducibility.
 
     Returns:
@@ -364,13 +366,21 @@ def sample_dataset(
             t0 = np.array([float(i) for i in range(int(t_start), int(t_end))])
             t1 = t0 + 1.0
             y = curve.prevalence_difference(t0, t1, **kwargs)
-            y = y.eval() if hasattr(y, "eval") else np.asarray(y)  # type: ignore[assignment]
+            y_values = y.eval() if hasattr(y, "eval") else y
+            y_array: npt.NDArray[np.float64] = np.asarray(y_values, dtype=float)
             if epsilon > 0:
-                y = generator.gamma(
-                    shape=np.power(y / epsilon, 2.0),
-                    scale=(epsilon**2.0) / y,
-                )
-            value = sum(y)
+                if noise == "gamma":
+                    y_array = generator.gamma(
+                        shape=np.power(y_array / epsilon, 2.0),
+                        scale=(epsilon**2.0) / y_array,
+                    )
+                elif noise == "normal":
+                    y_array = generator.normal(loc=y_array, scale=epsilon)
+                else:
+                    msg = f"Unknown noise model: {noise}."
+                    raise ValueError(msg)
+            y_array = np.clip(y_array, 0.0, 1.0)
+            value = float(y_array.sum())
             record = (
                 {
                     "season": date_range.season,
