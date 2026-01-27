@@ -67,6 +67,9 @@ Changed:
 - Added `noise` argument to `sample_dataset` that allows users to choose between
   normal or gamma distributed noise. Default is 'gamma' for backwards
   compatibility.
+- Updated documentation site to reflect changes from the
+  ["Model Refactor" milestone](https://github.com/ACCIDDA/vaxflux/milestone/3).
+  See [#109](https://github.com/ACCIDDA/vaxflux/issues/109).
 
 Deprecated:
 

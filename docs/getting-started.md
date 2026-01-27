@@ -10,13 +10,11 @@ this data, and steps for working with a fitted model.
 
 At the core of `vaxflux` is the concept of a curve family. A curve family is a
 set of curves that share a common structure and are used for modeling the uptake
-prevalence of a vaccine. This package provides several curve families via the
-[`vaxflux.curves`](api/curves.md) module, including logistic which we'll use in
-this example. Advanced users can also create their own curve families to model
-different types of vaccine uptake patterns.
+prevalence of a vaccine. Advanced users can also create their own curve families
+to model different types of vaccine uptake patterns.
 
 ```python
-from vaxflux.curves import LogisticCurve
+from vaxflux import LogisticCurve
 
 logistic_curve = LogisticCurve()
 ```
@@ -27,9 +25,8 @@ uptake starts slowly, accelerates, and then levels off as the population becomes
 saturated with the vaccine. However, `vaxflux` makes some modifications to the
 typical logistic curve to better suit the requirements of vaccine uptake
 modeling. For details on how the logistic curve is defined in `vaxflux`, refer
-to the
-[`vaxflux.curves.LogisticCurve`](api/curves.md#vaxflux.curves.LogisticCurve)
-class documentation.
+to the [`vaxflux.LogisticCurve`](api/vaxflux.md#vaxflux.LogisticCurve) class
+documentation.
 
 ## Season And Date Ranges
 
@@ -110,10 +107,9 @@ documentation, but in brief they are:
 - $s$: The switch point of the curve, which is the inflection point of the
   prevalence curve.
 
-The `epsilon` argument defines the observational noise level. For this function
-this is the standard deviation of a
-`gamma distribution <https://en.wikipedia.org/wiki/Gamma_distribution>`\_ that
-daily incidence observations are drawn from.
+The `epsilon` argument defines the observational noise level. By default,
+observations are drawn with gamma noise; you can switch to a normal noise model
+by passing `noise="normal"` to `sample_dataset`.
 
 ```python
 from vaxflux.data import sample_dataset
@@ -154,6 +150,7 @@ sample_observations = sample_dataset(
     [age_covariate],
     parameters,
     0.0005,
+    noise="gamma",
     random_seed=42,
 )
 ```
@@ -162,97 +159,92 @@ sample_observations = sample_dataset(
 
 Now that many of the building blocks of the model have been defined we can
 create a model represented by the
-[`vaxflux.uptake.SeasonalUptakeModel`](api/uptake.md#vaxflux.uptake.SeasonalUptakeModel)
-class. This class encapsulates the entire modeling process, including the curve
-family, seasons, dates, covariates, and the sample dataset. Many of the
-arguments to this class have already been defined in the previous sections, but
-we will also need to define the prior distributions for the covariates that will
-be used in the model.
+[`vaxflux.VaxfluxModel`](api/vaxflux.md#vaxflux.VaxfluxModel) class. This class
+encapsulates the entire modeling process, including the curve family, seasons,
+dates, covariates, and the sample dataset. Many of the arguments to this class
+have already been defined in the previous sections, but we will also need to
+define the prior distributions for the covariates that will be used in the
+model.
 
-In this example we will use a combination of pooled covariates and a Gaussian
-covariate. Pooled covariates are used to model parameters that are shared across
-all categories of a covariate, while Gaussian covariates are used to model
-parameters that vary by category. The
-[`vaxflux.covariates.PooledCovariate`](api/covariates.md#vaxflux.covariates.PooledCovariate)
-and
-[`vaxflux.covariates.GaussianCovariate`](api/covariates.md#vaxflux.covariates.PooledCovariate)
-classes are used to define these covariates. Note that the priors are loosely
-centered around the values used to generate the sample dataset, but they are not
-exact. This is because the model will learn the parameters from the data, and
-the priors are used to inform the model about reasonable ranges for these
-parameters. For more information on model details and how to inform prior
-distributions please refer to the [model-details](./model-details.md) section of
-the documentation.
+In this example we will use partially pooled Gaussian covariates for seasonal
+effects and an age effect on the max uptake parameter. The
+[`vaxflux.PartiallyPooledGaussianCovariate`](api/covariates.md#vaxflux.covariates.PartiallyPooledGaussianCovariate)
+class provides a convenient way to express these priors in the NumPyro-based
+model. Note that the priors are loosely centered around the values used to
+generate the sample dataset, but they are not exact. This is because the model
+will learn the parameters from the data, and the priors are used to inform the
+model about reasonable ranges for these parameters. For more information on
+model details and how to inform prior distributions please refer to the
+[model-details](./model-details.md) section of the documentation.
 
 ```python
-from vaxflux.covariates import GaussianCovariate, PooledCovariate
-from vaxflux.uptake import SeasonalUptakeModel
+from vaxflux import PartiallyPooledGaussianCovariate, VaxfluxModel
 
 covariates = [
-    PooledCovariate(
+    PartiallyPooledGaussianCovariate(
         parameter="m",
         covariate=None,
-        distribution="Normal",
-        distribution_kwargs={
-            "mu": -0.5,
-            "sigma": 0.25,
-        },
+        mu=(0.0, 0.75),
+        sigma=0.75,
     ),
-    PooledCovariate(
+    PartiallyPooledGaussianCovariate(
         parameter="r",
         covariate=None,
-        distribution="Normal",
-        distribution_kwargs={
-            "mu": -3.0,
-            "sigma": 0.5,
-        },
+        mu=(-2.5, 1.5),
+        sigma=1.5,
     ),
-    PooledCovariate(
+    PartiallyPooledGaussianCovariate(
         parameter="s",
         covariate=None,
-        distribution="Normal",
-        distribution_kwargs={
-            "mu": 45.0,
-            "sigma": 10.0,
-        },
+        mu=(35.0, 20.0),
+        sigma=20.0,
     ),
-    GaussianCovariate(
+    PartiallyPooledGaussianCovariate(
         parameter="m",
         covariate="age",
-        mu=[0.8, 1.6],
-        sigma=2 * [0.25],
+        mu=(1.0, 1.0),
+        sigma=1.0,
     ),
 ]
-model = SeasonalUptakeModel(
-    logistic_curve,
-    covariates,
-    observations=sample_observations,
-    covariate_categories=[age_covariate],
-    season_ranges=seasons,
-    date_ranges=dates,
+model = (
+    VaxfluxModel(curve=logistic_curve)
+    .add_seasons(seasons)
+    .add_dates(dates)
+    .add_covariate_categories(age_covariate)
+    .add_covariates(covariates)
+    .add_observations(sample_observations)
+    .add_observation_process(
+        kind="normal",
+        noise=0.005,
+        partially_pool_by_season=False,
+        prevalence_penalty=10.0,
+    )
 )
 ```
 
 ## Fitting The Model
 
 Finally, we can fit the model to the sample dataset using the
-[`vaxflux.uptake.SeasonalUptakeModel.build`](./api/uptake.md#vaxflux.uptake.SeasonalUptakeModel.build)
-method. This method compiles the model and prepares it for sampling. After
-building the model, we can sample from it using the
-[`vaxflux.uptake.SeasonalUptakeModel.sample`](./api/uptake.md#vaxflux.uptake.SeasonalUptakeModel.sample)
-method. This method allows us to specify the number of tuning steps, draws, and
-chains for the sampling process. In this example, we will use 2,000 tuning
-steps, 1,000 draws, and 2 chains. Those samples can be extracted using the
-[`vaxflux.uptake.SeasonalUptakeModel.dataframe`](./api/uptake.md#vaxflux.uptake.SeasonalUptakeModel.dataframe)
-method, which returns a Pandas DataFrame containing the sampled incidence data.
+[`vaxflux.VaxfluxModel.sample`](./api/vaxflux.md#vaxflux.VaxfluxModel.sample)
+method. This method handles prior predictive sampling, MCMC fitting, and
+posterior predictive sampling in one call. In this example, we will run a small
+prior predictive sample and then fit with 2,000 warmup steps, 1,000 samples, and
+2 chains. The return value is a
+[`VaxfluxInferenceData`](./api/vaxflux.md#vaxflux.VaxfluxInferenceData) object
+compatible with ArviZ.
 
 **If you are following along with this tutorial with a REPL or notebook please
 note that the following code will take anywhere from a few seconds to a few
 minutes to run. Adjust the arguments to `sample` appropriately.**
 
 ```python
-model.build().sample(tune=2_000, draws=1_000, chains=2)
-sample_incidence = model.dataframe()
+vaxflux_idata = model.sample(
+    prior_samples=500,
+    warmup=2_000,
+    samples=1_000,
+    chains=2,
+)
+vaxflux_idata
 ```
 
 ## Conclusion
@@ -267,6 +259,6 @@ are:
 2. Define the seasons and date ranges for the model.
 3. Define the covariates and their categories that will be used in the model.
 4. Either loading or creating a dataset that contains the vaccine uptake data.
-5. Define the model using the `SeasonalUptakeModel` class, including the curve
-   family, seasons, dates, covariates, and observations.
-6. Fit the model to the data using the `build` and `sample` methods.
+5. Define the model using the `VaxfluxModel` class, including the curve family,
+   seasons, dates, covariates, and observations.
+6. Fit the model to the data using the `sample` method.
