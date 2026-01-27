@@ -17,29 +17,18 @@ $f(t\vert\theta_1,\dots,\theta_n)$, should have a few key properties:
 - The curve should be differentiable with respect to $t$ and $\theta_i$.
 - The curve should be monotonic with respect to $t$.
 
-`vaxflux` provides two curves, `vaxflux.curves.LogisticCurve` and
-`vaxflux.curves.TanhCurve` that satisfy these properties. The logistic curve is
-defined as:
+`vaxflux` provides a logistic curve out of the box,
+[`vaxflux.LogisticCurve`](api/vaxflux.md#vaxflux.LogisticCurve) that satisfy
+these properties. The logistic curve is defined as:
 
 $$
 f(t\vert m,r,s) = \mathrm{invlogit}\left(m\right)\mathrm{logit}\left(e^r\left(t-s\right)\right)
 $$
 
-where $\mathrm{invlogit}(m)$ is the max uptake of the curve, $r$ is the rate of
-uptake, and $s$ is the inflection point of the curve. The logistic curve is a
+where $\mathrm{invlogit}(m)$ is the max uptake of the curve, $e^r$ is the rate
+of uptake, and $s$ is the inflection point of the curve. The logistic curve is a
 common choice for modeling vaccination uptake as it captures the typical
 S-shaped curve seen in many vaccination campaigns.
-
-The tanh curve is defined as:
-
-$$
-f(t\vert m,r,s) = \frac{1}{2}\mathrm{invlogit}\left(m\right)\left(\tanh\left(e^r\left(t-s\right)\right)+1\right)
-$$
-
-where $\mathrm{invlogit}(m)$, $r$, and $s$ are defined the same as the logistic
-curve. The tanh curve is similar to the logistic curve but has a different
-steep-ness in it's S-shape, which can be useful for modeling different types of
-vaccination uptake patterns.
 
 ## Curve Parameters
 
@@ -92,22 +81,27 @@ not observe the true vaccination uptake curve, but rather a noisy version of it.
 The observational model is used to define how the observed data is generated
 from the underlying model.
 
-For each day in a season, $i$, we model the observed incidence of vaccinations
-on that day as:
+We observe noisy incidence over arbitrary date ranges, not the underlying daily
+curve directly. Let $I_{t,i,\mathbf{c}}$ be the modeled daily incidence for day
+$t$ in season $i$ and covariate category combination $\mathbf{c}$. For each
+observation interval $r$ with $n_r$ days, the model sums the daily incidence to
+get an expected incidence,
+$\mu_{r,i,\mathbf{c}}=\sum_{t\in r} I_{t,i,\mathbf{c}}$, and then applies a
+normal observation model:
 
 $$
 \begin{aligned}
-\varepsilon_i&\sim\mathrm{Exponential}\left(\epsilon^{-1}\right) \\
-I_{t,i}&\sim\mathrm{Gamma}\left(f(t+1\vert\theta_1,\dots,\theta_n)-f(t\vert\theta_1,\dots,\theta_n),\varepsilon_i\right)
+\sigma&\sim\mathrm{Exponential}\left(\epsilon^{-1}\right) \\
+y_{r,i,\mathbf{c}}&\sim\mathrm{Normal}\left(\mu_{r,i,\mathbf{c}},n_r^2\sigma^2\right)
 \end{aligned}
 $$
 
-Where the gamma distribution is mean-variance parameterized, $I_{t,i}$ is the
-observed incidence of vaccinations on day $t$ in season $i$, $\varepsilon_i$ is
-the observational noise level for season $i$, and $\epsilon$ is a user provided
-parameter that controls the scale of the observational noise prior.
+The noise scale $\sigma$ can be fully pooled, partially pooled by season,
+partially pooled by covariate category combination, or pooled by both season and
+covariates depending on model configuration. Scaling by $n_r$ accounts for the
+number of days aggregated in each observation interval.
 
-The likelihood of the observed data is then constructed by summing the
-appropriate values of $I_{t,i}$ for each day in the season. This means that the
-model is able to capture the variability in the observed data while still being
-able to fit the underlying vaccination uptake curve.
+Optionally, a prevalence penalty can be applied when the total modeled incidence
+for a season exceeds 1. This is implemented as a soft quadratic penalty (or a
+hard constraint when configured) using a
+[`numpyro.factor`](https://num.pyro.ai/en/latest/primitives.html#factor) term.

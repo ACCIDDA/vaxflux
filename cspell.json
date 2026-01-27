@@ -37,6 +37,7 @@
     "levelname",
     "linestyle",
     "logit",
+    "mathbf",
     "mathcal",
     "mathrm",
     "mcmc",

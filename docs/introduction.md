@@ -27,8 +27,8 @@ In particular this package is designed to help users address questions such as:
 - How do seasonal patterns in vaccine uptake change over time?
 - What are reasonable ranges to expect for vaccine uptake for a season?
 
-The package is built on top of `pymc`, providing an interface that allows users
-to define models using a high-level API that are translated to `pymc` models
-under the hood. This allows users to take advantage of the powerful
-probabilistic programming capabilities of `pymc` while still being able to work
-with a user-friendly interface.
+The package is built on top of `numpyro`, providing an interface that allows
+users to define models using a high-level API that are translated to `numpyro`
+models under the hood. This allows users to take advantage of the powerful
+probabilistic programming capabilities of `numpyro` while still being able to
+work with a user-friendly interface.
