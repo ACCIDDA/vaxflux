@@ -64,6 +64,9 @@ Changed:
   [#86](https://github.com/ACCIDDA/vaxflux/issues/86).
 - Generate documentation index page from `README.md` file, see
   [#71](https://github.com/ACCIDDA/vaxflux/issues/71).
+- Added `noise` argument to `sample_dataset` that allows users to choose between
+  normal or gamma distributed noise. Default is 'gamma' for backwards
+  compatibility.
 
 Deprecated:
 
