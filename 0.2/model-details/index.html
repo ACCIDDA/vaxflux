@@ -878,24 +878,16 @@ seasons and covariate combinations, but with different parameters. A curve,
 <li>The curve should be differentiable with respect to <span class="arithmatex">\(t\)</span> and <span class="arithmatex">\(\theta_i\)</span>.</li>
 <li>The curve should be monotonic with respect to <span class="arithmatex">\(t\)</span>.</li>
 </ul>
-<p><code>vaxflux</code> provides two curves, <code>vaxflux.curves.LogisticCurve</code> and
-<code>vaxflux.curves.TanhCurve</code> that satisfy these properties. The logistic curve is
-defined as:</p>
+<p><code>vaxflux</code> provides a logistic curve out of the box,
+<a href="../api/vaxflux/#vaxflux.LogisticCurve"><code>vaxflux.LogisticCurve</code></a> that satisfy
+these properties. The logistic curve is defined as:</p>
 <div class="arithmatex">\[
 f(t\vert m,r,s) = \mathrm{invlogit}\left(m\right)\mathrm{logit}\left(e^r\left(t-s\right)\right)
 \]</div>
-<p>where <span class="arithmatex">\(\mathrm{invlogit}(m)\)</span> is the max uptake of the curve, <span class="arithmatex">\(r\)</span> is the rate of
-uptake, and <span class="arithmatex">\(s\)</span> is the inflection point of the curve. The logistic curve is a
+<p>where <span class="arithmatex">\(\mathrm{invlogit}(m)\)</span> is the max uptake of the curve, <span class="arithmatex">\(e^r\)</span> is the rate
+of uptake, and <span class="arithmatex">\(s\)</span> is the inflection point of the curve. The logistic curve is a
 common choice for modeling vaccination uptake as it captures the typical
 S-shaped curve seen in many vaccination campaigns.</p>
-<p>The tanh curve is defined as:</p>
-<div class="arithmatex">\[
-f(t\vert m,r,s) = \frac{1}{2}\mathrm{invlogit}\left(m\right)\left(\tanh\left(e^r\left(t-s\right)\right)+1\right)
-\]</div>
-<p>where <span class="arithmatex">\(\mathrm{invlogit}(m)\)</span>, <span class="arithmatex">\(r\)</span>, and <span class="arithmatex">\(s\)</span> are defined the same as the logistic
-curve. The tanh curve is similar to the logistic curve but has a different
-steep-ness in it's S-shape, which can be useful for modeling different types of
-vaccination uptake patterns.</p>
 <h2 id="curve-parameters">Curve Parameters<a class="headerlink" href="#curve-parameters" title="Permanent link">&para;</a></h2>
 <p>While the same underlying curve family is used for all seasons and covariate
 combinations, the parameters of the curve can vary. The parameters of the curve
@@ -938,22 +930,27 @@ defines the shape of the vaccination uptake curve. However, in practice we do
 not observe the true vaccination uptake curve, but rather a noisy version of it.
 The observational model is used to define how the observed data is generated
 from the underlying model.</p>
-<p>For each day in a season, <span class="arithmatex">\(i\)</span>, we model the observed incidence of vaccinations
-on that day as:</p>
+<p>We observe noisy incidence over arbitrary date ranges, not the underlying daily
+curve directly. Let <span class="arithmatex">\(I_{t,i,\mathbf{c}}\)</span> be the modeled daily incidence for day
+<span class="arithmatex">\(t\)</span> in season <span class="arithmatex">\(i\)</span> and covariate category combination <span class="arithmatex">\(\mathbf{c}\)</span>. For each
+observation interval <span class="arithmatex">\(r\)</span> with <span class="arithmatex">\(n_r\)</span> days, the model sums the daily incidence to
+get an expected incidence,
+<span class="arithmatex">\(\mu_{r,i,\mathbf{c}}=\sum_{t\in r} I_{t,i,\mathbf{c}}\)</span>, and then applies a
+normal observation model:</p>
 <div class="arithmatex">\[
 \begin{aligned}
-\varepsilon_i&amp;\sim\mathrm{Exponential}\left(\epsilon^{-1}\right) \\
-I_{t,i}&amp;\sim\mathrm{Gamma}\left(f(t+1\vert\theta_1,\dots,\theta_n)-f(t\vert\theta_1,\dots,\theta_n),\varepsilon_i\right)
+\sigma&amp;\sim\mathrm{Exponential}\left(\epsilon^{-1}\right) \\
+y_{r,i,\mathbf{c}}&amp;\sim\mathrm{Normal}\left(\mu_{r,i,\mathbf{c}},n_r^2\sigma^2\right)
 \end{aligned}
 \]</div>
-<p>Where the gamma distribution is mean-variance parameterized, <span class="arithmatex">\(I_{t,i}\)</span> is the
-observed incidence of vaccinations on day <span class="arithmatex">\(t\)</span> in season <span class="arithmatex">\(i\)</span>, <span class="arithmatex">\(\varepsilon_i\)</span> is
-the observational noise level for season <span class="arithmatex">\(i\)</span>, and <span class="arithmatex">\(\epsilon\)</span> is a user provided
-parameter that controls the scale of the observational noise prior.</p>
-<p>The likelihood of the observed data is then constructed by summing the
-appropriate values of <span class="arithmatex">\(I_{t,i}\)</span> for each day in the season. This means that the
-model is able to capture the variability in the observed data while still being
-able to fit the underlying vaccination uptake curve.</p>
+<p>The noise scale <span class="arithmatex">\(\sigma\)</span> can be fully pooled, partially pooled by season,
+partially pooled by covariate category combination, or pooled by both season and
+covariates depending on model configuration. Scaling by <span class="arithmatex">\(n_r\)</span> accounts for the
+number of days aggregated in each observation interval.</p>
+<p>Optionally, a prevalence penalty can be applied when the total modeled incidence
+for a season exceeds 1. This is implemented as a soft quadratic penalty (or a
+hard constraint when configured) using a
+<a href="https://num.pyro.ai/en/latest/primitives.html#factor"><code>numpyro.factor</code></a> term.</p>
 
 
 

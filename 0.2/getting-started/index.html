@@ -943,11 +943,9 @@ this data, and steps for working with a fitted model.</p>
 <h2 id="selecting-a-curve-family">Selecting A Curve Family<a class="headerlink" href="#selecting-a-curve-family" title="Permanent link">&para;</a></h2>
 <p>At the core of <code>vaxflux</code> is the concept of a curve family. A curve family is a
 set of curves that share a common structure and are used for modeling the uptake
-prevalence of a vaccine. This package provides several curve families via the
-<a href="../api/curves/"><code>vaxflux.curves</code></a> module, including logistic which we'll use in
-this example. Advanced users can also create their own curve families to model
-different types of vaccine uptake patterns.</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">vaxflux.curves</span><span class="w"> </span><span class="kn">import</span> <span class="n">LogisticCurve</span>
+prevalence of a vaccine. Advanced users can also create their own curve families
+to model different types of vaccine uptake patterns.</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">vaxflux</span><span class="w"> </span><span class="kn">import</span> <span class="n">LogisticCurve</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="n">logistic_curve</span> <span class="o">=</span> <span class="n">LogisticCurve</span><span class="p">()</span>
 </span></code></pre></div>
@@ -957,9 +955,8 @@ uptake starts slowly, accelerates, and then levels off as the population becomes
 saturated with the vaccine. However, <code>vaxflux</code> makes some modifications to the
 typical logistic curve to better suit the requirements of vaccine uptake
 modeling. For details on how the logistic curve is defined in <code>vaxflux</code>, refer
-to the
-<a href="../api/curves/#vaxflux.curves.LogisticCurve"><code>vaxflux.curves.LogisticCurve</code></a>
-class documentation.</p>
+to the <a href="../api/vaxflux/#vaxflux.LogisticCurve"><code>vaxflux.LogisticCurve</code></a> class
+documentation.</p>
 <h2 id="season-and-date-ranges">Season And Date Ranges<a class="headerlink" href="#season-and-date-ranges" title="Permanent link">&para;</a></h2>
 <p>In <code>vaxflux</code>, a season is defined as a period of time during which vaccine
 uptake is measured. The package allows you to specify the start and end dates of
@@ -1028,10 +1025,9 @@ documentation, but in brief they are:</p>
 <li><span class="arithmatex">\(s\)</span>: The switch point of the curve, which is the inflection point of the
   prevalence curve.</li>
 </ul>
-<p>The <code>epsilon</code> argument defines the observational noise level. For this function
-this is the standard deviation of a
-<code>gamma distribution &lt;https://en.wikipedia.org/wiki/Gamma_distribution&gt;</code>_ that
-daily incidence observations are drawn from.</p>
+<p>The <code>epsilon</code> argument defines the observational noise level. By default,
+observations are drawn with gamma noise; you can switch to a normal noise model
+by passing <code>noise="normal"</code> to <code>sample_dataset</code>.</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">vaxflux.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">sample_dataset</span>
 </span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>
 </span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="n">parameters</span> <span class="o">=</span> <span class="p">[</span>
@@ -1070,95 +1066,91 @@ daily incidence observations are drawn from.</p>
 </span><span id="__span-3-36"><a id="__codelineno-3-36" name="__codelineno-3-36" href="#__codelineno-3-36"></a>    <span class="p">[</span><span class="n">age_covariate</span><span class="p">],</span>
 </span><span id="__span-3-37"><a id="__codelineno-3-37" name="__codelineno-3-37" href="#__codelineno-3-37"></a>    <span class="n">parameters</span><span class="p">,</span>
 </span><span id="__span-3-38"><a id="__codelineno-3-38" name="__codelineno-3-38" href="#__codelineno-3-38"></a>    <span class="mf">0.0005</span><span class="p">,</span>
-</span><span id="__span-3-39"><a id="__codelineno-3-39" name="__codelineno-3-39" href="#__codelineno-3-39"></a>    <span class="n">random_seed</span><span class="o">=</span><span class="mi">42</span><span class="p">,</span>
-</span><span id="__span-3-40"><a id="__codelineno-3-40" name="__codelineno-3-40" href="#__codelineno-3-40"></a><span class="p">)</span>
+</span><span id="__span-3-39"><a id="__codelineno-3-39" name="__codelineno-3-39" href="#__codelineno-3-39"></a>    <span class="n">noise</span><span class="o">=</span><span class="s2">&quot;gamma&quot;</span><span class="p">,</span>
+</span><span id="__span-3-40"><a id="__codelineno-3-40" name="__codelineno-3-40" href="#__codelineno-3-40"></a>    <span class="n">random_seed</span><span class="o">=</span><span class="mi">42</span><span class="p">,</span>
+</span><span id="__span-3-41"><a id="__codelineno-3-41" name="__codelineno-3-41" href="#__codelineno-3-41"></a><span class="p">)</span>
 </span></code></pre></div>
 <h2 id="defining-a-model">Defining A Model<a class="headerlink" href="#defining-a-model" title="Permanent link">&para;</a></h2>
 <p>Now that many of the building blocks of the model have been defined we can
 create a model represented by the
-<a href="../api/uptake/#vaxflux.uptake.SeasonalUptakeModel"><code>vaxflux.uptake.SeasonalUptakeModel</code></a>
-class. This class encapsulates the entire modeling process, including the curve
-family, seasons, dates, covariates, and the sample dataset. Many of the
-arguments to this class have already been defined in the previous sections, but
-we will also need to define the prior distributions for the covariates that will
-be used in the model.</p>
-<p>In this example we will use a combination of pooled covariates and a Gaussian
-covariate. Pooled covariates are used to model parameters that are shared across
-all categories of a covariate, while Gaussian covariates are used to model
-parameters that vary by category. The
-<a href="../api/covariates/#vaxflux.covariates.PooledCovariate"><code>vaxflux.covariates.PooledCovariate</code></a>
-and
-<a href="../api/covariates/#vaxflux.covariates.PooledCovariate"><code>vaxflux.covariates.GaussianCovariate</code></a>
-classes are used to define these covariates. Note that the priors are loosely
-centered around the values used to generate the sample dataset, but they are not
-exact. This is because the model will learn the parameters from the data, and
-the priors are used to inform the model about reasonable ranges for these
-parameters. For more information on model details and how to inform prior
-distributions please refer to the <a href="../model-details/">model-details</a> section of
-the documentation.</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">vaxflux.covariates</span><span class="w"> </span><span class="kn">import</span> <span class="n">GaussianCovariate</span><span class="p">,</span> <span class="n">PooledCovariate</span>
-</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">vaxflux.uptake</span><span class="w"> </span><span class="kn">import</span> <span class="n">SeasonalUptakeModel</span>
-</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>
-</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="n">covariates</span> <span class="o">=</span> <span class="p">[</span>
-</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>    <span class="n">PooledCovariate</span><span class="p">(</span>
-</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>        <span class="n">parameter</span><span class="o">=</span><span class="s2">&quot;m&quot;</span><span class="p">,</span>
-</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>        <span class="n">covariate</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-</span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>        <span class="n">distribution</span><span class="o">=</span><span class="s2">&quot;Normal&quot;</span><span class="p">,</span>
-</span><span id="__span-4-9"><a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>        <span class="n">distribution_kwargs</span><span class="o">=</span><span class="p">{</span>
-</span><span id="__span-4-10"><a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a>            <span class="s2">&quot;mu&quot;</span><span class="p">:</span> <span class="o">-</span><span class="mf">0.5</span><span class="p">,</span>
-</span><span id="__span-4-11"><a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a>            <span class="s2">&quot;sigma&quot;</span><span class="p">:</span> <span class="mf">0.25</span><span class="p">,</span>
-</span><span id="__span-4-12"><a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a>        <span class="p">},</span>
-</span><span id="__span-4-13"><a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a>    <span class="p">),</span>
-</span><span id="__span-4-14"><a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a>    <span class="n">PooledCovariate</span><span class="p">(</span>
-</span><span id="__span-4-15"><a id="__codelineno-4-15" name="__codelineno-4-15" href="#__codelineno-4-15"></a>        <span class="n">parameter</span><span class="o">=</span><span class="s2">&quot;r&quot;</span><span class="p">,</span>
-</span><span id="__span-4-16"><a id="__codelineno-4-16" name="__codelineno-4-16" href="#__codelineno-4-16"></a>        <span class="n">covariate</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-</span><span id="__span-4-17"><a id="__codelineno-4-17" name="__codelineno-4-17" href="#__codelineno-4-17"></a>        <span class="n">distribution</span><span class="o">=</span><span class="s2">&quot;Normal&quot;</span><span class="p">,</span>
-</span><span id="__span-4-18"><a id="__codelineno-4-18" name="__codelineno-4-18" href="#__codelineno-4-18"></a>        <span class="n">distribution_kwargs</span><span class="o">=</span><span class="p">{</span>
-</span><span id="__span-4-19"><a id="__codelineno-4-19" name="__codelineno-4-19" href="#__codelineno-4-19"></a>            <span class="s2">&quot;mu&quot;</span><span class="p">:</span> <span class="o">-</span><span class="mf">3.0</span><span class="p">,</span>
-</span><span id="__span-4-20"><a id="__codelineno-4-20" name="__codelineno-4-20" href="#__codelineno-4-20"></a>            <span class="s2">&quot;sigma&quot;</span><span class="p">:</span> <span class="mf">0.5</span><span class="p">,</span>
-</span><span id="__span-4-21"><a id="__codelineno-4-21" name="__codelineno-4-21" href="#__codelineno-4-21"></a>        <span class="p">},</span>
-</span><span id="__span-4-22"><a id="__codelineno-4-22" name="__codelineno-4-22" href="#__codelineno-4-22"></a>    <span class="p">),</span>
-</span><span id="__span-4-23"><a id="__codelineno-4-23" name="__codelineno-4-23" href="#__codelineno-4-23"></a>    <span class="n">PooledCovariate</span><span class="p">(</span>
-</span><span id="__span-4-24"><a id="__codelineno-4-24" name="__codelineno-4-24" href="#__codelineno-4-24"></a>        <span class="n">parameter</span><span class="o">=</span><span class="s2">&quot;s&quot;</span><span class="p">,</span>
-</span><span id="__span-4-25"><a id="__codelineno-4-25" name="__codelineno-4-25" href="#__codelineno-4-25"></a>        <span class="n">covariate</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-</span><span id="__span-4-26"><a id="__codelineno-4-26" name="__codelineno-4-26" href="#__codelineno-4-26"></a>        <span class="n">distribution</span><span class="o">=</span><span class="s2">&quot;Normal&quot;</span><span class="p">,</span>
-</span><span id="__span-4-27"><a id="__codelineno-4-27" name="__codelineno-4-27" href="#__codelineno-4-27"></a>        <span class="n">distribution_kwargs</span><span class="o">=</span><span class="p">{</span>
-</span><span id="__span-4-28"><a id="__codelineno-4-28" name="__codelineno-4-28" href="#__codelineno-4-28"></a>            <span class="s2">&quot;mu&quot;</span><span class="p">:</span> <span class="mf">45.0</span><span class="p">,</span>
-</span><span id="__span-4-29"><a id="__codelineno-4-29" name="__codelineno-4-29" href="#__codelineno-4-29"></a>            <span class="s2">&quot;sigma&quot;</span><span class="p">:</span> <span class="mf">10.0</span><span class="p">,</span>
-</span><span id="__span-4-30"><a id="__codelineno-4-30" name="__codelineno-4-30" href="#__codelineno-4-30"></a>        <span class="p">},</span>
-</span><span id="__span-4-31"><a id="__codelineno-4-31" name="__codelineno-4-31" href="#__codelineno-4-31"></a>    <span class="p">),</span>
-</span><span id="__span-4-32"><a id="__codelineno-4-32" name="__codelineno-4-32" href="#__codelineno-4-32"></a>    <span class="n">GaussianCovariate</span><span class="p">(</span>
-</span><span id="__span-4-33"><a id="__codelineno-4-33" name="__codelineno-4-33" href="#__codelineno-4-33"></a>        <span class="n">parameter</span><span class="o">=</span><span class="s2">&quot;m&quot;</span><span class="p">,</span>
-</span><span id="__span-4-34"><a id="__codelineno-4-34" name="__codelineno-4-34" href="#__codelineno-4-34"></a>        <span class="n">covariate</span><span class="o">=</span><span class="s2">&quot;age&quot;</span><span class="p">,</span>
-</span><span id="__span-4-35"><a id="__codelineno-4-35" name="__codelineno-4-35" href="#__codelineno-4-35"></a>        <span class="n">mu</span><span class="o">=</span><span class="p">[</span><span class="mf">0.8</span><span class="p">,</span> <span class="mf">1.6</span><span class="p">],</span>
-</span><span id="__span-4-36"><a id="__codelineno-4-36" name="__codelineno-4-36" href="#__codelineno-4-36"></a>        <span class="n">sigma</span><span class="o">=</span><span class="mi">2</span> <span class="o">*</span> <span class="p">[</span><span class="mf">0.25</span><span class="p">],</span>
-</span><span id="__span-4-37"><a id="__codelineno-4-37" name="__codelineno-4-37" href="#__codelineno-4-37"></a>    <span class="p">),</span>
-</span><span id="__span-4-38"><a id="__codelineno-4-38" name="__codelineno-4-38" href="#__codelineno-4-38"></a><span class="p">]</span>
-</span><span id="__span-4-39"><a id="__codelineno-4-39" name="__codelineno-4-39" href="#__codelineno-4-39"></a><span class="n">model</span> <span class="o">=</span> <span class="n">SeasonalUptakeModel</span><span class="p">(</span>
-</span><span id="__span-4-40"><a id="__codelineno-4-40" name="__codelineno-4-40" href="#__codelineno-4-40"></a>    <span class="n">logistic_curve</span><span class="p">,</span>
-</span><span id="__span-4-41"><a id="__codelineno-4-41" name="__codelineno-4-41" href="#__codelineno-4-41"></a>    <span class="n">covariates</span><span class="p">,</span>
-</span><span id="__span-4-42"><a id="__codelineno-4-42" name="__codelineno-4-42" href="#__codelineno-4-42"></a>    <span class="n">observations</span><span class="o">=</span><span class="n">sample_observations</span><span class="p">,</span>
-</span><span id="__span-4-43"><a id="__codelineno-4-43" name="__codelineno-4-43" href="#__codelineno-4-43"></a>    <span class="n">covariate_categories</span><span class="o">=</span><span class="p">[</span><span class="n">age_covariate</span><span class="p">],</span>
-</span><span id="__span-4-44"><a id="__codelineno-4-44" name="__codelineno-4-44" href="#__codelineno-4-44"></a>    <span class="n">season_ranges</span><span class="o">=</span><span class="n">seasons</span><span class="p">,</span>
-</span><span id="__span-4-45"><a id="__codelineno-4-45" name="__codelineno-4-45" href="#__codelineno-4-45"></a>    <span class="n">date_ranges</span><span class="o">=</span><span class="n">dates</span><span class="p">,</span>
-</span><span id="__span-4-46"><a id="__codelineno-4-46" name="__codelineno-4-46" href="#__codelineno-4-46"></a><span class="p">)</span>
+<a href="../api/vaxflux/#vaxflux.VaxfluxModel"><code>vaxflux.VaxfluxModel</code></a> class. This class
+encapsulates the entire modeling process, including the curve family, seasons,
+dates, covariates, and the sample dataset. Many of the arguments to this class
+have already been defined in the previous sections, but we will also need to
+define the prior distributions for the covariates that will be used in the
+model.</p>
+<p>In this example we will use partially pooled Gaussian covariates for seasonal
+effects and an age effect on the max uptake parameter. The
+<a href="../api/covariates/#vaxflux.covariates.PartiallyPooledGaussianCovariate"><code>vaxflux.PartiallyPooledGaussianCovariate</code></a>
+class provides a convenient way to express these priors in the NumPyro-based
+model. Note that the priors are loosely centered around the values used to
+generate the sample dataset, but they are not exact. This is because the model
+will learn the parameters from the data, and the priors are used to inform the
+model about reasonable ranges for these parameters. For more information on
+model details and how to inform prior distributions please refer to the
+<a href="../model-details/">model-details</a> section of the documentation.</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">vaxflux</span><span class="w"> </span><span class="kn">import</span> <span class="n">PartiallyPooledGaussianCovariate</span><span class="p">,</span> <span class="n">VaxfluxModel</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="n">covariates</span> <span class="o">=</span> <span class="p">[</span>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>    <span class="n">PartiallyPooledGaussianCovariate</span><span class="p">(</span>
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>        <span class="n">parameter</span><span class="o">=</span><span class="s2">&quot;m&quot;</span><span class="p">,</span>
+</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>        <span class="n">covariate</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>        <span class="n">mu</span><span class="o">=</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.75</span><span class="p">),</span>
+</span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>        <span class="n">sigma</span><span class="o">=</span><span class="mf">0.75</span><span class="p">,</span>
+</span><span id="__span-4-9"><a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>    <span class="p">),</span>
+</span><span id="__span-4-10"><a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a>    <span class="n">PartiallyPooledGaussianCovariate</span><span class="p">(</span>
+</span><span id="__span-4-11"><a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a>        <span class="n">parameter</span><span class="o">=</span><span class="s2">&quot;r&quot;</span><span class="p">,</span>
+</span><span id="__span-4-12"><a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a>        <span class="n">covariate</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+</span><span id="__span-4-13"><a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a>        <span class="n">mu</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mf">2.5</span><span class="p">,</span> <span class="mf">1.5</span><span class="p">),</span>
+</span><span id="__span-4-14"><a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a>        <span class="n">sigma</span><span class="o">=</span><span class="mf">1.5</span><span class="p">,</span>
+</span><span id="__span-4-15"><a id="__codelineno-4-15" name="__codelineno-4-15" href="#__codelineno-4-15"></a>    <span class="p">),</span>
+</span><span id="__span-4-16"><a id="__codelineno-4-16" name="__codelineno-4-16" href="#__codelineno-4-16"></a>    <span class="n">PartiallyPooledGaussianCovariate</span><span class="p">(</span>
+</span><span id="__span-4-17"><a id="__codelineno-4-17" name="__codelineno-4-17" href="#__codelineno-4-17"></a>        <span class="n">parameter</span><span class="o">=</span><span class="s2">&quot;s&quot;</span><span class="p">,</span>
+</span><span id="__span-4-18"><a id="__codelineno-4-18" name="__codelineno-4-18" href="#__codelineno-4-18"></a>        <span class="n">covariate</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+</span><span id="__span-4-19"><a id="__codelineno-4-19" name="__codelineno-4-19" href="#__codelineno-4-19"></a>        <span class="n">mu</span><span class="o">=</span><span class="p">(</span><span class="mf">35.0</span><span class="p">,</span> <span class="mf">20.0</span><span class="p">),</span>
+</span><span id="__span-4-20"><a id="__codelineno-4-20" name="__codelineno-4-20" href="#__codelineno-4-20"></a>        <span class="n">sigma</span><span class="o">=</span><span class="mf">20.0</span><span class="p">,</span>
+</span><span id="__span-4-21"><a id="__codelineno-4-21" name="__codelineno-4-21" href="#__codelineno-4-21"></a>    <span class="p">),</span>
+</span><span id="__span-4-22"><a id="__codelineno-4-22" name="__codelineno-4-22" href="#__codelineno-4-22"></a>    <span class="n">PartiallyPooledGaussianCovariate</span><span class="p">(</span>
+</span><span id="__span-4-23"><a id="__codelineno-4-23" name="__codelineno-4-23" href="#__codelineno-4-23"></a>        <span class="n">parameter</span><span class="o">=</span><span class="s2">&quot;m&quot;</span><span class="p">,</span>
+</span><span id="__span-4-24"><a id="__codelineno-4-24" name="__codelineno-4-24" href="#__codelineno-4-24"></a>        <span class="n">covariate</span><span class="o">=</span><span class="s2">&quot;age&quot;</span><span class="p">,</span>
+</span><span id="__span-4-25"><a id="__codelineno-4-25" name="__codelineno-4-25" href="#__codelineno-4-25"></a>        <span class="n">mu</span><span class="o">=</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span>
+</span><span id="__span-4-26"><a id="__codelineno-4-26" name="__codelineno-4-26" href="#__codelineno-4-26"></a>        <span class="n">sigma</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+</span><span id="__span-4-27"><a id="__codelineno-4-27" name="__codelineno-4-27" href="#__codelineno-4-27"></a>    <span class="p">),</span>
+</span><span id="__span-4-28"><a id="__codelineno-4-28" name="__codelineno-4-28" href="#__codelineno-4-28"></a><span class="p">]</span>
+</span><span id="__span-4-29"><a id="__codelineno-4-29" name="__codelineno-4-29" href="#__codelineno-4-29"></a><span class="n">model</span> <span class="o">=</span> <span class="p">(</span>
+</span><span id="__span-4-30"><a id="__codelineno-4-30" name="__codelineno-4-30" href="#__codelineno-4-30"></a>    <span class="n">VaxfluxModel</span><span class="p">(</span><span class="n">curve</span><span class="o">=</span><span class="n">logistic_curve</span><span class="p">)</span>
+</span><span id="__span-4-31"><a id="__codelineno-4-31" name="__codelineno-4-31" href="#__codelineno-4-31"></a>    <span class="o">.</span><span class="n">add_seasons</span><span class="p">(</span><span class="n">seasons</span><span class="p">)</span>
+</span><span id="__span-4-32"><a id="__codelineno-4-32" name="__codelineno-4-32" href="#__codelineno-4-32"></a>    <span class="o">.</span><span class="n">add_dates</span><span class="p">(</span><span class="n">dates</span><span class="p">)</span>
+</span><span id="__span-4-33"><a id="__codelineno-4-33" name="__codelineno-4-33" href="#__codelineno-4-33"></a>    <span class="o">.</span><span class="n">add_covariate_categories</span><span class="p">(</span><span class="n">age_covariate</span><span class="p">)</span>
+</span><span id="__span-4-34"><a id="__codelineno-4-34" name="__codelineno-4-34" href="#__codelineno-4-34"></a>    <span class="o">.</span><span class="n">add_covariates</span><span class="p">(</span><span class="n">covariates</span><span class="p">)</span>
+</span><span id="__span-4-35"><a id="__codelineno-4-35" name="__codelineno-4-35" href="#__codelineno-4-35"></a>    <span class="o">.</span><span class="n">add_observations</span><span class="p">(</span><span class="n">sample_observations</span><span class="p">)</span>
+</span><span id="__span-4-36"><a id="__codelineno-4-36" name="__codelineno-4-36" href="#__codelineno-4-36"></a>    <span class="o">.</span><span class="n">add_observation_process</span><span class="p">(</span>
+</span><span id="__span-4-37"><a id="__codelineno-4-37" name="__codelineno-4-37" href="#__codelineno-4-37"></a>        <span class="n">kind</span><span class="o">=</span><span class="s2">&quot;normal&quot;</span><span class="p">,</span>
+</span><span id="__span-4-38"><a id="__codelineno-4-38" name="__codelineno-4-38" href="#__codelineno-4-38"></a>        <span class="n">noise</span><span class="o">=</span><span class="mf">0.005</span><span class="p">,</span>
+</span><span id="__span-4-39"><a id="__codelineno-4-39" name="__codelineno-4-39" href="#__codelineno-4-39"></a>        <span class="n">partially_pool_by_season</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+</span><span id="__span-4-40"><a id="__codelineno-4-40" name="__codelineno-4-40" href="#__codelineno-4-40"></a>        <span class="n">prevalence_penalty</span><span class="o">=</span><span class="mf">10.0</span><span class="p">,</span>
+</span><span id="__span-4-41"><a id="__codelineno-4-41" name="__codelineno-4-41" href="#__codelineno-4-41"></a>    <span class="p">)</span>
+</span><span id="__span-4-42"><a id="__codelineno-4-42" name="__codelineno-4-42" href="#__codelineno-4-42"></a><span class="p">)</span>
 </span></code></pre></div>
 <h2 id="fitting-the-model">Fitting The Model<a class="headerlink" href="#fitting-the-model" title="Permanent link">&para;</a></h2>
 <p>Finally, we can fit the model to the sample dataset using the
-<a href="../api/uptake/#vaxflux.uptake.SeasonalUptakeModel.build"><code>vaxflux.uptake.SeasonalUptakeModel.build</code></a>
-method. This method compiles the model and prepares it for sampling. After
-building the model, we can sample from it using the
-<a href="../api/uptake/#vaxflux.uptake.SeasonalUptakeModel.sample"><code>vaxflux.uptake.SeasonalUptakeModel.sample</code></a>
-method. This method allows us to specify the number of tuning steps, draws, and
-chains for the sampling process. In this example, we will use 2,000 tuning
-steps, 1,000 draws, and 2 chains. Those samples can be extracted using the
-<a href="../api/uptake/#vaxflux.uptake.SeasonalUptakeModel.dataframe"><code>vaxflux.uptake.SeasonalUptakeModel.dataframe</code></a>
-method, which returns a Pandas DataFrame containing the sampled incidence data.</p>
+<a href="../api/vaxflux/#vaxflux.VaxfluxModel.sample"><code>vaxflux.VaxfluxModel.sample</code></a>
+method. This method handles prior predictive sampling, MCMC fitting, and
+posterior predictive sampling in one call. In this example, we will run a small
+prior predictive sample and then fit with 2,000 warmup steps, 1,000 samples, and
+2 chains. The return value is a
+<a href="../api/vaxflux/#vaxflux.VaxfluxInferenceData"><code>VaxfluxInferenceData</code></a> object
+compatible with ArviZ.</p>
 <p><strong>If you are following along with this tutorial with a REPL or notebook please
 note that the following code will take anywhere from a few seconds to a few
 minutes to run. Adjust the arguments to <code>sample</code> appropriately.</strong></p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="n">model</span><span class="o">.</span><span class="n">build</span><span class="p">()</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">tune</span><span class="o">=</span><span class="mi">2_000</span><span class="p">,</span> <span class="n">draws</span><span class="o">=</span><span class="mi">1_000</span><span class="p">,</span> <span class="n">chains</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
-</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="n">sample_incidence</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">dataframe</span><span class="p">()</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="n">vaxflux_idata</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>    <span class="n">prior_samples</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>    <span class="n">warmup</span><span class="o">=</span><span class="mi">2_000</span><span class="p">,</span>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>    <span class="n">samples</span><span class="o">=</span><span class="mi">1_000</span><span class="p">,</span>
+</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>    <span class="n">chains</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="p">)</span>
+</span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="n">vaxflux_idata</span>
 </span></code></pre></div>
 <h2 id="conclusion">Conclusion<a class="headerlink" href="#conclusion" title="Permanent link">&para;</a></h2>
 <p>In this tutorial, we have covered the basic steps to get started with the
@@ -1171,9 +1163,9 @@ are:</p>
 <li>Define the seasons and date ranges for the model.</li>
 <li>Define the covariates and their categories that will be used in the model.</li>
 <li>Either loading or creating a dataset that contains the vaccine uptake data.</li>
-<li>Define the model using the <code>SeasonalUptakeModel</code> class, including the curve
-   family, seasons, dates, covariates, and observations.</li>
-<li>Fit the model to the data using the <code>build</code> and <code>sample</code> methods.</li>
+<li>Define the model using the <code>VaxfluxModel</code> class, including the curve family,
+   seasons, dates, covariates, and observations.</li>
+<li>Fit the model to the data using the <code>sample</code> method.</li>
 </ol>
 
 
