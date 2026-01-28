@@ -1,3 +1,4 @@
+import warnings
 from collections.abc import Sequence
 from functools import cached_property
 from itertools import product
@@ -183,6 +184,115 @@ class VaxfluxInferenceData(az.InferenceData):
 
         """
         return self._observations_from_dataset(self.merged_posterior)
+
+    def _observations_from_dataset(self, dataset: xr.Dataset) -> pd.DataFrame:
+        """
+        Build an observations DataFrame from an ArviZ dataset.
+
+        This extracts incidence curve parameters and reconstructs observation metadata
+        from stored coordinates and variable naming conventions.
+
+        """
+        observations: list[pd.DataFrame] = []
+
+        # Find incidence variables to decode into observation rows
+        incidence_vars = [
+            name for name in dataset.data_vars if str(name).startswith("incidence_")
+        ]
+        if not incidence_vars:
+            msg = "No incidence variables found in the inference data."
+            raise ValueError(msg)
+
+        covariate_names = self.coords.get("covariate_names", [])
+        if not covariate_names:
+            covariate_names = sorted(
+                key[: -len("_categories")]
+                for key in self.coords
+                if key.endswith("_categories") and not key.endswith("_categories_short")
+            )
+        covariate_categories = {
+            name: self.coords.get(f"{name}_categories", []) for name in covariate_names
+        }
+        season_labels = self.coords.get("season", [])
+        date_dims = [dim for dim in dataset.dims if str(dim).startswith("date_ranges_")]
+
+        # Convert each season/category combination into observation rows
+        for date_dim in date_dims:
+            season_token = str(date_dim)[len("date_ranges_") :]
+            season = next(
+                (
+                    season_name
+                    for season_name in season_labels
+                    if _coord_name(season_name) == season_token
+                ),
+                season_token,
+            )
+            category_combos = (
+                list(product(*(covariate_categories[name] for name in covariate_names)))
+                if covariate_names
+                else [()]
+            )
+            for combo in category_combos:
+                name_parts = ["incidence", season]
+                for covariate_name, category_value in zip(
+                    covariate_names, combo, strict=False
+                ):
+                    name_parts.extend([covariate_name, category_value])
+                var_name = _coord_name(*name_parts)
+                if var_name not in dataset.data_vars:
+                    continue
+                data = dataset[var_name]
+                df = data.to_dataframe(name="value").reset_index()
+
+                # Parse start/end/report dates from the date-range coordinate
+                date_values = df[date_dim].str.split("_", n=1, expand=True)
+                df["start_date"] = pd.to_datetime(date_values[0])
+                df["end_date"] = pd.to_datetime(date_values[1])
+                df["report_date"] = df["end_date"]
+                df["season"] = season
+
+                # Fill season start/end dates from the season day coordinates if present
+                days_key = _coord_name("days", season)
+                if days_key in dataset.coords:
+                    days = dataset.coords[days_key].to_numpy().tolist()
+                    df["season_start_date"] = (
+                        pd.to_datetime(days[0]) if days else pd.NaT
+                    )
+                    df["season_end_date"] = pd.to_datetime(days[-1]) if days else pd.NaT
+                else:
+                    df["season_start_date"] = pd.NaT
+                    df["season_end_date"] = pd.NaT
+
+                for covariate_name, category_value in zip(
+                    covariate_names, combo, strict=False
+                ):
+                    df[covariate_name] = category_value
+
+                # Finalize this block of observations and move to the next
+                df["type"] = "incidence"
+                df = df.drop(columns=[date_dim])
+                observations.append(df)
+
+        if not observations:
+            msg = "No observation data could be constructed from incidence outputs."
+            raise ValueError(msg)
+
+        df = pd.concat(observations, ignore_index=True)
+        return df[
+            [
+                "chain",
+                "draw",
+                "season",
+                "season_start_date",
+                "season_end_date",
+                "start_date",
+                "end_date",
+                "report_date",
+                *covariate_names,
+                "type",
+                "value",
+            ]
+        ]
 
     def prior_prevalence_scenarios(
         self,
@@ -391,115 +501,6 @@ class VaxfluxInferenceData(az.InferenceData):
             figsize=figsize,
         )
 
-    def _observations_from_dataset(self, dataset: xr.Dataset) -> pd.DataFrame:
-        """
-        Build an observations DataFrame from an ArviZ dataset.
-
-        This extracts incidence curve parameters and reconstructs observation metadata
-        from stored coordinates and variable naming conventions.
-
-        """
-        observations: list[pd.DataFrame] = []
-
-        # Find incidence variables to decode into observation rows
-        incidence_vars = [
-            name for name in dataset.data_vars if str(name).startswith("incidence_")
-        ]
-        if not incidence_vars:
-            msg = "No incidence variables found in the inference data."
-            raise ValueError(msg)
-
-        covariate_names = self.coords.get("covariate_names", [])
-        if not covariate_names:
-            covariate_names = sorted(
-                key[: -len("_categories")]
-                for key in self.coords
-                if key.endswith("_categories") and not key.endswith("_categories_short")
-            )
-        covariate_categories = {
-            name: self.coords.get(f"{name}_categories", []) for name in covariate_names
-        }
-        season_labels = self.coords.get("season", [])
-        date_dims = [dim for dim in dataset.dims if str(dim).startswith("date_ranges_")]
-
-        # Convert each season/category combination into observation rows
-        for date_dim in date_dims:
-            season_token = str(date_dim)[len("date_ranges_") :]
-            season = next(
-                (
-                    season_name
-                    for season_name in season_labels
-                    if _coord_name(season_name) == season_token
-                ),
-                season_token,
-            )
-            category_combos = (
-                list(product(*(covariate_categories[name] for name in covariate_names)))
-                if covariate_names
-                else [()]
-            )
-            for combo in category_combos:
-                name_parts = ["incidence", season]
-                for covariate_name, category_value in zip(
-                    covariate_names, combo, strict=False
-                ):
-                    name_parts.extend([covariate_name, category_value])
-                var_name = _coord_name(*name_parts)
-                if var_name not in dataset.data_vars:
-                    continue
-                data = dataset[var_name]
-                df = data.to_dataframe(name="value").reset_index()
-
-                # Parse start/end/report dates from the date-range coordinate
-                date_values = df[date_dim].str.split("_", n=1, expand=True)
-                df["start_date"] = pd.to_datetime(date_values[0])
-                df["end_date"] = pd.to_datetime(date_values[1])
-                df["report_date"] = df["end_date"]
-                df["season"] = season
-
-                # Fill season start/end dates from the season day coordinates if present
-                days_key = _coord_name("days", season)
-                if days_key in dataset.coords:
-                    days = dataset.coords[days_key].to_numpy().tolist()
-                    df["season_start_date"] = (
-                        pd.to_datetime(days[0]) if days else pd.NaT
-                    )
-                    df["season_end_date"] = pd.to_datetime(days[-1]) if days else pd.NaT
-                else:
-                    df["season_start_date"] = pd.NaT
-                    df["season_end_date"] = pd.NaT
-
-                for covariate_name, category_value in zip(
-                    covariate_names, combo, strict=False
-                ):
-                    df[covariate_name] = category_value
-
-                # Finalize this block of observations and move to the next
-                df["type"] = "incidence"
-                df = df.drop(columns=[date_dim])
-                observations.append(df)
-
-        if not observations:
-            msg = "No observation data could be constructed from incidence outputs."
-            raise ValueError(msg)
-
-        df = pd.concat(observations, ignore_index=True)
-        return df[
-            [
-                "chain",
-                "draw",
-                "season",
-                "season_start_date",
-                "season_end_date",
-                "start_date",
-                "end_date",
-                "report_date",
-                *covariate_names,
-                "type",
-                "value",
-            ]
-        ]
-
     def _plot_predictive(
         self,
         *,
@@ -614,7 +615,13 @@ class VaxfluxInferenceData(az.InferenceData):
             )
         fig.legend(handles=legend_handles, loc="center left", bbox_to_anchor=(1.0, 0.5))
         fig.suptitle(title, fontsize=14)
-        fig.tight_layout()
+        with warnings.catch_warnings():
+            warnings.filterwarnings(
+                "ignore",
+                message="the figure layout has changed to tight",
+                category=UserWarning,
+            )
+            fig.tight_layout()
         return fig
 
     def _resolve_plot_observations(
