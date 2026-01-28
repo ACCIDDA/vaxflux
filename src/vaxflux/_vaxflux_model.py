@@ -483,7 +483,9 @@ class VaxfluxModel:
             prior_predictive = Predictive(
                 self._model, num_samples=prior_samples, **prior_predictive_args
             )
-            from_numpyro_kwargs["prior"] = prior_predictive(prior_key)
+            from_numpyro_kwargs["prior"] = prior_predictive(
+                prior_key, simulate_observations=True
+            )
 
         # Sample from posterior/posterior predictive if requested
         if samples is not None:
@@ -505,7 +507,7 @@ class VaxfluxModel:
                 **posterior_predictive_args,
             )
             from_numpyro_kwargs["posterior_predictive"] = posterior_predictive(
-                posterior_key
+                posterior_key, simulate_observations=True
             )
             from_numpyro_kwargs["posterior"] = mcmc
 
@@ -776,6 +778,8 @@ class VaxfluxModel:
             new_dims["observation"] = ["observation"]
         if "observation_mean" not in dims:
             new_dims["observation_mean"] = ["observation"]
+        if "observation_sim" not in dims:
+            new_dims["observation_sim"] = ["observation"]
         return new_coords or None, new_dims or None
 
     def _coords_and_dims_for_interventions(
@@ -978,8 +982,14 @@ class VaxfluxModel:
             for name in self._interventions_by_name
         }
 
-    def _model(self) -> None:
-        """Define the model for inference."""
+    def _model(self, *, simulate_observations: bool = False) -> None:
+        """
+        Define the model for inference.
+
+        Args:
+            simulate_observations: Whether to simulate observations as part of the
+                model. Particularly useful for posterior/prior predictive sampling.
+        """
         covariate_values = self._model_sample_covariates()
         summed_parameters = self._model_summed_parameters(covariate_values)
         daily_summed_parameters = self._model_daily_summed_parameters(summed_parameters)
@@ -987,7 +997,10 @@ class VaxfluxModel:
             daily_summed_parameters
         )
         observations = self._model_observations(daily_summed_parameters)
-        self._model_observation_process(observations)
+        self._model_observation_process(
+            observations,
+            simulate_observations=simulate_observations,
+        )
 
     def _model_sample_covariate(self, covariate: Covariate) -> jnp.ndarray:
         """
@@ -1272,12 +1285,19 @@ class VaxfluxModel:
                 )
         return incidence_by_date_range
 
-    def _model_observation_process(self, observations: dict[str, jnp.ndarray]) -> None:
+    def _model_observation_process(
+        self,
+        observations: dict[str, jnp.ndarray],
+        *,
+        simulate_observations: bool,
+    ) -> None:
         """
         Fit the observation process to the model observations.
 
         Args:
             observations: A dictionary mapping observation names to incidence values.
+            simulate_observations: Whether to sample observation-level draws for
+                predictive checks.
 
         """
         if self._observations is None:
@@ -1344,6 +1364,11 @@ class VaxfluxModel:
                 numpyro.distributions.Normal(obs_mean_array, obs_scale_array),
                 obs=obs_value_array,
             )
+            if simulate_observations:
+                numpyro.sample(
+                    "observation_sim",
+                    numpyro.distributions.Normal(obs_mean_array, obs_scale_array),
+                )
 
     def _model_observation_process_sigma(self) -> jnp.ndarray:
         """
