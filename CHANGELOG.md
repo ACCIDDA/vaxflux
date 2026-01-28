@@ -48,7 +48,8 @@ Added:
   [#141](https://github.com/ACCIDDA/vaxflux/issues/141).
   - Added `plot_prior_predictive` and `plot_posterior_predictive` methods to
     easily plot the results of a model with sensible defaults for visualization.
-    See [#159](https://github.com/ACCIDDA/vaxflux/issues/159).
+    See [#159](https://github.com/ACCIDDA/vaxflux/issues/159),
+    [#174](https://github.com/ACCIDDA/vaxflux/issues/174).
   - Added `prior_prevalence_scenarios` and `posterior_prevalence_scenarios`
     methods to produce a human readable set of projections for end of season
     prevalence ranges. See

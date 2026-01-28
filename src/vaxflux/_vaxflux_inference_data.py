@@ -2,7 +2,7 @@ import warnings
 from collections.abc import Sequence
 from functools import cached_property
 from itertools import product
-from typing import Any, cast
+from typing import Any, Literal, cast
 
 import arviz as az
 import pandas as pd
@@ -440,6 +440,7 @@ class VaxfluxInferenceData(az.InferenceData):
         plot_incidence: bool = True,
         plot_prevalence: bool = True,
         plot_observations: bool | None = None,
+        predictive: Literal["latent", "observation"] = "latent",
         figsize: tuple[float, float] | None = None,
     ) -> Figure:
         """
@@ -451,15 +452,28 @@ class VaxfluxInferenceData(az.InferenceData):
             plot_prevalence: Whether to plot prevalence panels.
             plot_observations: Whether to plot observed data points. When `None`,
                 uses `self.observations` availability.
+            predictive: Whether to plot latent curve intervals or observation-level
+                predictive intervals.
             figsize: Optional figure size override.
 
         Returns:
             The Matplotlib figure.
 
         """
+        predictive_label = (
+            "Observation Predictive" if predictive == "observation" else "Predictive"
+        )
         return self._plot_predictive(
-            data=self.prior_observations,
-            title="Prior Predictive Checks",
+            data=self._predictive_observations(
+                predictive=predictive,
+                fallback=self.prior_observations,
+                dataset=(
+                    self.merged_prior
+                    if predictive == "observation"
+                    else getattr(self, "prior_predictive", None)
+                ),
+            ),
+            title=f"Prior {predictive_label} Checks",
             intervals=intervals,
             plot_incidence=plot_incidence,
             plot_prevalence=plot_prevalence,
@@ -474,6 +488,7 @@ class VaxfluxInferenceData(az.InferenceData):
         plot_incidence: bool = True,
         plot_prevalence: bool = True,
         plot_observations: bool | None = None,
+        predictive: Literal["latent", "observation"] = "latent",
         figsize: tuple[float, float] | None = None,
     ) -> Figure:
         """
@@ -485,15 +500,28 @@ class VaxfluxInferenceData(az.InferenceData):
             plot_prevalence: Whether to plot prevalence panels.
             plot_observations: Whether to plot observed data points. When `None`,
                 uses `self.observations` availability.
+            predictive: Whether to plot latent curve intervals or observation-level
+                predictive intervals.
             figsize: Optional figure size override.
 
         Returns:
             The Matplotlib figure.
 
         """
+        predictive_label = (
+            "Observation Predictive" if predictive == "observation" else "Predictive"
+        )
         return self._plot_predictive(
-            data=self.posterior_observations,
-            title="Posterior Predictive Checks",
+            data=self._predictive_observations(
+                predictive=predictive,
+                fallback=self.posterior_observations,
+                dataset=(
+                    self.merged_posterior
+                    if predictive == "observation"
+                    else getattr(self, "posterior_predictive", None)
+                ),
+            ),
+            title=f"Posterior {predictive_label} Checks",
             intervals=intervals,
             plot_incidence=plot_incidence,
             plot_prevalence=plot_prevalence,
@@ -623,6 +651,148 @@ class VaxfluxInferenceData(az.InferenceData):
             )
             fig.tight_layout()
         return fig
+
+    def _predictive_observations(
+        self,
+        *,
+        predictive: Literal["latent", "observation"],
+        fallback: pd.DataFrame,
+        dataset: xr.Dataset | None,
+    ) -> pd.DataFrame:
+        """
+        Resolve predictive observation data for plotting.
+
+        Args:
+            predictive: Whether to return latent curve or observation-level draws.
+            fallback: Latent observation DataFrame used when predictive is "latent".
+            dataset: Dataset containing observation-level samples.
+
+        Returns:
+            A DataFrame of observations for plotting.
+
+        Raises:
+            ValueError: If predictive samples are unavailable or invalid.
+
+        """
+        if predictive == "latent":
+            return fallback
+        if dataset is None:
+            msg = (
+                "Observation-level predictive samples are not available; "
+                "ensure prior or posterior predictive data is present."
+            )
+            raise ValueError(msg)
+        return self._observations_from_observation_samples(dataset)
+
+    def _observations_from_observation_samples(
+        self,
+        dataset: xr.Dataset,
+    ) -> pd.DataFrame:
+        """
+        Build an observations DataFrame from observation-level samples.
+
+        Args:
+            dataset: Dataset containing ``observation_sim`` samples and coordinates.
+
+        Returns:
+            A DataFrame with observation metadata and values.
+
+        Raises:
+            ValueError: If observation samples or labels are missing.
+
+        """
+        if "observation_sim" not in dataset.data_vars:
+            msg = "No observation samples found in the inference data."
+            raise ValueError(msg)
+        if "observation" not in dataset.coords:
+            msg = "No observation labels found in the inference data."
+            raise ValueError(msg)
+
+        covariate_names = self.coords.get("covariate_names", [])
+        if not covariate_names:
+            covariate_names = sorted(
+                key[: -len("_categories")]
+                for key in self.coords
+                if key.endswith("_categories") and not key.endswith("_categories_short")
+            )
+        label_map = self._parse_observation_labels(
+            labels=dataset.coords["observation"].to_numpy().tolist(),
+            covariate_names=list(covariate_names),
+        )
+        data = dataset["observation_sim"].to_dataframe(name="value").reset_index()
+        meta = pd.DataFrame(label_map)
+        df = data.merge(meta, on="observation", how="left")
+        if df[["season", "start_date", "end_date"]].isna().any().any():
+            msg = "Unable to map observation samples to observation metadata."
+            raise ValueError(msg)
+
+        for col in ("season_start_date", "season_end_date", "report_date"):
+            if col not in df.columns:
+                df[col] = pd.NaT
+        df["type"] = "incidence"
+        return df[
+            [
+                "chain",
+                "draw",
+                "season",
+                "season_start_date",
+                "season_end_date",
+                "start_date",
+                "end_date",
+                "report_date",
+                *covariate_names,
+                "type",
+                "value",
+            ]
+        ]
+
+    def _parse_observation_labels(
+        self,
+        *,
+        labels: list[str],
+        covariate_names: list[str],
+    ) -> list[dict[str, Any]]:
+        """
+        Parse observation labels into structured metadata.
+
+        Args:
+            labels: Observation labels created by the model.
+            covariate_names: Covariate names in the expected label order.
+
+        Returns:
+            A list of metadata dictionaries keyed by "observation".
+
+        Raises:
+            ValueError: If a label cannot be parsed.
+
+        """
+        metadata: list[dict[str, Any]] = []
+        for label in labels:
+            parts = str(label).split("|")
+            if len(parts) < 3:
+                msg = f"Invalid observation label: {label}."
+                raise ValueError(msg)
+            season, start_date, end_date = parts[:3]
+            covariate_values: dict[str, str] = {}
+            for item in parts[3:]:
+                if "=" not in item:
+                    msg = f"Invalid observation label: {label}."
+                    raise ValueError(msg)
+                key, value = item.split("=", 1)
+                covariate_values[key] = value
+            for covariate_name in covariate_names:
+                covariate_values.setdefault(covariate_name, "")
+            metadata.append(
+                {
+                    "observation": label,
+                    "season": season,
+                    "start_date": pd.to_datetime(start_date),
+                    "end_date": pd.to_datetime(end_date),
+                    "report_date": pd.to_datetime(end_date),
+                    **covariate_values,
+                }
+            )
+        return metadata
 
     def _resolve_plot_observations(
         self,
