@@ -38,8 +38,9 @@ Added:
     to produce a graphic of the underlying model. Added an example of its usage
     to the `demos/vaxflux-model.ipynb` notebook. See
     [#156](https://github.com/ACCIDDA/vaxflux/issues/156).
-  - Added `PartiallyPooledGaussianCovariate`, `PooledGaussianCovariate`
-    covariate classes to specify the priors/parameters for covariates. See
+  - Added `PooledGaussianCovariate`, `PartiallyPooledGaussianCovariate`,
+    `SeasonVaryingPartiallyPooledGaussianCovariate` covariate classes to specify
+    the priors/parameters for covariates. See
     [#106](https://github.com/ACCIDDA/vaxflux/issues/106).
 - Added `VaxfluxInferenceData` class that inherits from
   [`arviz.InferenceData`](https://python.arviz.org/en/stable/api/inference_data.html)

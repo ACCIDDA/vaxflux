@@ -19,13 +19,15 @@ from vaxflux import (
                 PartiallyPooledGaussianCovariate(
                     parameter="m",
                     covariate="age",
-                    mu=(0.5, 0.1),
+                    mu_mu=0.5,
+                    mu_sigma=0.1,
                     sigma=0.2,
                 ),
                 PartiallyPooledGaussianCovariate(
                     parameter="m",
                     covariate="age",
-                    mu=(0.6, 0.1),
+                    mu_mu=0.6,
+                    mu_sigma=0.1,
                     sigma=0.3,
                 ),
             ],
@@ -36,7 +38,8 @@ from vaxflux import (
                 PartiallyPooledGaussianCovariate(
                     parameter="r",
                     covariate="sex",
-                    mu=(0.5, 0.1),
+                    mu_mu=0.5,
+                    mu_sigma=0.1,
                     sigma=0.2,
                 ),
             ],
@@ -44,7 +47,8 @@ from vaxflux import (
                 PartiallyPooledGaussianCovariate(
                     parameter="r",
                     covariate="sex",
-                    mu=(0.6, 0.1),
+                    mu_mu=0.6,
+                    mu_sigma=0.1,
                     sigma=0.3,
                 ),
             ],
