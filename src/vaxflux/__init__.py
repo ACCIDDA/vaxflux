@@ -8,6 +8,7 @@ __all__ = (
     "LogisticCurve",
     "PartiallyPooledGaussianCovariate",
     "PooledGaussianCovariate",
+    "SeasonVaryingPartiallyPooledGaussianCovariate",
     "VaxfluxInferenceData",
     "VaxfluxModel",
     "covariates",
@@ -32,6 +33,7 @@ from vaxflux._covariates import (
     Covariate,
     PartiallyPooledGaussianCovariate,
     PooledGaussianCovariate,
+    SeasonVaryingPartiallyPooledGaussianCovariate,
 )
 from vaxflux._curves import Curve, LogisticCurve
 from vaxflux._interventions import Implementation, Intervention
