@@ -9,6 +9,7 @@ __all__ = (
     "coordinates_from_incidence",
     "create_logistic_sample_dataset",
     "format_incidence_dataframe",
+    "get_ncird_nis_frvm_flu_vaccination_coverage",
     "get_ncird_weekly_cumulative_vaccination_coverage",
     "sample_dataset",
 )
@@ -31,6 +32,164 @@ from vaxflux._covariate_categories import (
 )
 from vaxflux._curves import Curve
 from vaxflux._dates import DateRange, SeasonRange
+
+
+def _format_influenza_season_label(raw: str) -> str:
+    """
+    Format influenza season labels for downstream vaxflux usage.
+
+    The NCIRD datasets generally encode seasons as `YYYY-YYYY` (for example,
+    `2023-2024`). vaxflux examples and outputs use `YYYY/YY` (for example,
+    `2023/24`), so this helper standardizes labels to that form.
+
+    Args:
+        raw: Raw season label from the source dataset.
+
+    Returns:
+        The formatted season label. If `raw` does not include `-`, the
+        original value is returned unchanged.
+
+    Examples:
+        >>> from vaxflux.data import _format_influenza_season_label
+        >>> _format_influenza_season_label("2022-2023")
+        '2022/23'
+        >>> _format_influenza_season_label("2023/24")
+        '2023/24'
+
+    """
+    if "-" in raw:
+        start, end = raw.split("-", maxsplit=1)
+        return f"{start}/{end[-2:]}"
+    return raw
+
+
+def _prepare_nis_frvm_observations(
+    filtered: pd.DataFrame,
+    *,
+    group_cols: list[str],
+    include_age_groups: bool,
+) -> pd.DataFrame:
+    """
+    Convert filtered NIS/FRVM rows into `VaxfluxModel`-ready observations.
+
+    This helper converts cumulative coverage estimates into incidence by group
+    (season or season+age) and returns the canonical observation schema expected
+    by :meth:`VaxfluxModel.add_observations`.
+
+    Args:
+        filtered: Data already filtered to the intended NCIRD subset
+            (geography/indicator/demographic level).
+        group_cols: Grouping columns used to compute cadence and incidence
+            differences, e.g. `["season"]` or `["season", "age"]`.
+        include_age_groups: Whether to include the `age` column in the
+            returned DataFrame.
+
+    Returns:
+        A DataFrame with columns `season`, `season_start_date`,
+        `season_end_date`, `start_date`, `end_date`, `report_date`,
+        `type`, and `value` plus `age` when age groups are requested.
+
+    Raises:
+        ValueError: If no valid rows remain after parsing dates/values.
+    """
+    # CDC exports appear in at least two datetime string formats depending on source.
+    end_date = pd.to_datetime(
+        filtered["week_ending"],
+        format="%m/%d/%Y %I:%M:%S %p",
+        errors="coerce",
+    )
+    missing_mask = end_date.isna()
+    if missing_mask.any():
+        end_date.loc[missing_mask] = pd.to_datetime(
+            filtered.loc[missing_mask, "week_ending"],
+            format="%Y %b %d %I:%M:%S %p",
+            errors="coerce",
+        )
+    filtered["end_date"] = end_date.dt.normalize()
+    filtered["prevalence"] = (
+        pd.to_numeric(filtered["estimates"], errors="coerce") / 100.0
+    )
+    filtered = filtered.dropna(subset=["end_date", "prevalence"])
+    if filtered.empty:
+        msg = "No valid rows remain after parsing dates and estimates."
+        raise ValueError(msg)
+
+    # Normalize season labels and sort so prevalence differences are temporal.
+    filtered["season"] = (
+        filtered["influenza_season"]
+        .astype("string")
+        .map(lambda s: _format_influenza_season_label(str(s)))
+    )
+    filtered = filtered.sort_values([*group_cols, "end_date"])
+    filtered = filtered.drop_duplicates(subset=[*group_cols, "end_date"])
+    # Ensure cumulative prevalence is non-decreasing, then difference to incidence.
+    filtered["prevalence"] = filtered.groupby(group_cols)["prevalence"].cummax()
+    filtered["value"] = (
+        filtered.groupby(group_cols)["prevalence"].diff().fillna(filtered["prevalence"])
+    )
+    season_year = filtered["season"].str.split("/", n=1).str[0].astype(int)
+    filtered["season_start_date"] = pd.to_datetime(
+        {
+            "year": season_year,
+            "month": 8,
+            "day": 1,
+        }
+    )
+    filtered["season_end_date"] = pd.to_datetime(
+        {
+            "year": season_year + 1,
+            "month": 7,
+            "day": 1,
+        }
+    )
+    # Start date is prior report date; first period starts at season start.
+    filtered["start_date"] = filtered.groupby(group_cols)["end_date"].shift(1)
+    filtered["start_date"] = filtered["start_date"].fillna(
+        filtered["season_start_date"]
+    )
+
+    # Truncate each season to observations that start before April 1 of the
+    # spring calendar year (the second year in the season label).
+    spring_cutoff = pd.to_datetime(
+        {
+            "year": season_year + 1,
+            "month": 4,
+            "day": 1,
+        }
+    )
+    filtered = filtered[filtered["start_date"] < spring_cutoff].copy()
+
+    # Use a fixed season end date of March 31 for truncated seasons.
+    filtered["season_end_date"] = pd.to_datetime(
+        {
+            "year": season_year + 1,
+            "month": 3,
+            "day": 31,
+        }
+    )
+
+    filtered["report_date"] = filtered["end_date"]
+    filtered["type"] = "incidence"
+
+    base_cols = [
+        "season",
+        "season_start_date",
+        "season_end_date",
+        "start_date",
+        "end_date",
+        "report_date",
+    ]
+    cols = (
+        [*base_cols, "age", "type", "value"]
+        if include_age_groups
+        else [*base_cols, "type", "value"]
+    )
+    observations = filtered[cols].reset_index(drop=True)
+    observations["season"] = observations["season"].astype("string")
+    observations["type"] = observations["type"].astype("string")
+    if include_age_groups:
+        observations["age"] = observations["age"].astype("string")
+    return observations
 
 
 def get_ncird_weekly_cumulative_vaccination_coverage() -> pd.DataFrame:
@@ -133,6 +292,73 @@ def get_ncird_weekly_cumulative_vaccination_coverage() -> pd.DataFrame:
     )
     return ncird_df.drop(columns=["week_ending", "95_ci"])
     # Return
+
+
+def get_ncird_nis_frvm_flu_vaccination_coverage(
+    *,
+    include_age_groups: bool = False,
+) -> pd.DataFrame:
+    """
+    Get NCIRD NIS/FRVM flu vaccination coverage formatted for `VaxfluxModel`.
+
+    This uses the CDC dataset `Weekly Influenza Vaccination Coverage and Intent
+    for Vaccination Among Adults 18 Years and Older
+    <https://data.cdc.gov/Flu-Vaccinations/Weekly-Influenza-Vaccination-Coverage-and-Intent-f/sw5n-wg2p/about_data>`_.
+
+    Args:
+        include_age_groups: Whether to return an age-stratified output. When
+            `False`, only overall national rows are returned.
+
+    Returns:
+        A pandas DataFrame with columns required by
+        :meth:`VaxfluxModel.add_observations`:
+        `season`, `season_start_date`, `season_end_date`, `start_date`,
+        `end_date`, `report_date`, `type`, and `value`. Includes `age`
+        when `include_age_groups=True`.
+    """
+    now = datetime.now(UTC)
+    cache_bust = time.mktime(now.timetuple())
+    date = now.strftime("%Y%m%d")
+    url = (
+        "https://data.cdc.gov/api/views/sw5n-wg2p/rows.csv?fourfour=sw5n-wg2p"
+        f"&cacheBust={cache_bust}&date={date}&accessType=DOWNLOAD"
+    )
+    resp = requests.get(url, timeout=30)
+    resp.raise_for_status()
+    nis_df = pd.read_csv(io.BytesIO(resp.content))
+    nis_df.columns = (
+        nis_df.columns.str.strip()
+        .str.lower()
+        .str.replace(r"[^a-z0-9]+", "_", regex=True)
+        .str.strip("_")
+    )
+
+    filtered = nis_df[
+        (nis_df["geographic_level"] == "National")
+        & (nis_df["indicator_label"] == "Up-to-date")
+    ].copy()
+
+    if include_age_groups:
+        age_categories = ("18-49 years", "50-64 years", "65+ years")
+        filtered = filtered[
+            (filtered["demographic_level"] == "Age")
+            & (filtered["demographic_name"].isin(age_categories))
+        ].copy()
+        filtered["age"] = filtered["demographic_name"].astype("string")
+        group_cols = ["season", "age"]
+    else:
+        filtered = filtered[filtered["demographic_level"] == "Overall"].copy()
+        group_cols = ["season"]
+
+    if filtered.empty:
+        msg = "No rows found for requested NCIRD NIS/FRVM filters."
+        raise ValueError(msg)
+
+    return _prepare_nis_frvm_observations(
+        filtered,
+        group_cols=group_cols,
+        include_age_groups=include_age_groups,
+    )
 
 
 def format_incidence_dataframe(incidence: pd.DataFrame) -> pd.DataFrame:

@@ -56,7 +56,9 @@ Added:
     prevalence ranges. See
     [#150](https://github.com/ACCIDDA/vaxflux/issues/150).
 - Added demonstration of `VaxfluxModel` class in the `demos/vaxflux-model.ipynb`
-  notebook using synthetic data.
+  and `demos/season-only-vaxflux-model.ipynb` notebooks using synthetic data as
+  well as in the `demos/nis-frvm-survey.ipynb` notebook with real data. See
+  [#173](https://github.com/ACCIDDA/vaxflux/issues/173).
 
 Changed:
 

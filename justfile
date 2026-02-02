@@ -18,7 +18,6 @@ lint: cspell prettier yamllint
 [unix]
 [group('clean')]
 clean-docs:
-    {{rmdir}} docs/api
     {{rmdir}} docs/demos
     {{rmdir}} site
     {{rm}} docs/changelog.md
