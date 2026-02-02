@@ -306,21 +306,21 @@ class SeasonVaryingPartiallyPooledGaussianCovariate(Covariate):
         if num_categories < 2:
             msg = "Season-varying covariates require at least 2 categories."
             raise ValueError(msg)
-        mu_sample = numpyro.sample(
-            f"{self.prefix}_mu",
-            dist.Normal(self.mu_mu, self.mu_sigma),
-        )
-        sigma_sample = numpyro.sample(
-            f"{self.prefix}_sigma",
-            dist.HalfNormal(self.sigma),
-        )
-        with (
-            numpyro.plate(f"covariate_{self.prefix}", num_categories - 1),
-            numpyro.plate(f"{self.prefix}_season", num_seasons),
-        ):
+        # Draw category-level parameters from hyper priors.
+        with numpyro.plate(f"covariate_{self.prefix}", num_categories - 1):
+            mu_sample = numpyro.sample(
+                f"{self.prefix}_mu",
+                dist.Normal(self.mu_mu, self.mu_sigma),
+            )
+            sigma_sample = numpyro.sample(
+                f"{self.prefix}_sigma",
+                dist.HalfNormal(self.sigma),
+            )
+        # Draw season-level effects per category from the category-level priors.
+        with numpyro.plate(f"{self.prefix}_season", num_seasons):
             sampled_values = numpyro.sample(
                 self.prefix,
-                dist.Normal(mu_sample, sigma_sample),
+                dist.Normal(mu_sample, sigma_sample).to_event(1),
             )
         padded = jnp.pad(sampled_values, ((0, 0), (1, 0)), mode="constant")
         return cast(
@@ -340,6 +340,8 @@ class SeasonVaryingPartiallyPooledGaussianCovariate(Covariate):
             raise ValueError(msg)
         full_key, short_key = category_coord_keys
         return {
+            f"{self.prefix}_mu": [short_key],
+            f"{self.prefix}_sigma": [short_key],
             self.prefix: ["season", short_key],
             f"covariate_values_{self.prefix}": ["season", full_key],
         }

@@ -27,6 +27,7 @@
     "expit",
     "figsize",
     "fontsize",
+    "frvm",
     "groupby",
     "hyperprior",
     "inferencedata",
