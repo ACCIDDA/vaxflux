@@ -2,7 +2,7 @@
 
 import pytest
 
-from vaxflux.covariates import CovariateCategories
+from vaxflux import CovariateCategories
 
 
 @pytest.mark.parametrize(

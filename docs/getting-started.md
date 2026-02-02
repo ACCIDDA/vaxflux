@@ -34,17 +34,15 @@ In `vaxflux`, a season is defined as a period of time during which vaccine
 uptake is measured. The package allows you to specify the start and end dates of
 a season, which is crucial for modeling vaccine uptake patterns over time. These
 are specified to the model using the
-[`vaxflux.dates.SeasonRange`](api/dates.md#vaxflux.dates.SeasonRange) class.
-Within each season, you can define a date range that represents the period
-during which vaccine uptake is observed, which is done using the
-[`vaxflux.dates.DateRange`](api/dates.md#vaxflux.dates.DateRange) class. For
-this example we will create a season that starts the 1st Monday of October and
-ends the 1st Sunday of the following February for the 2022/23, 2023/24, and
-2024/25 seasons.
+[`vaxflux.SeasonRange`](api/vaxflux.md#vaxflux.SeasonRange) class. Within each
+season, you can define a date range that represents the period during which
+vaccine uptake is observed, which is done using the
+[`vaxflux.DateRange`](api/vaxflux.md#vaxflux.DateRange) class. For this example
+we will create a season that starts the 1st Monday of October and ends the 1st
+Sunday of the following February for the 2022/23, 2023/24, and 2024/25 seasons.
 
 Then we'll define date ranges for each of these seasons that span a week using
-the
-[`vaxflux.dates.daily_date_ranges`](api/dates.md#vaxflux.dates.daily_date_ranges)
+the [`vaxflux.daily_date_ranges`](api/vaxflux.md#vaxflux.daily_date_ranges)
 function. The `daily_date_ranges` function generates a list of date ranges for
 each season, where each date range represents a period of time during which
 vaccine uptake is observed. The `range_days` argument specifies the number of
@@ -52,7 +50,7 @@ days in each date range where ranges are defined start date inclusive end date
 exclusive.
 
 ```python
-from vaxflux.dates import DateRange, SeasonRange, daily_date_ranges
+from vaxflux import DateRange, SeasonRange, daily_date_ranges
 
 seasons = [
     SeasonRange(season="2022/23", start_date="2022-10-03", end_date="2023-02-05"),
@@ -67,15 +65,14 @@ dates = daily_date_ranges(seasons, range_days=6)
 In `vaxflux`, covariates are additional variables that can influence vaccine
 uptake patterns. These can include demographic information, geographic data, or
 any other relevant factors. Covariates and their categories are defined using
-the
-[`vaxflux.covariates.CovariateCategories`](api/covariates.md#vaxflux.covariates.CovariateCategories)
+the [`vaxflux.CovariateCategories`](api/vaxflux.md#vaxflux.CovariateCategories)
 class. In this example, we will create a single "age" covariate with three
 categories, "youth", "adult", and "elderly", which loosely correspond to 0-17
 yrs, 18-65 yrs, and 65+ yrs, respectively. This covariate will be used to model
 how vaccine uptake varies across different age groups.
 
 ```python
-from vaxflux.covariates import CovariateCategories
+from vaxflux import CovariateCategories
 
 age_covariate = CovariateCategories(
     covariate="age",
@@ -97,7 +94,7 @@ defined in the previous sections.
 The parameters are defined as a list of tuples, where each tuple contains the
 curve family parameter name, season, covariate category/categories, and the
 value for that parameter. The parameters for a logistic curve can be found in
-the [`vaxflux.curves.LogisticCurve`](api/curves.md#vaxflux.curves.LogisticCurve)
+the [`vaxflux.LogisticCurve`](api/vaxflux.md#vaxflux.LogisticCurve)
 documentation, but in brief they are:
 
 - $m$: The max uptake prevalence, which is the maximum value of the logistic
@@ -168,7 +165,7 @@ model.
 
 In this example we will use partially pooled Gaussian covariates for seasonal
 effects and an age effect on the max uptake parameter. The
-[`vaxflux.PartiallyPooledGaussianCovariate`](api/covariates.md#vaxflux.covariates.PartiallyPooledGaussianCovariate)
+[`vaxflux.PartiallyPooledGaussianCovariate`](api/vaxflux.md#vaxflux.PartiallyPooledGaussianCovariate)
 class provides a convenient way to express these priors in the NumPyro-based
 model. Note that the priors are loosely centered around the values used to
 generate the sample dataset, but they are not exact. This is because the model

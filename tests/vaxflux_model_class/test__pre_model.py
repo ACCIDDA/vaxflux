@@ -7,10 +7,14 @@ from typing import Any
 import jax.numpy as jnp
 import pytest
 
-from vaxflux import Curve, PartiallyPooledGaussianCovariate, VaxfluxModel
+from vaxflux import (
+    CovariateCategories,
+    Curve,
+    PartiallyPooledGaussianCovariate,
+    SeasonRange,
+    VaxfluxModel,
+)
 from vaxflux._types import NumericalArrayLike
-from vaxflux.covariates import CovariateCategories
-from vaxflux.dates import SeasonRange
 
 
 class DummyCurve(Curve):

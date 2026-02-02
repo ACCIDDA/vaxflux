@@ -4,9 +4,7 @@ from datetime import date
 
 import pytest
 
-from vaxflux._curves import LogisticCurve
-from vaxflux._vaxflux_model import VaxfluxModel
-from vaxflux.dates import DateRange, SeasonRange
+from vaxflux import DateRange, LogisticCurve, SeasonRange, VaxfluxModel
 
 SEASON_2023_2024 = SeasonRange(
     season="2023/2024",

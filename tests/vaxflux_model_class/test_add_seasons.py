@@ -4,9 +4,7 @@ from datetime import date
 
 import pytest
 
-from vaxflux._curves import LogisticCurve
-from vaxflux._vaxflux_model import VaxfluxModel
-from vaxflux.dates import SeasonRange
+from vaxflux import LogisticCurve, SeasonRange, VaxfluxModel
 
 
 @pytest.mark.parametrize(

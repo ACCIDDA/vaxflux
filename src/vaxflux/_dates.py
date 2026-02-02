@@ -1,6 +1,6 @@
 """Tools for specifying date ranges for uptake models and scenarios."""
 
-__all__ = ("DateRange", "SeasonRange", "daily_date_ranges")
+__all__: list[str] = []
 
 
 from collections.abc import Sequence
@@ -23,7 +23,7 @@ class SeasonRange(BaseModel):
     A representation of a season range for uptake scenarios.
 
     Examples:
-        >>> from vaxflux.dates import SeasonRange
+        >>> from vaxflux import SeasonRange
         >>> season_range = SeasonRange(
         ...     season="2023/2024",
         ...     start_date="2023-12-01",
@@ -87,7 +87,7 @@ class DateRange(BaseModel):
     A representation of a date range for uptake scenarios.
 
     Examples:
-        >>> from vaxflux.dates import DateRange
+        >>> from vaxflux import DateRange
         >>> date_range = DateRange(
         ...     season="2023/2024",
         ...     start_date="2023-12-01",
@@ -185,7 +185,8 @@ def _date_ranges_overlap(date_range1: DateRange, date_range2: DateRange) -> bool
 
     Examples:
         >>> from datetime import date
-        >>> from vaxflux.dates import DateRange, _date_ranges_overlap
+        >>> from vaxflux import DateRange
+        >>> from vaxflux._dates import _date_ranges_overlap
         >>> dr1 = DateRange(
         ...     season="2023/2024",
         ...     start_date=date(2023, 12, 1),
@@ -233,7 +234,8 @@ def _seasons_overlap(season1: SeasonRange, season2: SeasonRange) -> bool:
 
     Examples:
         >>> from datetime import date
-        >>> from vaxflux.dates import SeasonRange, _seasons_overlap
+        >>> from vaxflux import SeasonRange
+        >>> from vaxflux._dates import _seasons_overlap
         >>> season1 = SeasonRange(
         ...     season="2023/2024",
         ...     start_date=date(2023, 12, 1),

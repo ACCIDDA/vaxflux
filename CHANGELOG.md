@@ -72,6 +72,8 @@ Changed:
 - Updated documentation site to reflect changes from the
   ["Model Refactor" milestone](https://github.com/ACCIDDA/vaxflux/milestone/3).
   See [#109](https://github.com/ACCIDDA/vaxflux/issues/109).
+- Consolidated the `covariates`, `dates`, `interventions`, and `curves` modules
+  as direct exports of `vaxflux` to simplify user imports.
 
 Deprecated:
 
@@ -81,6 +83,9 @@ Removed:
 
 - Dropped support for python 3.10, see
   [#90](https://github.com/ACCIDDA/vaxflux/issues/90).
+- Removed the `PyMC` based implementation of the vaxflux model, represented
+  previously by the `UptakeModel` class, in favor of the `numpyro` based
+  implementation. See [#172](https://github.com/ACCIDDA/vaxflux/issues/172).
 
 Fixed:
 

@@ -60,10 +60,12 @@ For covariates besides the seasonal baseline the first index is set to zero, so
 in our example $s^{\mathrm{age}}_{i,1}=s^{\mathrm{density}}_{i,1}=0$ (this is
 why for two categories the effect is not drawn from a multivariate
 distribution). The covariate indexes are determined by the order of `categories`
-provided to `vaxflux.covariates.CovariateCategories`. This means the
-interpretation of a covariate effect like $s^{\mathrm{age}}_{i,j}$ is that it is
-the difference in the inflection point between the $j$-th age category and the
-first age category (which is the reference category).
+provided to
+[`vaxflux.CovariateCategories`](api/vaxflux.md#vaxflux.CovariateCategories).
+This means the interpretation of a covariate effect like
+$s^{\mathrm{age}}_{i,j}$ is that it is the difference in the inflection point
+between the $j$-th age category and the first age category (which is the
+reference category).
 
 A limitation of this approach to curve parameters is that it does not allow for
 interactions between covariates. For example, if we wanted to model the
