@@ -25,9 +25,12 @@ import pandas as pd
 import requests
 from scipy.special import expit
 
-from vaxflux.covariates import CovariateCategories, _covariate_categories_product
-from vaxflux.curves import Curve
-from vaxflux.dates import DateRange, SeasonRange
+from vaxflux._covariate_categories import (
+    CovariateCategories,
+    _covariate_categories_product,
+)
+from vaxflux._curves import Curve
+from vaxflux._dates import DateRange, SeasonRange
 
 
 def get_ncird_weekly_cumulative_vaccination_coverage() -> pd.DataFrame:
@@ -200,7 +203,7 @@ def coordinates_from_incidence(
         incidence: A formatted incidence pandas DataFrame.
 
     Returns:
-        A dictionary of coordinates that can be provided to xarray or PyMC.
+        A dictionary of coordinates that can be provided to xarray.
 
     """
     keys: tuple[Literal["season", "region", "strata"], ...] = (

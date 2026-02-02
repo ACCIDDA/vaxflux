@@ -40,8 +40,7 @@ clean: clean-docs
 # Generate API reference documentation
 [unix]
 [group('docs')]
-api-reference: venv
-    uv run python scripts/api-reference.py
+reference: venv
     {{cp}} CHANGELOG.md docs/changelog.md
     {{cp}} CONTRIBUTING.md docs/contributing.md
     {{cp}} README.md docs/index.md
@@ -55,7 +54,7 @@ demos: venv
 
 # Build complete documentation
 [group('docs')]
-docs: venv api-reference demos
+docs: venv reference demos
     uv run mkdocs build --verbose --strict
 
 # Serve documentation locally

@@ -13,8 +13,16 @@ import pandas as pd
 from jax.random import key, split
 from numpyro.infer import MCMC, NUTS, Predictive
 
+from vaxflux._covariate_categories import CovariateCategories
 from vaxflux._covariates import Covariate
 from vaxflux._curves import Curve
+from vaxflux._dates import (
+    DateRange,
+    SeasonRange,
+    _collect_ranges,
+    _infer_ranges_from_observations,
+    _validate_ranges,
+)
 from vaxflux._interventions import (
     Implementation,
     Intervention,
@@ -26,14 +34,6 @@ from vaxflux._util import (
     _validate_and_format_observations,
 )
 from vaxflux._vaxflux_inference_data import VaxfluxInferenceData
-from vaxflux.covariates import CovariateCategories
-from vaxflux.dates import (
-    DateRange,
-    SeasonRange,
-    _collect_ranges,
-    _infer_ranges_from_observations,
-    _validate_ranges,
-)
 
 try:
     from numpyro import render_model as _render_model
@@ -91,8 +91,7 @@ class VaxfluxModel:
                 `SeasonRange` objects.
 
         Examples:
-            >>> from vaxflux._curves import LogisticCurve
-            >>> from vaxflux.dates import SeasonRange
+            >>> from vaxflux import LogisticCurve, SeasonRange
             >>> model = VaxfluxModel(curve=LogisticCurve())
             >>> model.add_seasons(
             ...     SeasonRange(
@@ -158,8 +157,7 @@ class VaxfluxModel:
             ValueError: If overlapping date ranges are found.
 
         Examples:
-            >>> from vaxflux._curves import LogisticCurve
-            >>> from vaxflux.dates import DateRange, SeasonRange
+            >>> from vaxflux import LogisticCurve, DateRange, SeasonRange
             >>> model = VaxfluxModel(curve=LogisticCurve())
             >>> model.add_seasons(
             ...     SeasonRange(

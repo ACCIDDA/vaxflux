@@ -9,9 +9,12 @@ import numpyro.distributions as dist
 from jax import Array as JaxArray
 from pydantic import BaseModel, ConfigDict, Field, computed_field
 
+from vaxflux._covariate_categories import (
+    CovariateCategories,
+    _covariate_categories_to_dict,
+)
+from vaxflux._dates import SeasonRange
 from vaxflux._util import _coord_name
-from vaxflux.covariates import CovariateCategories, _covariate_categories_to_dict
-from vaxflux.dates import SeasonRange
 
 InterventionName = Annotated[str, Field(pattern=r"^[a-z0-9_]+$")]
 

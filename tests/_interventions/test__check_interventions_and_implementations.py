@@ -4,13 +4,8 @@ from datetime import date
 
 import pytest
 
-from vaxflux._interventions import (
-    Implementation,
-    Intervention,
-    _check_interventions_and_implementations,
-)
-from vaxflux.covariates import CovariateCategories
-from vaxflux.dates import SeasonRange
+from vaxflux import CovariateCategories, Implementation, Intervention, SeasonRange
+from vaxflux._interventions import _check_interventions_and_implementations
 
 
 @pytest.fixture

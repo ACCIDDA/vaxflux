@@ -6,11 +6,10 @@ from typing import Literal
 import pandas as pd
 import pytest
 
-from vaxflux.dates import (
+from vaxflux import DateRange, SeasonRange
+from vaxflux._dates import (
     _INFER_RANGES_REQUIRED_COLUMNS,
     DateOrSeasonRange,
-    DateRange,
-    SeasonRange,
     _infer_ranges_from_observations,
 )
 
