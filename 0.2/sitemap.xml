@@ -36,32 +36,7 @@
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://accidda.github.io/vaxflux/0.2/api/covariates/</loc>
-         <lastmod>2026-02-02</lastmod>
-         <changefreq>daily</changefreq>
-    </url>
-    <url>
-         <loc>https://accidda.github.io/vaxflux/0.2/api/curves/</loc>
-         <lastmod>2026-02-02</lastmod>
-         <changefreq>daily</changefreq>
-    </url>
-    <url>
          <loc>https://accidda.github.io/vaxflux/0.2/api/data/</loc>
-         <lastmod>2026-02-02</lastmod>
-         <changefreq>daily</changefreq>
-    </url>
-    <url>
-         <loc>https://accidda.github.io/vaxflux/0.2/api/dates/</loc>
-         <lastmod>2026-02-02</lastmod>
-         <changefreq>daily</changefreq>
-    </url>
-    <url>
-         <loc>https://accidda.github.io/vaxflux/0.2/api/interventions/</loc>
-         <lastmod>2026-02-02</lastmod>
-         <changefreq>daily</changefreq>
-    </url>
-    <url>
-         <loc>https://accidda.github.io/vaxflux/0.2/api/uptake/</loc>
          <lastmod>2026-02-02</lastmod>
          <changefreq>daily</changefreq>
     </url>
@@ -71,27 +46,7 @@
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://accidda.github.io/vaxflux/0.2/demos/idd-demo/</loc>
-         <lastmod>2026-02-02</lastmod>
-         <changefreq>daily</changefreq>
-    </url>
-    <url>
          <loc>https://accidda.github.io/vaxflux/0.2/demos/season-only-vaxflux-model/</loc>
-         <lastmod>2026-02-02</lastmod>
-         <changefreq>daily</changefreq>
-    </url>
-    <url>
-         <loc>https://accidda.github.io/vaxflux/0.2/demos/synthetic-data-daily/</loc>
-         <lastmod>2026-02-02</lastmod>
-         <changefreq>daily</changefreq>
-    </url>
-    <url>
-         <loc>https://accidda.github.io/vaxflux/0.2/demos/synthetic-data/</loc>
-         <lastmod>2026-02-02</lastmod>
-         <changefreq>daily</changefreq>
-    </url>
-    <url>
-         <loc>https://accidda.github.io/vaxflux/0.2/demos/uptake-model/</loc>
          <lastmod>2026-02-02</lastmod>
          <changefreq>daily</changefreq>
     </url>

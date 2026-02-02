@@ -370,90 +370,6 @@ version.
   
   
     <li class="md-nav__item">
-      <a href="../demos/idd-demo/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    IDD Demo
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../demos/synthetic-data-daily/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Synthetic Data Daily
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../demos/synthetic-data/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Synthetic Data
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../demos/uptake-model/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Uptake Model
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
       <a href="../demos/vaxflux-model/" class="md-nav__link">
         
   
@@ -559,116 +475,11 @@ version.
   
   
     <li class="md-nav__item">
-      <a href="../api/covariates/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Covariates
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../api/curves/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Curves
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
       <a href="../api/data/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
     Data
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../api/dates/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Dates
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../api/interventions/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Interventions
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../api/uptake/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Uptake
   </span>
   
 
@@ -912,6 +723,8 @@ and this project adheres to
 <li>Updated documentation site to reflect changes from the
   <a href="https://github.com/ACCIDDA/vaxflux/milestone/3">"Model Refactor" milestone</a>.
   See <a href="https://github.com/ACCIDDA/vaxflux/issues/109">#109</a>.</li>
+<li>Consolidated the <code>covariates</code>, <code>dates</code>, <code>interventions</code>, and <code>curves</code> modules
+  as direct exports of <code>vaxflux</code> to simplify user imports.</li>
 </ul>
 <p>Deprecated:</p>
 <ul>
@@ -921,6 +734,9 @@ and this project adheres to
 <ul>
 <li>Dropped support for python 3.10, see
   <a href="https://github.com/ACCIDDA/vaxflux/issues/90">#90</a>.</li>
+<li>Removed the <code>PyMC</code> based implementation of the vaxflux model, represented
+  previously by the <code>UptakeModel</code> class, in favor of the <code>numpyro</code> based
+  implementation. See <a href="https://github.com/ACCIDDA/vaxflux/issues/172">#172</a>.</li>
 </ul>
 <p>Fixed:</p>
 <ul>

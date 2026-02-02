@@ -475,90 +475,6 @@ version.
   
   
     <li class="md-nav__item">
-      <a href="../demos/idd-demo/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    IDD Demo
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../demos/synthetic-data-daily/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Synthetic Data Daily
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../demos/synthetic-data/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Synthetic Data
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../demos/uptake-model/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Uptake Model
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
       <a href="../demos/vaxflux-model/" class="md-nav__link">
         
   
@@ -664,116 +580,11 @@ version.
   
   
     <li class="md-nav__item">
-      <a href="../api/covariates/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Covariates
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../api/curves/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Curves
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
       <a href="../api/data/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
     Data
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../api/dates/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Dates
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../api/interventions/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Interventions
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../api/uptake/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Uptake
   </span>
   
 
@@ -962,22 +773,20 @@ documentation.</p>
 uptake is measured. The package allows you to specify the start and end dates of
 a season, which is crucial for modeling vaccine uptake patterns over time. These
 are specified to the model using the
-<a href="../api/dates/#vaxflux.dates.SeasonRange"><code>vaxflux.dates.SeasonRange</code></a> class.
-Within each season, you can define a date range that represents the period
-during which vaccine uptake is observed, which is done using the
-<a href="../api/dates/#vaxflux.dates.DateRange"><code>vaxflux.dates.DateRange</code></a> class. For
-this example we will create a season that starts the 1st Monday of October and
-ends the 1st Sunday of the following February for the 2022/23, 2023/24, and
-2024/25 seasons.</p>
+<a href="../api/vaxflux/#vaxflux.SeasonRange"><code>vaxflux.SeasonRange</code></a> class. Within each
+season, you can define a date range that represents the period during which
+vaccine uptake is observed, which is done using the
+<a href="../api/vaxflux/#vaxflux.DateRange"><code>vaxflux.DateRange</code></a> class. For this example
+we will create a season that starts the 1st Monday of October and ends the 1st
+Sunday of the following February for the 2022/23, 2023/24, and 2024/25 seasons.</p>
 <p>Then we'll define date ranges for each of these seasons that span a week using
-the
-<a href="../api/dates/#vaxflux.dates.daily_date_ranges"><code>vaxflux.dates.daily_date_ranges</code></a>
+the <a href="../api/vaxflux/#vaxflux.daily_date_ranges"><code>vaxflux.daily_date_ranges</code></a>
 function. The <code>daily_date_ranges</code> function generates a list of date ranges for
 each season, where each date range represents a period of time during which
 vaccine uptake is observed. The <code>range_days</code> argument specifies the number of
 days in each date range where ranges are defined start date inclusive end date
 exclusive.</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">vaxflux.dates</span><span class="w"> </span><span class="kn">import</span> <span class="n">DateRange</span><span class="p">,</span> <span class="n">SeasonRange</span><span class="p">,</span> <span class="n">daily_date_ranges</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">vaxflux</span><span class="w"> </span><span class="kn">import</span> <span class="n">DateRange</span><span class="p">,</span> <span class="n">SeasonRange</span><span class="p">,</span> <span class="n">daily_date_ranges</span>
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>
 </span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="n">seasons</span> <span class="o">=</span> <span class="p">[</span>
 </span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>    <span class="n">SeasonRange</span><span class="p">(</span><span class="n">season</span><span class="o">=</span><span class="s2">&quot;2022/23&quot;</span><span class="p">,</span> <span class="n">start_date</span><span class="o">=</span><span class="s2">&quot;2022-10-03&quot;</span><span class="p">,</span> <span class="n">end_date</span><span class="o">=</span><span class="s2">&quot;2023-02-05&quot;</span><span class="p">),</span>
@@ -990,13 +799,12 @@ exclusive.</p>
 <p>In <code>vaxflux</code>, covariates are additional variables that can influence vaccine
 uptake patterns. These can include demographic information, geographic data, or
 any other relevant factors. Covariates and their categories are defined using
-the
-<a href="../api/covariates/#vaxflux.covariates.CovariateCategories"><code>vaxflux.covariates.CovariateCategories</code></a>
+the <a href="../api/vaxflux/#vaxflux.CovariateCategories"><code>vaxflux.CovariateCategories</code></a>
 class. In this example, we will create a single "age" covariate with three
 categories, "youth", "adult", and "elderly", which loosely correspond to 0-17
 yrs, 18-65 yrs, and 65+ yrs, respectively. This covariate will be used to model
 how vaccine uptake varies across different age groups.</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">vaxflux.covariates</span><span class="w"> </span><span class="kn">import</span> <span class="n">CovariateCategories</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">vaxflux</span><span class="w"> </span><span class="kn">import</span> <span class="n">CovariateCategories</span>
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>
 </span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="n">age_covariate</span> <span class="o">=</span> <span class="n">CovariateCategories</span><span class="p">(</span>
 </span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>    <span class="n">covariate</span><span class="o">=</span><span class="s2">&quot;age&quot;</span><span class="p">,</span>
@@ -1015,7 +823,7 @@ defined in the previous sections.</p>
 <p>The parameters are defined as a list of tuples, where each tuple contains the
 curve family parameter name, season, covariate category/categories, and the
 value for that parameter. The parameters for a logistic curve can be found in
-the <a href="../api/curves/#vaxflux.curves.LogisticCurve"><code>vaxflux.curves.LogisticCurve</code></a>
+the <a href="../api/vaxflux/#vaxflux.LogisticCurve"><code>vaxflux.LogisticCurve</code></a>
 documentation, but in brief they are:</p>
 <ul>
 <li><span class="arithmatex">\(m\)</span>: The max uptake prevalence, which is the maximum value of the logistic
@@ -1081,7 +889,7 @@ define the prior distributions for the covariates that will be used in the
 model.</p>
 <p>In this example we will use partially pooled Gaussian covariates for seasonal
 effects and an age effect on the max uptake parameter. The
-<a href="../api/covariates/#vaxflux.covariates.PartiallyPooledGaussianCovariate"><code>vaxflux.PartiallyPooledGaussianCovariate</code></a>
+<a href="../api/vaxflux/#vaxflux.PartiallyPooledGaussianCovariate"><code>vaxflux.PartiallyPooledGaussianCovariate</code></a>
 class provides a convenient way to express these priors in the NumPyro-based
 model. Note that the priors are loosely centered around the values used to
 generate the sample dataset, but they are not exact. This is because the model
