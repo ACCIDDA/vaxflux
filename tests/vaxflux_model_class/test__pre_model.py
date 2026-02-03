@@ -33,44 +33,46 @@ class DummyCurve(Curve):
     ("model_factory", "expected"),
     [
         (
-            lambda: VaxfluxModel(curve=DummyCurve())
-            .add_seasons(
-                SeasonRange(
-                    season="2023/2024",
-                    start_date=date(2023, 12, 1),
-                    end_date=date(2024, 3, 31),
-                ),
-                SeasonRange(
-                    season="2024/2025",
-                    start_date=date(2024, 12, 1),
-                    end_date=date(2025, 3, 31),
-                ),
-            )
-            .add_covariate_categories(
-                CovariateCategories(covariate="sex", categories=("female", "male"))
-            )
-            .add_covariates(
-                PartiallyPooledGaussianCovariate(
-                    parameter="m",
-                    covariate=None,
-                    mu_mu=0.0,
-                    mu_sigma=1.0,
-                    sigma=1.0,
-                ),
-                PartiallyPooledGaussianCovariate(
-                    parameter="m",
-                    covariate="sex",
-                    mu_mu=0.0,
-                    mu_sigma=1.0,
-                    sigma=1.0,
-                ),
-                PartiallyPooledGaussianCovariate(
-                    parameter="r",
-                    covariate=None,
-                    mu_mu=0.0,
-                    mu_sigma=1.0,
-                    sigma=1.0,
-                ),
+            lambda: (
+                VaxfluxModel(curve=DummyCurve())
+                .add_seasons(
+                    SeasonRange(
+                        season="2023/2024",
+                        start_date=date(2023, 12, 1),
+                        end_date=date(2024, 3, 31),
+                    ),
+                    SeasonRange(
+                        season="2024/2025",
+                        start_date=date(2024, 12, 1),
+                        end_date=date(2025, 3, 31),
+                    ),
+                )
+                .add_covariate_categories(
+                    CovariateCategories(covariate="sex", categories=("female", "male"))
+                )
+                .add_covariates(
+                    PartiallyPooledGaussianCovariate(
+                        parameter="m",
+                        covariate=None,
+                        mu_mu=0.0,
+                        mu_sigma=1.0,
+                        sigma=1.0,
+                    ),
+                    PartiallyPooledGaussianCovariate(
+                        parameter="m",
+                        covariate="sex",
+                        mu_mu=0.0,
+                        mu_sigma=1.0,
+                        sigma=1.0,
+                    ),
+                    PartiallyPooledGaussianCovariate(
+                        parameter="r",
+                        covariate=None,
+                        mu_mu=0.0,
+                        mu_sigma=1.0,
+                        sigma=1.0,
+                    ),
+                )
             ),
             {
                 "season_names": ["2023/2024", "2024/2025"],
@@ -87,22 +89,24 @@ class DummyCurve(Curve):
             },
         ),
         (
-            lambda: VaxfluxModel(curve=DummyCurve())
-            .add_seasons(
-                SeasonRange(
-                    season="2023/2024",
-                    start_date=date(2023, 12, 1),
-                    end_date=date(2024, 3, 31),
-                ),
-            )
-            .add_covariates(
-                PartiallyPooledGaussianCovariate(
-                    parameter="m",
-                    covariate=None,
-                    mu_mu=0.0,
-                    mu_sigma=1.0,
-                    sigma=1.0,
-                ),
+            lambda: (
+                VaxfluxModel(curve=DummyCurve())
+                .add_seasons(
+                    SeasonRange(
+                        season="2023/2024",
+                        start_date=date(2023, 12, 1),
+                        end_date=date(2024, 3, 31),
+                    ),
+                )
+                .add_covariates(
+                    PartiallyPooledGaussianCovariate(
+                        parameter="m",
+                        covariate=None,
+                        mu_mu=0.0,
+                        mu_sigma=1.0,
+                        sigma=1.0,
+                    ),
+                )
             ),
             {
                 "season_names": ["2023/2024"],

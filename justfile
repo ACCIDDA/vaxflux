@@ -98,7 +98,10 @@ demo-test:
     uv run jupyter nbconvert --to script demos/*.ipynb
     {{mv}} demos/*.py demos/scripts/
     echo "Running demo test scripts"
+    TMP=$(mktemp)
+    touch ${TMP}
     for file in demos/scripts/*.py; do
+        awk 'NR==4{print "import matplotlib; matplotlib.use(\"Agg\")"}1' ${file} > ${TMP} && mv ${TMP} ${file}
         echo "Running $file"
         time uv run python "$file"
     done
