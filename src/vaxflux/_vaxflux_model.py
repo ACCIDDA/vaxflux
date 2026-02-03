@@ -389,7 +389,7 @@ class VaxfluxModel:
         if self._observations is None:
             msg = "No observations have been added to the model, nothing to observe."
             raise ValueError(msg)
-        if kind not in {"normal"}:
+        if kind != "normal":
             msg = f"Unsupported observation process kind: {kind}."
             raise ValueError(msg)
         if prevalence_penalty < 0:
