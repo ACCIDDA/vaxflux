@@ -148,11 +148,5 @@ yamllint: venv
 [confirm]
 [unix]
 [group('release')]
-release create='false': venv
-    #!/usr/bin/env bash
-    set -euo pipefail
-    if [ "{{create}}" = "true" ]; then
-        uv run python scripts/release.py --create
-    else
-        uv run python scripts/release.py
-    fi
+release +FLAGS='': venv
+    uv run python scripts/release.py {{FLAGS}}

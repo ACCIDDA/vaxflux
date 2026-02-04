@@ -54,7 +54,7 @@ jobs:
           python-version: '${{ matrix.python-version }}'
       - name: 'run release'
         if: "${{ steps.check-release.outputs.proceed == 'true' }}"
-        run: 'just --yes release create=true'
+        run: 'just --yes release --create'
         env:
           GH_TOKEN: '${{ secrets.GITHUB_TOKEN }}'
           UV_PYTHON_VERSION: '${{ matrix.python-version }}'
