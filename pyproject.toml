@@ -1,6 +1,6 @@
 [project]
 name = "vaxflux"
-version = "0.2.0"
+version = "0.3.0"
 description = "Flexible bayesian models for seasonal vaccine uptake."
 readme = "README.md"
 license = { text = "MIT" }
