@@ -96,6 +96,48 @@ def get_versions() -> SemVer:
     return SemVer.parse(pyproject_version)
 
 
+def collapse_bullet_lines(lines: list[str]) -> list[str]:
+    """
+    Collapse wrapped markdown bullet text to one line per bullet.
+
+    Bullet indentation is preserved to maintain nesting levels.
+    """
+    collapsed: list[str] = []
+    bullet_prefix: str | None = None
+    bullet_parts: list[str] = []
+
+    def flush_bullet() -> None:
+        nonlocal bullet_prefix, bullet_parts
+        if bullet_prefix is None:
+            return
+        joined = " ".join(part for part in bullet_parts if part).strip()
+        collapsed.append(
+            f"{bullet_prefix}{joined}" if joined else bullet_prefix.rstrip()
+        )
+        bullet_prefix = None
+        bullet_parts = []
+
+    for line in lines:
+        bullet_match = re.match(r"^(?P<indent>\s*)-\s+(?P<text>.*)$", line)
+        if bullet_match is not None:
+            flush_bullet()
+            bullet_prefix = f"{bullet_match.group('indent')}- "
+            bullet_parts = [bullet_match.group("text").strip()]
+            continue
+        if bullet_prefix is None:
+            collapsed.append(line)
+            continue
+        stripped = line.strip()
+        if not stripped:
+            flush_bullet()
+            collapsed.append(line)
+            continue
+        bullet_parts.append(stripped)
+
+    flush_bullet()
+    return collapsed
+
+
 def validate_and_extract_changelog_section(
     version: SemVer, *, create: bool = False
 ) -> str:
@@ -130,7 +172,7 @@ def validate_and_extract_changelog_section(
             msg = f"Invalid changelog bullet point: {line!r}."
             raise ValueError(msg)
         section_lines.append(line)
-    notes = "\n".join(section_lines).strip()
+    notes = "\n".join(collapse_bullet_lines(section_lines)).strip()
     if not notes:
         msg = f"CHANGELOG section for {version} is empty."
         raise ValueError(msg)
@@ -185,9 +227,10 @@ def create_release(version: SemVer, notes: str, *, create: bool = False) -> None
         encoding="utf-8",
         suffix=".md",
         prefix="vaxflux-release-notes-",
+        delete=False,
     ) as temp_file:
         temp_file.write(notes)
-        notes_path = temp_file.name
+        temp_file.close()
         command = [
             get_gh_bin(),
             "release",
@@ -196,7 +239,7 @@ def create_release(version: SemVer, notes: str, *, create: bool = False) -> None
             "--title",
             tag,
             "--notes-file",
-            notes_path,
+            temp_file.name,
         ]
         if version.major == 0:
             command.append("--prerelease")
