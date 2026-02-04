@@ -1,15 +1,11 @@
 ---
-name: CI
+name: 'CI'
 
 'on':
   pull_request:
     branches:
       - main
   workflow_dispatch:
-
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
 
 permissions:
   contents: 'read'
@@ -25,7 +21,7 @@ jobs:
           - '3.12'
     steps:
       - name: 'checkout repository'
-        uses: 'actions/checkout@v5'
+        uses: 'actions/checkout@v6'
       - name: 'setup just'
         uses: 'extractions/setup-just@v3'
       - name: 'setup uv with python ${{ matrix.python-version }}'
@@ -43,7 +39,7 @@ jobs:
     runs-on: 'ubuntu-latest'
     steps:
       - name: 'checkout repository'
-        uses: 'actions/checkout@v5'
+        uses: 'actions/checkout@v6'
         with:
           fetch-depth: 0
       - name: 'check changelog updated'
@@ -68,7 +64,7 @@ jobs:
           - '3.12'
     steps:
       - name: 'checkout repository'
-        uses: 'actions/checkout@v5'
+        uses: 'actions/checkout@v6'
       - name: 'setup just'
         uses: 'extractions/setup-just@v3'
       - name: 'setup uv with python ${{ matrix.python-version }}'
