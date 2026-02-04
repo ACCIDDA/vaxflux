@@ -1,5 +1,5 @@
 ---
-name: 'lint'
+name: 'Lint'
 
 'on':
   pull_request:
@@ -7,15 +7,18 @@ name: 'lint'
       - 'main'
   workflow_dispatch:
 
+permissions:
+  contents: 'read'
+
 jobs:
   prettier:
     name: 'prettier'
     runs-on: 'ubuntu-latest'
     steps:
+      - name: 'checkout repository'
+        uses: 'actions/checkout@v6'
       - name: 'setup just'
         uses: 'extractions/setup-just@v3'
-      - name: 'checkout repository'
-        uses: 'actions/checkout@v5'
       - name: 'setup node'
         uses: 'actions/setup-node@v6'
         with:
@@ -27,10 +30,10 @@ jobs:
     name: 'cspell'
     runs-on: 'ubuntu-latest'
     steps:
+      - name: 'checkout repository'
+        uses: 'actions/checkout@v6'
       - name: 'setup just'
         uses: 'extractions/setup-just@v3'
-      - name: 'checkout repository'
-        uses: 'actions/checkout@v5'
       - name: 'setup node'
         uses: 'actions/setup-node@v6'
         with:
@@ -46,10 +49,10 @@ jobs:
         python-version:
           - '3.12'
     steps:
+      - name: 'checkout repository'
+        uses: 'actions/checkout@v6'
       - name: 'setup just'
         uses: 'extractions/setup-just@v3'
-      - name: 'checkout repository'
-        uses: 'actions/checkout@v5'
       - name: 'setup uv'
         uses: 'astral-sh/setup-uv@v6'
         with:

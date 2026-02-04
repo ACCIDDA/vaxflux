@@ -1,0 +1,60 @@
+---
+name: 'Release'
+
+'on':
+  push:
+    branches:
+      - 'main'
+  workflow_dispatch:
+
+permissions:
+  contents: 'write'
+
+jobs:
+  release:
+    name: 'release'
+    runs-on: 'ubuntu-latest'
+    strategy:
+      matrix:
+        python-version:
+          - '3.12'
+    steps:
+      - name: 'checkout repository'
+        uses: 'actions/checkout@v6'
+        with:
+          fetch-depth: 0
+      - name: 'check release'
+        id: 'check-release'
+        shell: 'bash'
+        run: |
+          set -euo pipefail
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "proceed=true" >> "${GITHUB_OUTPUT}"
+            echo "Workflow dispatch detected; bypassing commit message gate."
+            exit 0
+          fi
+          msg="$(git log -1 --pretty=%s)"
+          echo "Commit message: ${msg}"
+          if [[ "${msg}" =~ ^v([0-9]+)\.([0-9]+)\.([0-9]+)([[:space:]]|$) ]]; then
+            echo "proceed=true" >> "${GITHUB_OUTPUT}"
+            echo "Commit message matches release prefix vX.Y.Z."
+          else
+            echo "proceed=false" >> "${GITHUB_OUTPUT}"
+            echo "Commit message does not start with vX.Y.Z; skipping release."
+          fi
+      - name: 'setup just'
+        if: "${{ steps.check-release.outputs.proceed == 'true' }}"
+        uses: 'extractions/setup-just@v3'
+      - name: 'setup uv with python ${{ matrix.python-version }}'
+        if: "${{ steps.check-release.outputs.proceed == 'true' }}"
+        uses: 'astral-sh/setup-uv@v7'
+        with:
+          enable-cache: true
+          cache-dependency-glob: 'pyproject.toml'
+          python-version: '${{ matrix.python-version }}'
+      - name: 'run release'
+        if: "${{ steps.check-release.outputs.proceed == 'true' }}"
+        run: 'just --yes release create=true'
+        env:
+          GH_TOKEN: '${{ secrets.GITHUB_TOKEN }}'
+          UV_PYTHON_VERSION: '${{ matrix.python-version }}'

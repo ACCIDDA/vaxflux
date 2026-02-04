@@ -10,10 +10,6 @@ name: 'GitHub Pages Deploy'
       - 'published'
   workflow_dispatch:
 
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
-
 permissions:
   contents: 'read'
 
@@ -29,7 +25,7 @@ jobs:
       contents: 'write' # Needed to push to gh-pages
     steps:
       - name: 'checkout repository'
-        uses: 'actions/checkout@v5'
+        uses: 'actions/checkout@v6'
         with:
           ref: 'main'
       - name: 'setup just'
