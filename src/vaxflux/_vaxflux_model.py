@@ -14,6 +14,7 @@ from jax.random import key, split
 from numpyro.infer import MCMC, NUTS, Predictive
 
 from vaxflux._covariate_categories import CovariateCategories
+from vaxflux._covariate_index_info import CovariateIndexInfo
 from vaxflux._covariates import Covariate
 from vaxflux._curves import Curve
 from vaxflux._dates import (
@@ -697,33 +698,53 @@ class VaxfluxModel:
             new_coords["covariate_names"] = list(self._covariate_names)
         if "season" not in coords:
             new_coords["season"] = list(self._season_names)
-        # Delegate dimension mapping to each covariate so custom covariates can
-        # define their own output shapes and coordinate usage.
+        # Derive dimension mappings from the known shape contracts. Seasonal
+        # covariates are always shape (num_seasons,) and categorical covariates
+        # are always shape (num_seasons, num_categories).
         for covariate in self._covariates:
-            category_coord_keys = None
-            covariate_categories = None
-            if covariate.covariate is not None:
-                # Non-seasonal covariates need category coordinates for dims.
-                covariate_categories = list(
-                    self._covariate_categories_map.get(covariate.covariate, [])
-                )
-                category_coord_keys = self._covariate_category_coord_keys.get(
-                    covariate.covariate
-                )
-            dims_map = covariate.dims(
-                season_names=self._season_names,
-                covariate_categories=covariate_categories,
-                category_coord_keys=category_coord_keys,
-            )
-            # Merge covariate-provided dims into the model dims mapping.
-            new_dims.update(
-                {
-                    var_name: var_dims
-                    for var_name, var_dims in dims_map.items()
-                    if var_name not in dims
-                }
-            )
+            self._build_covariate_dims(covariate, dims, new_dims)
         return new_coords or None, new_dims or None
+
+    def _build_covariate_dims(
+        self,
+        covariate: Covariate,
+        existing_dims: dict[str, list[str]],
+        new_dims: dict[str, list[str]],
+    ) -> None:
+        """
+        Register ArviZ dimension labels for a single covariate.
+
+        Derives dims for the mandatory `covariate_values_*` deterministic site
+        and the raw `{prefix}` sample site from the known shape contracts.
+        Any additional sites declared by the covariate via `extra_dims()` are
+        also registered here.
+
+        Args:
+            covariate: The covariate to register dims for.
+            existing_dims: The dims already registered on the model; used to
+                avoid overwriting user-supplied overrides.
+            new_dims: The mapping to extend with any newly derived dims.
+
+        """
+        values_var = f"covariate_values_{covariate.prefix}"
+        if values_var in existing_dims:
+            return
+        raw_var = covariate.prefix
+        if covariate.covariate is None:
+            new_dims[values_var] = ["season"]
+            if raw_var not in existing_dims:
+                new_dims[raw_var] = ["season"]
+            extra = covariate.extra_dims("season", None)
+        else:
+            coord_keys = self._covariate_category_coord_keys[covariate.covariate]
+            full_key, short_key = coord_keys
+            new_dims[values_var] = ["season", full_key]
+            if raw_var not in existing_dims:
+                new_dims[raw_var] = [short_key]
+            extra = covariate.extra_dims("season", short_key)
+        new_dims.update(
+            {site: dims for site, dims in extra.items() if site not in existing_dims}
+        )
 
     def _coords_and_dims_for_observation_sigma(
         self,
@@ -898,13 +919,28 @@ class VaxfluxModel:
             for category in self._covariate_categories
         }
         self._covariate_names = list(self._covariate_categories_map.keys())
-        self._covariate_name_indices = {
+        _covariate_name_indices = {
             name: idx for idx, name in enumerate(self._covariate_names)
         }
-        self._covariate_category_indices = {
+        _covariate_category_indices = {
             name: {category: idx for idx, category in enumerate(categories)}
             for name, categories in self._covariate_categories_map.items()
         }
+        self._covariate_index_info = [
+            CovariateIndexInfo(
+                covariate=cov,
+                resolved_categories=list(self._covariate_categories_map[cov.covariate])
+                if cov.covariate is not None
+                else None,
+                combo_position=_covariate_name_indices.get(cov.covariate)
+                if cov.covariate is not None
+                else None,
+                category_index_map=_covariate_category_indices.get(cov.covariate)
+                if cov.covariate is not None
+                else None,
+            )
+            for cov in self._covariates
+        ]
         if self._observations is not None:
             self._observation_labels = [
                 self._format_observation_label(row)
@@ -926,7 +962,11 @@ class VaxfluxModel:
             combo: idx for idx, combo in enumerate(self._category_combinations)
         }
         self._covariates_by_parameter = {
-            param: [cov for cov in self._covariates if cov.parameter == param]
+            param: [
+                info
+                for info in self._covariate_index_info
+                if info.covariate.parameter == param
+            ]
             for param in self._curve.parameters
         }
         self._incidence_names_by_season = {
@@ -1012,36 +1052,22 @@ class VaxfluxModel:
             simulate_observations=simulate_observations,
         )
 
-    def _model_sample_covariate(self, covariate: Covariate) -> jnp.ndarray:
+    def _model_sample_covariate(self, info: CovariateIndexInfo) -> jnp.ndarray:
         """
         Sample from a single covariate.
 
         Args:
-            covariate: The covariate to sample from.
+            info: Pre-resolved index info for the covariate, built during
+                `_pre_model`. Provides the covariate and its already-resolved
+                categories so no runtime dict lookup is needed.
 
         Returns:
             The sampled covariate values.
 
         """
-        covariate_categories: list[str] | None = None
-        if covariate.covariate is not None:
-            # If the covariate has a covariate name, we look up the categories
-            # from the map of covariate categories.
-            possible_covariate_categories = self._covariate_categories_map.get(
-                covariate.covariate
-            )
-            if possible_covariate_categories is None:
-                msg = (
-                    f"Covariate categories for '{covariate.covariate}' not found. "
-                    "Ensure matching covariate categories are added to the model."
-                )
-                raise ValueError(msg)
-            covariate_categories = list(possible_covariate_categories)
-        # Sample from the covariate and store the sampled values in a
-        # deterministic site, optionally padding for non-seasonal covariates.
-        sampled_with_context = covariate.sample(
+        sampled_with_context = info.covariate.sample(
             season_names=self._season_names,
-            covariate_categories=covariate_categories,
+            covariate_categories=info.resolved_categories,
         )
         return cast("jnp.ndarray", sampled_with_context)
 
@@ -1053,11 +1079,10 @@ class VaxfluxModel:
             A dictionary mapping covariate prefixes to their sampled values.
 
         """
-        # Loop over the covariates and sample from them
-        covariate_values: dict[str, jnp.ndarray] = {}
-        for covariate in self._covariates:
-            covariate_values[covariate.prefix] = self._model_sample_covariate(covariate)
-        return covariate_values
+        return {
+            info.covariate.prefix: self._model_sample_covariate(info)
+            for info in self._covariate_index_info
+        }
 
     def _model_summed_parameters(
         self, covariate_values: dict[str, jnp.ndarray]
@@ -1084,27 +1109,17 @@ class VaxfluxModel:
                     # Collect covariate components that apply to this parameter,
                     # season, and covariate-category combination.
                     components = []
-                    for covariate in self._covariates_by_parameter.get(param, []):
-                        values = covariate_values[covariate.prefix]
-                        if covariate.covariate is None:
-                            # Seasonal covariates are indexed by season.
-                            season_index = self._season_name_indices[season]
-                            if values.shape[0] == len(self._season_names) + 1:
-                                season_index += 1
+                    season_index = self._season_name_indices[season]
+                    for info in self._covariates_by_parameter.get(param, []):
+                        values = covariate_values[info.covariate.prefix]
+                        if info.combo_position is None:
+                            # Seasonal covariates: always 1D (num_seasons,).
                             components.append(values[season_index])
-                            continue
-                        # Non-seasonal covariates are indexed by category.
-                        category = category_combo[
-                            self._covariate_name_indices[covariate.covariate]
-                        ]
-                        category_index = self._covariate_category_indices[
-                            covariate.covariate
-                        ][category]
-                        if values.ndim > 1:
-                            season_index = self._season_name_indices[season]
-                            components.append(values[season_index, category_index])
                         else:
-                            components.append(values[category_index])
+                            # Categorical covariates: always 2D.
+                            category = category_combo[info.combo_position]
+                            category_index = info.category_index_map[category]  # type: ignore[index]
+                            components.append(values[season_index, category_index])
                     # Sum the components (or use zero when none apply) for this
                     # parameter/season/category combination.
                     summed_name = _coord_name(

@@ -79,8 +79,6 @@ class DummyCurve(Curve):
                 "season_name_indices": {"2023/2024": 0, "2024/2025": 1},
                 "covariate_categories_map": {"sex": ("female", "male")},
                 "covariate_names": ["sex"],
-                "covariate_name_indices": {"sex": 0},
-                "covariate_category_indices": {"sex": {"female": 0, "male": 1}},
                 "category_combinations": [("female",), ("male",)],
                 "covariates_by_parameter": {
                     "m": ["m_season", "m_sex"],
@@ -113,8 +111,6 @@ class DummyCurve(Curve):
                 "season_name_indices": {"2023/2024": 0},
                 "covariate_categories_map": {},
                 "covariate_names": [],
-                "covariate_name_indices": {},
-                "covariate_category_indices": {},
                 "category_combinations": [()],
                 "covariates_by_parameter": {"m": ["m_season"], "r": []},
             },
@@ -131,10 +127,8 @@ def test_sets_expected_attributes(
     assert model._season_name_indices == expected["season_name_indices"]
     assert model._covariate_categories_map == expected["covariate_categories_map"]
     assert model._covariate_names == expected["covariate_names"]
-    assert model._covariate_name_indices == expected["covariate_name_indices"]
-    assert model._covariate_category_indices == expected["covariate_category_indices"]
     assert model._category_combinations == expected["category_combinations"]
     assert {
-        k: [v.prefix for v in model._covariates_by_parameter.get(k, [])]
+        k: [v.covariate.prefix for v in model._covariates_by_parameter.get(k, [])]
         for k in model._covariates_by_parameter
     } == expected["covariates_by_parameter"]
