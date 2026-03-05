@@ -692,7 +692,7 @@ class VaxfluxInferenceData(az.InferenceData):
         Build an observations DataFrame from observation-level samples.
 
         Args:
-            dataset: Dataset containing ``observation_sim`` samples and coordinates.
+            dataset: Dataset containing `observation_sim` samples and coordinates.
 
         Returns:
             A DataFrame with observation metadata and values.

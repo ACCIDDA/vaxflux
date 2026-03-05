@@ -14,7 +14,10 @@ Added:
 
 Changed:
 
-- ...
+- Changed the expected output of `Covariate.sample` to either be a 1D
+  `(num_seasons,)` or 2D `(num_seasons, num_categories)` array, removed the
+  `Covariate.dims` method, and added the optional `Covariate.extra_dims` method
+  to provide supplemental coordinates for latent variables.
 
 Deprecated:
 
