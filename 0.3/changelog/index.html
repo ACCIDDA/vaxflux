@@ -704,7 +704,10 @@ and this project adheres to
 </ul>
 <p>Changed:</p>
 <ul>
-<li>...</li>
+<li>Changed the expected output of <code>Covariate.sample</code> to either be a 1D
+  <code>(num_seasons,)</code> or 2D <code>(num_seasons, num_categories)</code> array, removed the
+  <code>Covariate.dims</code> method, and added the optional <code>Covariate.extra_dims</code> method
+  to provide supplemental coordinates for latent variables.</li>
 </ul>
 <p>Deprecated:</p>
 <ul>
