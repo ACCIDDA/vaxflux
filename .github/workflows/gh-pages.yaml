@@ -28,13 +28,9 @@ jobs:
         uses: 'actions/checkout@v6'
         with:
           ref: 'main'
-      - name: 'setup just'
-        uses: 'extractions/setup-just@v3'
-      - name: 'setup uv with python ${{ matrix.python-version }}'
-        uses: 'astral-sh/setup-uv@v7'
+      - name: 'setup just and uv'
+        uses: './.github/actions/setup-just-and-uv'
         with:
-          enable-cache: true
-          cache-dependency-glob: 'pyproject.toml'
           python-version: '${{ matrix.python-version }}'
       - name: 'fetch gh-pages branch'
         run: |

@@ -13,7 +13,6 @@ dependencies = [
     "pandas>=2.2.2",
     "xarray>=2024.7.0",
     "pydantic>=2.10.6",
-    "blackjax>=1.2.5",
     "jax>=0.6.2",
     "numpyro>=0.19.0",
 ]
@@ -32,6 +31,7 @@ dev = [
     "mypy>=1.14.1",
     "pandas-stubs>=2.2.3.241126",
     "pytest>=8.3.2",
+    "pytest-cov>=6.1.1",
     "ruamel-yaml>=0.18.16",
     "ruff>=0.9.4",
     "scipy-stubs>=1.15.1.0",

@@ -9,7 +9,7 @@ mkdir := "mkdir -vp"
 default: dev lint docs
 
 # Run all development checks
-dev: format check mypy pytest
+dev: format check mypy cov
 
 # Run all linting checks
 lint: cspell prettier yamllint
@@ -28,18 +28,17 @@ clean-docs:
 [unix]
 [group('clean')]
 clean: clean-docs
-    {{rmdir}} .mypy_cache
-    {{rmdir}} .pytest_cache
-    {{rmdir}} .ruff_cache
-    {{rmdir}} .venv
-    {{rmdir}} src/vaxflux/__pycache__
-    {{rmdir}} src/vaxflux.egg-info
+    {{rmdir}} .*cache/
+    {{rmdir}} .venv/
+    {{rmdir}} node_modules/
+    {{rmdir}} src/vaxflux/__pycache__/
+    {{rmdir}} src/vaxflux.egg-info/
     {{rm}} uv.lock
 
 # Generate API reference documentation
 [unix]
 [group('docs')]
-reference: venv
+reference:
     {{cp}} CHANGELOG.md docs/changelog.md
     {{cp}} CONTRIBUTING.md docs/contributing.md
     {{cp}} README.md docs/index.md
@@ -47,44 +46,39 @@ reference: venv
 # Generate demo documentation
 [unix]
 [group('docs')]
-demos: venv
+demos:
     {{mkdir}} docs/demos/
     {{cp}} demos/*.ipynb docs/demos/
 
 # Build complete documentation
 [group('docs')]
-docs: venv reference demos
+docs: reference demos
     uv run mkdocs build --verbose --strict
 
 # Serve documentation locally
 [group('docs')]
-serve: venv docs
+serve: docs
     uv run mkdocs serve
-
-# Setup the venv
-[group('dev')]
-venv:
-    uv sync --all-extras
 
 # Format code with ruff
 [group('dev')]
-format: venv
+format:
     uv run ruff format
 
 # Check and fix code issues with ruff
 [group('dev')]
-check: venv
+check:
     uv run ruff check --fix --unsafe-fixes
 
 # Run mypy type checking
 [group('dev')]
-mypy: venv
+mypy:
     uv run mypy --strict .
 
-# Run pytest tests
+# Run pytest with a coverage report
 [group('dev')]
-pytest: venv
-    uv run pytest --doctest-modules
+cov:
+    uv run pytest --doctest-modules --cov=src/vaxflux --cov-report=term-missing
 
 # Run demo tests
 [unix]
@@ -109,11 +103,27 @@ demo-test:
 
 # Run CI checks (non-interactive)
 [group('ci')]
-ci: venv
+ci: quality ci-pytest
+
+# Run CI quality checks
+[group('ci')]
+quality: ci-ruff ci-mypy
+
+# Run CI ruff formatting and linting checks
+[group('ci')]
+ci-ruff:
     uv run ruff format --check
     uv run ruff check --no-fix
+
+# Run CI mypy type checking
+[group('ci')]
+ci-mypy:
     uv run mypy --strict .
-    uv run pytest --doctest-modules --exitfirst
+
+# Run CI pytest checks using the resolution from `UV_RESOLUTION`
+[group('ci')]
+ci-pytest:
+    uv run --isolated --group dev --extra plot pytest --doctest-modules --exitfirst
 
 # Install npm dependencies
 [group('lint')]
@@ -141,12 +151,12 @@ cspell: npm-install
 
 # Run yamllint on YAML files
 [group('lint')]
-yamllint: venv
+yamllint:
     uv run yamllint --strict .
 
 # Create a GitHub release
 [confirm]
 [unix]
 [group('release')]
-release +FLAGS='': venv
+release +FLAGS='':
     uv run python scripts/release.py {{FLAGS}}
