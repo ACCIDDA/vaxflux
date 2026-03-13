@@ -7,7 +7,7 @@ This document provides guidelines and instructions for contributing to
 
 ### Prerequisites
 
-- Python 3.10, 3.11, or 3.12.
+- Python 3.11 or 3.12.
 - [`uv`](https://docs.astral.sh/uv/) - Python package manager.
 - [`npm`](https://www.npmjs.com/) - Node package manager for auxiliary
   formatting/linting tools.
@@ -23,19 +23,22 @@ git clone git@github.com:ACCIDDA/vaxflux.git
 cd vaxflux
 ```
 
-2. Create a virtual environment and install dependencies:
+2. Install dependencies:
 
 ```shell
-uv sync --dev
+uv sync --all-extras
 ```
 
-This creates a `.venv` virtual environment and installs the package along with
-all development dependencies (mypy, pytest, ruff, mkdocs). If you need to create
-an environment with a specific python version you can also run:
+This installs the package along with development, documentation, and optional
+plotting dependencies used across local workflows. If you want to pin the
+environment to a specific supported Python version you can also run:
 
 ```shell
-uv sync --dev --python 3.12
+uv sync --all-extras --python 3.12
 ```
+
+Most commands in this repository are invoked through `uv run ...`, which will
+also create or update the local environment as needed.
 
 3. Verify your setup
 
@@ -47,8 +50,9 @@ This runs the default development checks:
 
 - `ruff format` - Format code.
 - `ruff check --fix` - Lint and auto-fix issues.
-- `pytest --doctest-modules` - Run tests including doctests.
 - `mypy --strict` - Type check with strict settings.
+- `pytest --doctest-modules --cov=src/vaxflux --cov-report=term-missing` - Run
+  tests including doctests with a local coverage report.
 - `npm run cspell` - Spell check linting.
 - `npm run prettier:fix` - Formatting for JSON/markdown/YAML files.
 - `yamllint --strict` - Lint YAML files.
@@ -103,9 +107,10 @@ tests/
 
 ### Running Tests
 
-Running all tests is a part of `just` and `just dev`. If you instead want to
-only run the unit tests you can run `just pytest`. For more advanced running
-please use `pytest` directly:
+Running all tests is a part of `just` and `just dev`. If you instead want to run
+the Python test suite with a coverage report you can run `just cov`. Coverage is
+currently for local visibility only; CI does not enforce a coverage threshold.
+For more advanced invocations, please use `pytest` directly:
 
 ```shell
 uv run pytest tests/{module}/ -v                    # Run all tests in a module
@@ -120,7 +125,7 @@ documentation.
 
 - Any public API should have unit tests that reaffirm the documentation's
   description.
-- If possible unit tests should use `@pytest.mark.parameterize` for generality
+- If possible unit tests should use `@pytest.mark.parametrize` for generality
   and ease of adding new test cases.
 - Use descriptive test names that explain what is being tested. In the case of
   testing exceptions also the type of exception.
@@ -158,14 +163,19 @@ build the documentation and start a local server at
 
 - `ruff format --check` - Verify code formatting (no auto-fix).
 - `ruff check --no-fix` - Lint without modifications.
-- `pytest --doctest-modules` - Run test suite.
 - `mypy --strict` - Type checking.
+- `pytest --doctest-modules --exitfirst` - Run the test suite in a CI-style
+  configuration.
 
-In addition you will also want to make sure that `just lint` is successful.
+In addition, you should run:
+
+- `just docs` - Build the MkDocs documentation as CI does.
+- `just lint` - Run `cspell`, `prettier`, and `yamllint`.
 
 2. Update documentation if your changes affect user-facing functionality or add
    features that require usage guides. Also update the `CHANGELOG.md` with a
-   description of your changes.
+   description of your changes. Commits containing `no major changes` will skip
+   the changelog check in CI.
 
 3. Add tests for new functionality or bug fixes. Particularly for bug fixes, the
    test should be written before the fix and fail without the fix present.
@@ -186,7 +196,13 @@ In addition you will also want to make sure that `just lint` is successful.
 
 ### Pull Request Requirements
 
-- PRs are tested against Python 3.10, 3.11, and 3.12 using `just ci`.
+- PR CI runs:
+- `docs` on Python 3.12.
+- `quality` on Python 3.12.
+- `tests` on Python 3.11 and 3.12 with both `highest` and `lowest-direct`
+  dependency resolution.
+- `changelog` on pull requests.
+- A separate lint workflow runs `prettier`, `cspell`, and `yamllint`.
 - Documentation must build successfully with `just docs`.
 - Linting must also be successful.
 - Branches must be up to date against `main` before merging and have a linear

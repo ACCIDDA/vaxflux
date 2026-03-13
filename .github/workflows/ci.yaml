@@ -11,29 +11,65 @@ permissions:
   contents: 'read'
 
 jobs:
-  ci:
-    name: 'ci'
+  docs:
+    name: 'docs'
     runs-on: 'ubuntu-latest'
     strategy:
       matrix:
         python-version:
-          - '3.11'
           - '3.12'
     steps:
       - name: 'checkout repository'
         uses: 'actions/checkout@v6'
-      - name: 'setup just'
-        uses: 'extractions/setup-just@v3'
-      - name: 'setup uv with python ${{ matrix.python-version }}'
-        uses: 'astral-sh/setup-uv@v7'
+      - name: 'setup just and uv'
+        uses: './.github/actions/setup-just-and-uv'
         with:
-          enable-cache: true
-          cache-dependency-glob: 'pyproject.toml'
           python-version: '${{ matrix.python-version }}'
-      - name: 'run ci'
-        run: 'just ci'
+      - name: 'build docs'
+        run: 'just docs'
         env:
           UV_PYTHON_VERSION: '${{ matrix.python-version }}'
+  quality:
+    name: 'quality'
+    runs-on: 'ubuntu-latest'
+    steps:
+      - name: 'checkout repository'
+        uses: 'actions/checkout@v6'
+      - name: 'setup just and uv'
+        uses: './.github/actions/setup-just-and-uv'
+        with:
+          python-version: '3.12'
+      - name: 'run quality checks'
+        run: 'just quality'
+        env:
+          UV_PYTHON_VERSION: '3.12'
+  tests:
+    name: 'tests (${{ matrix.python-version }}, ${{ matrix.resolution }})'
+    needs:
+      - 'docs'
+      - 'quality'
+    runs-on: 'ubuntu-latest'
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version:
+          - '3.11'
+          - '3.12'
+        resolution:
+          - 'highest'
+          - 'lowest-direct'
+    steps:
+      - name: 'checkout repository'
+        uses: 'actions/checkout@v6'
+      - name: 'setup just and uv'
+        uses: './.github/actions/setup-just-and-uv'
+        with:
+          python-version: '${{ matrix.python-version }}'
+      - name: 'run tests'
+        run: 'just ci-pytest'
+        env:
+          UV_PYTHON_VERSION: '${{ matrix.python-version }}'
+          UV_RESOLUTION: '${{ matrix.resolution }}'
   changelog:
     name: 'changelog'
     runs-on: 'ubuntu-latest'
@@ -55,25 +91,3 @@ jobs:
             echo "Error: Please update CHANGELOG.md"
             exit 1
           fi
-  docs:
-    name: 'docs'
-    runs-on: 'ubuntu-latest'
-    strategy:
-      matrix:
-        python-version:
-          - '3.12'
-    steps:
-      - name: 'checkout repository'
-        uses: 'actions/checkout@v6'
-      - name: 'setup just'
-        uses: 'extractions/setup-just@v3'
-      - name: 'setup uv with python ${{ matrix.python-version }}'
-        uses: 'astral-sh/setup-uv@v7'
-        with:
-          enable-cache: true
-          cache-dependency-glob: 'pyproject.toml'
-          python-version: '${{ matrix.python-version }}'
-      - name: 'build docs'
-        run: 'just docs'
-        env:
-          UV_PYTHON_VERSION: '${{ matrix.python-version }}'

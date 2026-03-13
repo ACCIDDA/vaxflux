@@ -42,15 +42,10 @@ jobs:
             echo "proceed=false" >> "${GITHUB_OUTPUT}"
             echo "Commit message does not start with vX.Y.Z; skipping release."
           fi
-      - name: 'setup just'
+      - name: 'setup just and uv'
         if: "${{ steps.check-release.outputs.proceed == 'true' }}"
-        uses: 'extractions/setup-just@v3'
-      - name: 'setup uv with python ${{ matrix.python-version }}'
-        if: "${{ steps.check-release.outputs.proceed == 'true' }}"
-        uses: 'astral-sh/setup-uv@v7'
+        uses: './.github/actions/setup-just-and-uv'
         with:
-          enable-cache: true
-          cache-dependency-glob: 'pyproject.toml'
           python-version: '${{ matrix.python-version }}'
       - name: 'run release'
         if: "${{ steps.check-release.outputs.proceed == 'true' }}"

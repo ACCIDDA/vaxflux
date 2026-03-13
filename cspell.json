@@ -13,7 +13,6 @@
   "words": [
     "accidda",
     "arviz",
-    "blackjax",
     "boldsymbol",
     "chol",
     "covariate",
@@ -24,6 +23,7 @@
     "doctest",
     "doctests",
     "dtype",
+    "exitfirst",
     "expit",
     "figsize",
     "fontsize",
