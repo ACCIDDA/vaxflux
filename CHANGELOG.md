@@ -10,7 +10,9 @@ and this project adheres to
 
 Added:
 
-- ...
+- Added a `Curve.plot` method that is available when the "plot" optional
+  dependency group is installed to quickly visualize curves. See
+  [#176](https://github.com/ACCIDDA/vaxflux/issues/176).
 
 Changed:
 

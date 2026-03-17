@@ -35,6 +35,7 @@
     "infty",
     "invlogit",
     "ipynb",
+    "issubdtype",
     "kwargs",
     "levelname",
     "linestyle",
@@ -61,6 +62,7 @@
     "vaxflux",
     "venv",
     "vmap",
+    "xlabel",
     "xticklabels",
     "ylabel",
     "ylim"
