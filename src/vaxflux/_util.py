@@ -5,11 +5,15 @@ import re
 from collections.abc import Callable, Sequence
 from typing import Annotated, Any, Final, TypeVar, overload
 
+import jax
+import jax.numpy as jnp
 import numpy as np
 import numpy.typing as npt
 import pandas as pd
 from pandas.api.types import is_datetime64_any_dtype
 from pydantic import BeforeValidator
+
+from vaxflux._types import NumericalArrayLike
 
 _CLEAN_TEXT_REGEX: Final = re.compile(r"[^a-zA-Z0-9]")
 _OBSERVATION_TYPE_CATEGORIES: Final = ("incidence", "prevalence")
@@ -214,6 +218,45 @@ def _make_float_list(x: float | Any) -> list[float] | Any:
 
 
 ListOfFloats = Annotated[list[float], BeforeValidator(_make_float_list)]
+
+
+def _numerical_array_like_to_1d_jax_array(x: NumericalArrayLike) -> jax.Array:
+    """
+    Convert a numerical array-like input to a one-dimensional JAX array.
+
+    Args:
+        x: A numerical array-like input (e.g., list, tuple, NumPy array).
+
+    Returns:
+        A one-dimensional JAX array.
+
+    Raises:
+        ValueError: If the input when converted to a JAX array is not one-dimensional.
+
+    Examples:
+        >>> from vaxflux._util import _numerical_array_like_to_1d_jax_array
+        >>> _numerical_array_like_to_1d_jax_array([1, 2, 3])
+        Array([1., 2., 3.], dtype=float32)
+        >>> _numerical_array_like_to_1d_jax_array([])
+        Array([], shape=(0,), dtype=float32)
+        >>> _numerical_array_like_to_1d_jax_array(1.5)
+        Traceback (most recent call last):
+            ...
+        ValueError: Input must be a one-dimensional array, but is instead 0.
+        >>> _numerical_array_like_to_1d_jax_array([[1, 2], [3, 4]])
+        Traceback (most recent call last):
+            ...
+        ValueError: Input must be a one-dimensional array, but is instead 2.
+    """
+    x_array = jnp.asarray(x)
+    if (ndim := x_array.ndim) != 1:
+        msg = f"Input must be a one-dimensional array, but is instead {ndim}."
+        raise ValueError(msg)
+    return (
+        x_array
+        if jnp.issubdtype(x_array.dtype, jnp.inexact)
+        else x_array.astype(jnp.float32)
+    )
 
 
 def _coord_index_dim(

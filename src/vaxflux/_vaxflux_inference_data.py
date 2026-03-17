@@ -18,7 +18,6 @@ except ImportError:
 
 from vaxflux._plot import (
     _calculate_shaded_quantiles_from_intervals,
-    _check_matplotlib_available,
     _init_predictive_axes,
     _plot_predictive_panel,
 )
@@ -562,7 +561,6 @@ class VaxfluxInferenceData(az.InferenceData):
 
         """
         # Input validation
-        _check_matplotlib_available()
         if not plot_incidence and not plot_prevalence:
             msg = (
                 "At least one of `plot_incidence` or `plot_prevalence` must be `True`."

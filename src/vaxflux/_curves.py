@@ -2,13 +2,109 @@ __all__: list[str] = []
 
 import inspect
 from abc import ABC, abstractmethod
-from typing import cast
+from collections.abc import Sequence
+from typing import TYPE_CHECKING, Any, cast
 
 import jax
 import jax.numpy as jnp
 import jax.scipy.special as jsp
 
+from vaxflux._plot import _plot_curve_figure
 from vaxflux._types import NumericalArrayLike
+from vaxflux._util import _numerical_array_like_to_1d_jax_array
+
+if TYPE_CHECKING:
+    from matplotlib.figure import Figure
+else:
+    Figure = Any  # type: ignore[misc,assignment]
+
+
+def _normalize_parameter_sets(
+    *,
+    parameters: tuple[str, ...],
+    parameter_sets: Sequence[dict[str, NumericalArrayLike]] | None,
+    kwargs: dict[str, NumericalArrayLike],
+) -> list[dict[str, NumericalArrayLike]]:
+    """
+    Return normalized parameter sets for plotting.
+
+    Args:
+        parameters: The parameter names required by the curve.
+        parameter_sets: Optional collection of parameter dictionaries to overlay on the
+            same axes. When omitted, `kwargs` are used as a single set.
+        kwargs: Additional parameters required by the curve methods when plotting a
+            single parameter set.
+
+    Returns:
+        A list of parameter dictionaries for plotting.
+
+    Raises:
+        ValueError: If neither `parameter_sets` nor `kwargs` are provided.
+        ValueError: If `parameter_sets` and `kwargs` are both provided.
+        ValueError: If any normalized parameter set does not match `parameters`.
+
+    Examples:
+        >>> from vaxflux._curves import _normalize_parameter_sets
+        >>> _normalize_parameter_sets(
+        ...     parameters=("m", "r", "s"),
+        ...     parameter_sets=[
+        ...         {"m": 0.5, "r": 1.0, "s": 1.0},
+        ...         {"m": 0.8, "r": 1.5, "s": 0.5},
+        ...     ],
+        ...     kwargs={},
+        ... )
+        [{'m': 0.5, 'r': 1.0, 's': 1.0}, {'m': 0.8, 'r': 1.5, 's': 0.5}]
+        >>> _normalize_parameter_sets(
+        ...     parameters=("m", "r", "s"),
+        ...     parameter_sets=None,
+        ...     kwargs={"m": 0.5, "r": 1.0, "s": 1.0},
+        ... )
+        [{'m': 0.5, 'r': 1.0, 's': 1.0}]
+        >>> _normalize_parameter_sets(
+        ...     parameters=("m", "r", "s"),
+        ...     parameter_sets=[{"m": 0.5, "r": 1.0, "s": 1.0}],
+        ...     kwargs={"m": 0.8, "r": 1.5, "s": 0.5},
+        ... )
+        Traceback (most recent call last):
+            ...
+        ValueError: Pass either `parameter_sets` or `kwargs`, but not both.
+        >>> _normalize_parameter_sets(
+        ...     parameters=("m", "r", "s"),
+        ...     parameter_sets=None,
+        ...     kwargs={},
+        ... )
+        Traceback (most recent call last):
+            ...
+        ValueError: Provide either `parameter_sets` or `kwargs`.
+        >>> _normalize_parameter_sets(
+        ...     parameters=("m", "r", "s"),
+        ...     parameter_sets=[{"m": 0.5, "r": 1.0}],
+        ...     kwargs={},
+        ... )
+        Traceback (most recent call last):
+            ...
+        ValueError: Parameter set keys must exactly match `parameters`: ('m', 'r', 's').
+    """
+    if parameter_sets is None and not kwargs:
+        msg = "Provide either `parameter_sets` or `kwargs`."
+        raise ValueError(msg)
+    if parameter_sets is not None and kwargs:
+        msg = "Pass either `parameter_sets` or `kwargs`, but not both."
+        raise ValueError(msg)
+    normalized_parameter_sets = (
+        [dict(kwargs)]
+        if parameter_sets is None
+        else [dict(params) for params in parameter_sets]
+    )
+    if not normalized_parameter_sets:
+        msg = "Provide either `parameter_sets` or `kwargs`."
+        raise ValueError(msg)
+    expected_keys = set(parameters)
+    for params in normalized_parameter_sets:
+        if set(params) != expected_keys:
+            msg = f"Parameter set keys must exactly match `parameters`: {parameters}."
+            raise ValueError(msg)
+    return normalized_parameter_sets
 
 
 class Curve(ABC):
@@ -95,6 +191,83 @@ class Curve(ABC):
         """
         return self.prevalence(jnp.asarray(t1), **kwargs) - self.prevalence(
             jnp.asarray(t0), **kwargs
+        )
+
+    def plot(
+        self,
+        t: NumericalArrayLike,
+        *,
+        parameter_sets: Sequence[dict[str, NumericalArrayLike]] | None = None,
+        labels: Sequence[str] | None = None,
+        plot_incidence: bool = True,
+        plot_prevalence: bool = True,
+        figsize: tuple[float, float] | None = None,
+        title: str | None = None,
+        **kwargs: NumericalArrayLike,
+    ) -> Figure:
+        """
+        Plot the curve's incidence and/or prevalence over time.
+
+        Args:
+            t: The time steps to evaluate and plot.
+            parameter_sets: Optional collection of parameter dictionaries to overlay on
+                the same axes. When omitted, `kwargs` are used as a single set.
+            labels: Optional labels for each parameter set. When omitted, labels are
+                generated from `self.parameters`.
+            plot_incidence: Whether to plot the incidence curve.
+            plot_prevalence: Whether to plot the prevalence curve.
+            figsize: Optional figure size override.
+            title: Optional figure title.
+            **kwargs: Parameters forwarded to the curve methods when plotting a single
+                parameter set.
+
+        Returns:
+            The Matplotlib figure.
+
+        Raises:
+            ValueError: If neither incidence nor prevalence is selected.
+            ValueError: If both `parameter_sets` and `kwargs` are provided.
+            ValueError: If `labels` do not match `parameter_sets`.
+            ValueError: If `t` is not one-dimensional.
+
+        """
+        if not plot_incidence and not plot_prevalence:
+            msg = (
+                "At least one of `plot_incidence` or `plot_prevalence` must be `True`."
+            )
+            raise ValueError(msg)
+
+        t_values = _numerical_array_like_to_1d_jax_array(t)
+        curve_parameter_sets = _normalize_parameter_sets(
+            parameters=self.parameters,
+            parameter_sets=parameter_sets,
+            kwargs=kwargs,
+        )
+        incidence_series = (
+            [
+                jnp.asarray(self.incidence(t_values, **params))
+                for params in curve_parameter_sets
+            ]
+            if plot_incidence
+            else None
+        )
+        prevalence_series = (
+            [
+                jnp.asarray(self.prevalence(t_values, **params))
+                for params in curve_parameter_sets
+            ]
+            if plot_prevalence
+            else None
+        )
+        return _plot_curve_figure(
+            t=t_values,
+            parameter_sets=curve_parameter_sets,
+            labels=labels,
+            incidence_series=incidence_series,
+            prevalence_series=prevalence_series,
+            parameter_names=self.parameters,
+            title=title,
+            figsize=figsize,
         )
 
 
