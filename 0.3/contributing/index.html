@@ -1114,7 +1114,7 @@ version.
 <h2 id="development-setup">Development Setup<a class="headerlink" href="#development-setup" title="Permanent link">&para;</a></h2>
 <h3 id="prerequisites">Prerequisites<a class="headerlink" href="#prerequisites" title="Permanent link">&para;</a></h3>
 <ul>
-<li>Python 3.10, 3.11, or 3.12.</li>
+<li>Python 3.11 or 3.12.</li>
 <li><a href="https://docs.astral.sh/uv/"><code>uv</code></a> - Python package manager.</li>
 <li><a href="https://www.npmjs.com/"><code>npm</code></a> - Node package manager for auxiliary
   formatting/linting tools.</li>
@@ -1129,15 +1129,17 @@ version.
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="nb">cd</span><span class="w"> </span>vaxflux
 </span></code></pre></div>
 <ol>
-<li>Create a virtual environment and install dependencies:</li>
+<li>Install dependencies:</li>
 </ol>
-<div class="language-shell highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>uv<span class="w"> </span>sync<span class="w"> </span>--dev
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>uv<span class="w"> </span>sync<span class="w"> </span>--all-extras
 </span></code></pre></div>
-<p>This creates a <code>.venv</code> virtual environment and installs the package along with
-all development dependencies (mypy, pytest, ruff, mkdocs). If you need to create
-an environment with a specific python version you can also run:</p>
-<div class="language-shell highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>uv<span class="w"> </span>sync<span class="w"> </span>--dev<span class="w"> </span>--python<span class="w"> </span><span class="m">3</span>.12
+<p>This installs the package along with development, documentation, and optional
+plotting dependencies used across local workflows. If you want to pin the
+environment to a specific supported Python version you can also run:</p>
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>uv<span class="w"> </span>sync<span class="w"> </span>--all-extras<span class="w"> </span>--python<span class="w"> </span><span class="m">3</span>.12
 </span></code></pre></div>
+<p>Most commands in this repository are invoked through <code>uv run ...</code>, which will
+also create or update the local environment as needed.</p>
 <ol>
 <li>Verify your setup</li>
 </ol>
@@ -1147,8 +1149,9 @@ an environment with a specific python version you can also run:</p>
 <ul>
 <li><code>ruff format</code> - Format code.</li>
 <li><code>ruff check --fix</code> - Lint and auto-fix issues.</li>
-<li><code>pytest --doctest-modules</code> - Run tests including doctests.</li>
 <li><code>mypy --strict</code> - Type check with strict settings.</li>
+<li><code>pytest --doctest-modules --cov=src/vaxflux --cov-report=term-missing</code> - Run
+  tests including doctests with a local coverage report.</li>
 <li><code>npm run cspell</code> - Spell check linting.</li>
 <li><code>npm run prettier:fix</code> - Formatting for JSON/markdown/YAML files.</li>
 <li><code>yamllint --strict</code> - Lint YAML files.</li>
@@ -1191,9 +1194,10 @@ comments and docstrings are used to document code.</p>
   would be located at <code>tests/_internal/test__utility.py</code>.</li>
 </ul>
 <h3 id="running-tests">Running Tests<a class="headerlink" href="#running-tests" title="Permanent link">&para;</a></h3>
-<p>Running all tests is a part of <code>just</code> and <code>just dev</code>. If you instead want to
-only run the unit tests you can run <code>just pytest</code>. For more advanced running
-please use <code>pytest</code> directly:</p>
+<p>Running all tests is a part of <code>just</code> and <code>just dev</code>. If you instead want to run
+the Python test suite with a coverage report you can run <code>just cov</code>. Coverage is
+currently for local visibility only; CI does not enforce a coverage threshold.
+For more advanced invocations, please use <code>pytest</code> directly:</p>
 <div class="language-shell highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>uv<span class="w"> </span>run<span class="w"> </span>pytest<span class="w"> </span>tests/<span class="o">{</span>module<span class="o">}</span>/<span class="w"> </span>-v<span class="w">                    </span><span class="c1"># Run all tests in a module</span>
 </span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>uv<span class="w"> </span>run<span class="w"> </span>pytest<span class="w"> </span>tests/<span class="o">{</span>module<span class="o">}</span>/test_<span class="o">{</span><span class="k">function</span><span class="o">}</span>.py<span class="w"> </span>-v<span class="w">  </span><span class="c1"># Run specific test file</span>
 </span></code></pre></div>
@@ -1204,7 +1208,7 @@ documentation.</p>
 <ul>
 <li>Any public API should have unit tests that reaffirm the documentation's
   description.</li>
-<li>If possible unit tests should use <code>@pytest.mark.parameterize</code> for generality
+<li>If possible unit tests should use <code>@pytest.mark.parametrize</code> for generality
   and ease of adding new test cases.</li>
 <li>Use descriptive test names that explain what is being tested. In the case of
   testing exceptions also the type of exception.</li>
@@ -1236,21 +1240,27 @@ build the documentation and start a local server at
 <p><code>ruff format --check</code> - Verify code formatting (no auto-fix).</p>
 </li>
 <li><code>ruff check --no-fix</code> - Lint without modifications.</li>
-<li><code>pytest --doctest-modules</code> - Run test suite.</li>
 <li><code>mypy --strict</code> - Type checking.</li>
+<li><code>pytest --doctest-modules --exitfirst</code> - Run the test suite in a CI-style
+  configuration.</li>
 </ol>
-<p>In addition you will also want to make sure that <code>just lint</code> is successful.</p>
-<ol>
+<p>In addition, you should run:</p>
+<ul>
+<li><code>just docs</code> - Build the MkDocs documentation as CI does.</li>
+<li>
+<p><code>just lint</code> - Run <code>cspell</code>, <code>prettier</code>, and <code>yamllint</code>.</p>
+</li>
 <li>
 <p>Update documentation if your changes affect user-facing functionality or add
    features that require usage guides. Also update the <code>CHANGELOG.md</code> with a
-   description of your changes.</p>
+   description of your changes. Commits containing <code>no major changes</code> will skip
+   the changelog check in CI.</p>
 </li>
 <li>
 <p>Add tests for new functionality or bug fixes. Particularly for bug fixes, the
    test should be written before the fix and fail without the fix present.</p>
 </li>
-</ol>
+</ul>
 <h3 id="submitting-a-pull-request">Submitting a Pull Request<a class="headerlink" href="#submitting-a-pull-request" title="Permanent link">&para;</a></h3>
 <ol>
 <li>
@@ -1271,7 +1281,13 @@ build the documentation and start a local server at
 </ol>
 <h3 id="pull-request-requirements">Pull Request Requirements<a class="headerlink" href="#pull-request-requirements" title="Permanent link">&para;</a></h3>
 <ul>
-<li>PRs are tested against Python 3.10, 3.11, and 3.12 using <code>just ci</code>.</li>
+<li>PR CI runs:</li>
+<li><code>docs</code> on Python 3.12.</li>
+<li><code>quality</code> on Python 3.12.</li>
+<li><code>tests</code> on Python 3.11 and 3.12 with both <code>highest</code> and <code>lowest-direct</code>
+  dependency resolution.</li>
+<li><code>changelog</code> on pull requests.</li>
+<li>A separate lint workflow runs <code>prettier</code>, <code>cspell</code>, and <code>yamllint</code>.</li>
 <li>Documentation must build successfully with <code>just docs</code>.</li>
 <li>Linting must also be successful.</li>
 <li>Branches must be up to date against <code>main</code> before merging and have a linear
