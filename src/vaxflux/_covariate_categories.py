@@ -46,7 +46,42 @@ def _covariate_categories_to_dict(
 
     Raises:
         ValueError: If the covariate names are not unique.
-    """
+
+    Examples:
+        >>> import pprint
+        >>> # Empty input returns an empty dictionary
+        >>> pprint.pp(_covariate_categories_to_dict([]))
+        {}
+        >>> # The input order is preserved in the resulting dictionary
+        >>> covariate_categories = [
+        ...     CovariateCategories(
+        ...         covariate="season",
+        ...         categories=("2023/24", "2024/25"),
+        ...     ),
+        ...     CovariateCategories(
+        ...         covariate="age",
+        ...         categories=("child", "adult"),
+        ...     ),
+        ... ]
+        >>> pprint.pp(_covariate_categories_to_dict(covariate_categories))
+        {'season': ['2023/24', '2024/25'], 'age': ['child', 'adult']}
+        >>> # Duplicate covariate names are rejected because a dictionary
+        >>> # requires unique keys
+        >>> duplicate_covariates = [
+        ...     CovariateCategories(
+        ...         covariate="age",
+        ...         categories=("child", "adult"),
+        ...     ),
+        ...     CovariateCategories(
+        ...         covariate="age",
+        ...         categories=("senior", "older_adult"),
+        ...     ),
+        ... ]
+        >>> _covariate_categories_to_dict(duplicate_covariates)
+        Traceback (most recent call last):
+        ...
+        ValueError: Covariate category `covariate` names must be unique to collapse to a dict.
+    """  # noqa: E501
     covariate_categories_dict = {
         covariate_category.covariate: list(covariate_category.categories)
         for covariate_category in covariate_categories
@@ -70,6 +105,52 @@ def _covariate_categories_product(
 
     Returns:
         A list of dictionaries with the product of the covariate categories.
+
+    Examples:
+        >>> import pprint
+        >>> # A single covariate produces one dictionary per category
+        >>> single_covariate = [
+        ...     CovariateCategories(
+        ...         covariate="age",
+        ...         categories=("child", "adult"),
+        ...     ),
+        ... ]
+        >>> pprint.pp(_covariate_categories_product(single_covariate))
+        [{'age': 'child'}, {'age': 'adult'}]
+        >>> covariate_categories = [
+        ...     CovariateCategories(
+        ...         covariate="age",
+        ...         categories=("child", "adult"),
+        ...     ),
+        ...     CovariateCategories(
+        ...         covariate="region",
+        ...         categories=("north", "south"),
+        ...     ),
+        ... ]
+        >>> pprint.pp(_covariate_categories_product(covariate_categories))
+        [{'age': 'child', 'region': 'north'},
+         {'age': 'child', 'region': 'south'},
+         {'age': 'adult', 'region': 'north'},
+         {'age': 'adult', 'region': 'south'}]
+        >>> # Products expand left to right as additional covariates are added
+        >>> three_covariates = covariate_categories + [
+        ...     CovariateCategories(
+        ...         covariate="season",
+        ...         categories=("2023/24", "2024/25"),
+        ...     ),
+        ... ]
+        >>> pprint.pp(_covariate_categories_product(three_covariates))
+        [{'age': 'child', 'region': 'north', 'season': '2023/24'},
+         {'age': 'child', 'region': 'north', 'season': '2024/25'},
+         {'age': 'child', 'region': 'south', 'season': '2023/24'},
+         {'age': 'child', 'region': 'south', 'season': '2024/25'},
+         {'age': 'adult', 'region': 'north', 'season': '2023/24'},
+         {'age': 'adult', 'region': 'north', 'season': '2024/25'},
+         {'age': 'adult', 'region': 'south', 'season': '2023/24'},
+         {'age': 'adult', 'region': 'south', 'season': '2024/25'}]
+        >>> # An empty input returns an empty list
+        >>> pprint.pp(_covariate_categories_product([]))
+        []
     """
     if not covariate_categories:
         return []
