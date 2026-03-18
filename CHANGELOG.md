@@ -31,7 +31,9 @@ Removed:
 
 Fixed:
 
-- ...
+- Expanded documentation and unit tests for existing internal helpers. See
+  [#33](https://github.com/ACCIDDA/vaxflux/issues/33),
+  [#42](https://github.com/ACCIDDA/vaxflux/issues/42).
 
 Security:
 
