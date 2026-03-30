@@ -44,6 +44,45 @@ except ImportError:
 
 
 class VaxfluxModel:
+    """
+    Vaccine uptake model builder.
+
+    `VaxfluxModel` stores the curve, time ranges, covariates, interventions, and
+    observations that define a vaccination uptake model. Configure the model by
+    incrementally adding these components, then use rendering or sampling methods to
+    inspect or estimate the resulting probabilistic model.
+
+    Examples:
+        >>> import pandas as pd
+        >>> from vaxflux import LogisticCurve, SeasonRange, VaxfluxModel
+        >>> observations = pd.DataFrame(
+        ...     {
+        ...         "season": ["2023/2024"],
+        ...         "start_date": ["2023-12-01"],
+        ...         "end_date": ["2023-12-07"],
+        ...         "type": ["incidence"],
+        ...         "value": [0.18],
+        ...     }
+        ... )
+        >>> model = VaxfluxModel(curve=LogisticCurve())
+        >>> model = (
+        ...     model.add_seasons(
+        ...         SeasonRange(
+        ...             season="2023/2024",
+        ...             start_date="2023-12-01",
+        ...             end_date="2024-03-31",
+        ...         )
+        ...     )
+        ...     .add_observations(observations)
+        ...     .add_observation_process(
+        ...         kind="normal",
+        ...         noise=0.05,
+        ...     )
+        ... )
+        >>> model
+        <vaxflux.VaxfluxModel object at ...>
+    """
+
     def __init__(self, curve: Curve) -> None:
         """
         Initialize the `VaxfluxModel` with a given uptake curve.
