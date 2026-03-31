@@ -14,6 +14,7 @@ __all__ = (
     "SeasonVaryingPartiallyPooledGaussianCovariate",
     "VaxfluxInferenceData",
     "VaxfluxModel",
+    "VaxfluxObservations",
     "daily_date_ranges",
     "data",
 )
@@ -35,3 +36,4 @@ from vaxflux._dates import DateRange, SeasonRange, daily_date_ranges
 from vaxflux._interventions import Implementation, Intervention
 from vaxflux._vaxflux_inference_data import VaxfluxInferenceData
 from vaxflux._vaxflux_model import VaxfluxModel
+from vaxflux._vaxflux_observations import VaxfluxObservations

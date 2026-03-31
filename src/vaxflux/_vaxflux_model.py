@@ -32,9 +32,9 @@ from vaxflux._interventions import (
 from vaxflux._util import (
     _collect_args,
     _coord_name,
-    _validate_and_format_observations,
 )
 from vaxflux._vaxflux_inference_data import VaxfluxInferenceData
+from vaxflux._vaxflux_observations import VaxfluxObservations
 
 try:
     from numpyro import render_model as _render_model
@@ -96,7 +96,7 @@ class VaxfluxModel:
         self._dates: list[DateRange] = []
         self._covariate_categories: list[CovariateCategories] = []
         self._covariates: list[Covariate] = []
-        self._observations: pd.DataFrame | None = None
+        self._observations: VaxfluxObservations | None = None
         self._interventions: list[Intervention] = []
         self._implementations: list[Implementation] = []
         self._observation_process_kind: None | Literal["normal"] = None
@@ -374,12 +374,16 @@ class VaxfluxModel:
         self._implementations.extend(implementations)
         return self
 
-    def add_observations(self, observations: pd.DataFrame) -> Self:
+    def add_observations(
+        self, observations: VaxfluxObservations | pd.DataFrame
+    ) -> Self:
         """
         Add observations to the model.
 
         Args:
-            observations: The observations to add to the model.
+            observations: The observations to add to the model. Accepts either a
+                `vaxflux.VaxfluxObservations` instance or a raw `pandas.DataFrame`
+                which will be validated on construction.
 
         Returns:
             The model instance for method chaining.
@@ -391,7 +395,7 @@ class VaxfluxModel:
         if self._observations is not None:
             msg = "Observations have already been added to the model."
             raise ValueError(msg)
-        self._observations = _validate_and_format_observations(observations)
+        self._observations = VaxfluxObservations.from_dataframe(observations)
         return self
 
     def add_observation_process(
@@ -516,7 +520,7 @@ class VaxfluxModel:
         from_numpyro_kwargs["coords"] = coords
         from_numpyro_kwargs["dims"] = dims
         if self._observations is not None:
-            from_numpyro_kwargs["observations"] = self._observations.copy()
+            from_numpyro_kwargs["observations"] = self._observations.data.copy()
 
         # Sample from prior predictive if requested
         if prior_samples is not None:
@@ -904,7 +908,7 @@ class VaxfluxModel:
                 )
                 raise ValueError(msg)
             self._dates = _infer_ranges_from_observations(
-                self._observations,
+                self._observations.data,
                 self._dates,
                 "date",
             )
@@ -983,7 +987,7 @@ class VaxfluxModel:
         if self._observations is not None:
             self._observation_labels = [
                 self._format_observation_label(row)
-                for _, row in self._observations.iterrows()
+                for _, row in self._observations.data.iterrows()
             ]
         self._category_combinations = (
             list(
@@ -1363,7 +1367,7 @@ class VaxfluxModel:
         obs_means: list[jnp.ndarray] = []
         obs_scales: list[jnp.ndarray] = []
         obs_values: list[float] = []
-        for _, row in self._observations.iterrows():
+        for _, row in self._observations.data.iterrows():
             if self._covariate_names:
                 category_combo = tuple(
                     str(row[covariate_name]) for covariate_name in self._covariate_names
