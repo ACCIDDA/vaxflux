@@ -15,6 +15,8 @@ Added:
   [#176](https://github.com/ACCIDDA/vaxflux/issues/176).
 - Added a class docstring to `VaxfluxModel` including a brief example. See
   [#135](https://github.com/ACCIDDA/vaxflux/issues/135).
+- Added `VaxfluxObservations` container class for observations, see
+  [#160](https://github.com/ACCIDDA/vaxflux/issues/160).
 
 Changed:
 
