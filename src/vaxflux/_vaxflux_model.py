@@ -15,8 +15,8 @@ from numpyro.infer import MCMC, NUTS, Predictive
 
 from vaxflux._covariate_categories import CovariateCategories
 from vaxflux._covariate_index_info import CovariateIndexInfo
-from vaxflux._covariates import Covariate
-from vaxflux._curves import Curve
+from vaxflux._covariates import Covariate, SeasonVaryingPartiallyPooledGaussianCovariate
+from vaxflux._curves import Curve, LogisticCurve
 from vaxflux._dates import (
     DateRange,
     SeasonRange,
@@ -114,6 +114,78 @@ class VaxfluxModel:
             A string representation of the `VaxfluxModel` instance.
         """
         return f"<vaxflux.VaxfluxModel object at {hex(id(self))}>"
+
+    @classmethod
+    def from_csv(cls, *args: Any, **kwargs: Any) -> Self:
+        """
+        Construct a default model from observations stored in a CSV file.
+
+        The CSV is read with `VaxfluxObservations.from_csv`, then used to build a
+        model with:
+
+        - a default `LogisticCurve`,
+        - inferred seasons and dates from the observations,
+        - one `CovariateCategories` entry per observation covariate using the full
+          sorted list of observed levels,
+        - one `SeasonVaryingPartiallyPooledGaussianCovariate` per
+          curve-parameter/covariate pair with weak default hyperparameters
+          (`mu_mu=0.0`, `mu_sigma=1.0`, `sigma=1.0`),
+        - no interventions or implementations,
+        - a `"normal"` observation process with `noise=0.001`.
+
+        Args:
+            *args: Positional arguments forwarded to
+                `VaxfluxObservations.from_csv`.
+            **kwargs: Keyword arguments forwarded to
+                `VaxfluxObservations.from_csv`.
+
+        Returns:
+            A configured `VaxfluxModel` instance.
+
+        """
+        observations = VaxfluxObservations.from_csv(*args, **kwargs)
+        model = cls(curve=LogisticCurve())
+
+        season_ranges: list[SeasonRange] = _infer_ranges_from_observations(
+            observations.data, [], "season"
+        )
+        if season_ranges:
+            model.add_seasons(season_ranges)
+
+        date_ranges: list[DateRange] = _infer_ranges_from_observations(
+            observations.data, [], "date"
+        )
+        if date_ranges:
+            model.add_dates(date_ranges)
+
+        covariate_categories = [
+            CovariateCategories(
+                covariate=covariate_name,
+                categories=tuple(
+                    sorted(observations.data[covariate_name].astype(str).unique())
+                ),
+            )
+            for covariate_name in observations.covariate_columns
+        ]
+        if covariate_categories:
+            model.add_covariate_categories(covariate_categories)
+            model.add_covariates(
+                [
+                    SeasonVaryingPartiallyPooledGaussianCovariate(
+                        parameter=parameter,
+                        covariate=covariate_category.covariate,
+                        mu_mu=0.0,
+                        mu_sigma=1.0,
+                        sigma=1.0,
+                    )
+                    for parameter in model._curve.parameters
+                    for covariate_category in covariate_categories
+                ]
+            )
+
+        return model.add_observations(observations).add_observation_process(
+            kind="normal", noise=0.001
+        )
 
     def add_seasons(self, *args: SeasonRange | list[SeasonRange]) -> Self:
         """
