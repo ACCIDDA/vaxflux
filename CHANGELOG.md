@@ -22,6 +22,8 @@ Changed:
   `(num_seasons,)` or 2D `(num_seasons, num_categories)` array, removed the
   `Covariate.dims` method, and added the optional `Covariate.extra_dims` method
   to provide supplemental coordinates for latent variables.
+- Updated the `pandas` dependency to be at least 3.0.0 and limit `mkdocs`
+  dependency to less than 2.0.0.
 
 Deprecated:
 
