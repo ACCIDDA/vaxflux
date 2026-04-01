@@ -17,6 +17,10 @@ Added:
   [#135](https://github.com/ACCIDDA/vaxflux/issues/135).
 - Added `VaxfluxObservations` container class for observations, see
   [#160](https://github.com/ACCIDDA/vaxflux/issues/160).
+- Added ability to easily construct an observations instance, with
+  `VaxfluxObservations.from_csv`, as well as a default model, with
+  `VaxfluxModel.from_csv`, see
+  [#112](https://github.com/ACCIDDA/vaxflux/issues/112).
 
 Changed:
 

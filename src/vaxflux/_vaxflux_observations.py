@@ -1,4 +1,4 @@
-from typing import Final
+from typing import Any, Final
 
 import pandas as pd
 from pandas.api.types import is_datetime64_any_dtype
@@ -93,6 +93,34 @@ class VaxfluxObservations:
         if isinstance(data, VaxfluxObservations):
             return data
         return cls(data)
+
+    @classmethod
+    def from_csv(cls, *args: Any, **kwargs: Any) -> "VaxfluxObservations":
+        """
+        Construct a `VaxfluxObservations` by reading a CSV with pandas.
+
+        This is a thin wrapper around `pandas.read_csv`; all positional and keyword
+        arguments are forwarded directly to that function before the resulting
+        DataFrame is validated and wrapped.
+
+        Args:
+            *args: Positional arguments forwarded to `pandas.read_csv`.
+            **kwargs: Keyword arguments forwarded to `pandas.read_csv`.
+
+        Returns:
+            A validated `VaxfluxObservations` instance.
+
+        Raises:
+            Exception: Propagates any exception raised by `pandas.read_csv`.
+            ValueError: If the resulting DataFrame is empty or missing required
+                columns.
+            ValueError: If the `value` column contains NaN or negative values.
+            ValueError: If the `type` column contains unsupported values.
+            NotImplementedError: If prevalence observations are provided.
+            NotImplementedError: If observations with differing report dates are
+                provided.
+        """
+        return cls.from_dataframe(pd.read_csv(*args, **kwargs))
 
     @property
     def data(self) -> pd.DataFrame:

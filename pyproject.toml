@@ -58,6 +58,9 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.pytest.ini_options]
+addopts = [
+    "--import-mode=importlib",
+]
 testpaths = [
     "src/vaxflux/",
     "tests/",
@@ -110,6 +113,8 @@ max-args = 8  # Default is 5
 [tool.mypy]
 plugins = ["numpy.typing.mypy_plugin"]
 exclude = "demos/*"
+explicit_package_bases = true
+mypy_path = "$MYPY_CONFIG_FILE_DIR/src"
 
 [[tool.mypy.overrides]]
 module = ["numpyro.*"]
