@@ -47,6 +47,7 @@ extra:
 
 # Markdown extensions
 markdown_extensions:
+  - admonition
   - toc:
       permalink: true
       toc_depth: 4
@@ -58,6 +59,7 @@ markdown_extensions:
       line_spans: __span
       pygments_lang_class: true
   - pymdownx.inlinehilite
+  - pymdownx.details
   - pymdownx.snippets
   - pymdownx.superfences
 
@@ -76,4 +78,6 @@ nav:
       - Vaxflux: api/vaxflux.md
       - Data: api/data.md
   - Contributing: contributing.md
+  - Development:
+      - Creating A Release: development/creating-a-release.md
   - Changelog: changelog.md

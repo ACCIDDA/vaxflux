@@ -121,6 +121,20 @@ For more information on how to invoke pytest please refer to the
 [How to invoke pytest](https://docs.pytest.org/en/stable/how-to/usage.html)
 documentation.
 
+## Packaging
+
+Packaging checks are available through the `build` recipe group:
+
+- `just build-check` - Build the source distribution and wheel, then run
+  `twine check --strict` on the generated artifacts.
+- `just build-test` - Build the wheel, install it into a clean-room virtual
+  environment, install the pinned development test dependencies exported from
+  `uv.lock`, and run the test suite against the installed wheel.
+- `just build` - Run both `build-check` and `build-test`.
+
+These commands are useful when preparing a release or when making changes that
+could affect packaging metadata, installability, or build artifacts.
+
 ### Writing Tests
 
 - Any public API should have unit tests that reaffirm the documentation's
@@ -199,6 +213,7 @@ In addition, you should run:
 - PR CI runs:
 - `docs` on Python 3.12.
 - `quality` on Python 3.12.
+- `package` on Python 3.12, which runs `just build-check`.
 - `tests` on Python 3.11 and 3.12 with both `highest` and `lowest-direct`
   dependency resolution.
 - `changelog` on pull requests.

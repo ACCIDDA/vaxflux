@@ -125,6 +125,37 @@ ci-mypy:
 ci-pytest:
     uv run --isolated --group dev --extra plot pytest --doctest-modules --exitfirst
 
+# Build sdist and wheel, then validate package metadata
+[unix]
+[group('build')]
+build-check:
+    {{rmdir}} dist/
+    uv run python -m build
+    uv run python -m twine check --strict dist/*
+
+# Install the built wheel into a clean room and run tests against it
+[unix]
+[group('build')]
+build-test:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    CLEANROOM="$(mktemp -d)"
+    trap 'rm -rf "${CLEANROOM}"' EXIT
+    uv export --frozen --only-group dev --no-emit-project --format requirements.txt --no-hashes --output-file "${CLEANROOM}/dev-requirements.txt" >/dev/null
+    uv run python -m build --wheel --outdir "${CLEANROOM}/dist"
+    uv venv --python "${UV_PYTHON_VERSION:-3.12}" "${CLEANROOM}/venv"
+    uv pip install --python "${CLEANROOM}/venv/bin/python" "${CLEANROOM}"/dist/*.whl
+    uv pip install --python "${CLEANROOM}/venv/bin/python" -r "${CLEANROOM}/dev-requirements.txt"
+    cp -R tests "${CLEANROOM}/tests"
+    (
+        cd "${CLEANROOM}"
+        "${CLEANROOM}/venv/bin/python" -m pytest --import-mode=importlib tests -q -x
+    )
+
+# Run all package build validations
+[group('build')]
+build-all: build-check build-test
+
 # Install npm dependencies
 [group('lint')]
 npm-install:
@@ -160,3 +191,12 @@ yamllint:
 [group('release')]
 release +FLAGS='':
     uv run python scripts/release.py {{FLAGS}}
+
+# Validate release metadata without creating a GitHub release
+[group('release')]
+release-check:
+    uv run python scripts/release.py
+
+# Run the full local release preflight
+[group('release')]
+release-validate: build-all release-check

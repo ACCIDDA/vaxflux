@@ -7,10 +7,10 @@ of interventions, and more.
 
 ## Getting Started
 
-`vaxflux` is still a WIP so it is recommended to either install from github:
+`vaxflux` can either be installed from PyPI:
 
 ```bash
-uv pip install "git+https://github.com/ACCIDDA/vaxflux"
+uv pip install vaxflux
 ```
 
 or from source:
