@@ -69,8 +69,8 @@ nav:
   - Getting Started: getting-started.md
   - Model Details: model-details.md
   - Demos:
-      - Vaxflux Model: demos/vaxflux-model.ipynb
       - Season Only Vaxflux Model: demos/season-only-vaxflux-model.ipynb
+      - Vaxflux Model: demos/vaxflux-model.ipynb
       - NIS-FRVM Survey: demos/nis-frvm-survey.ipynb
   - API Reference:
       - Vaxflux: api/vaxflux.md
