@@ -43,10 +43,27 @@ jobs:
         run: 'just quality'
         env:
           UV_PYTHON_VERSION: '3.12'
+  package:
+    name: 'package'
+    runs-on: 'ubuntu-latest'
+    steps:
+      - name: 'checkout repository'
+        uses: 'actions/checkout@v6'
+      - name: 'setup just and uv'
+        uses: './.github/actions/setup-just-and-uv'
+        with:
+          python-version: '3.12'
+      - name: 'sync dev environment'
+        run: 'uv sync --python 3.12 --group dev'
+      - name: 'build package artifacts'
+        run: 'just build-check'
+        env:
+          UV_PYTHON_VERSION: '3.12'
   tests:
     name: 'tests (${{ matrix.python-version }}, ${{ matrix.resolution }})'
     needs:
       - 'docs'
+      - 'package'
       - 'quality'
     runs-on: 'ubuntu-latest'
     strategy:

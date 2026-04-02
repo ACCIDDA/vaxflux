@@ -6,7 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.3.0] - 2026-04-07
 
 Added:
 
@@ -32,24 +32,14 @@ Changed:
   dependency to less than 2.0.0.
 - Added explanatory details to demo notebooks, see
   [#175](https://github.com/ACCIDDA/vaxflux/issues/175).
-
-Deprecated:
-
-- ...
-
-Removed:
-
-- ...
+- Overhauled the `release.yaml` GitHub actions workflow to submit `vaxflux` to
+  PyPI, see [#161](https://github.com/ACCIDDA/vaxflux/issues/161).
 
 Fixed:
 
 - Expanded documentation and unit tests for existing internal helpers. See
   [#33](https://github.com/ACCIDDA/vaxflux/issues/33),
   [#42](https://github.com/ACCIDDA/vaxflux/issues/42).
-
-Security:
-
-- ...
 
 ## [0.2.0] - 2026-02-04
 

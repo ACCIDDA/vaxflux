@@ -2,54 +2,121 @@
 name: 'Release'
 
 'on':
-  push:
-    branches:
-      - 'main'
   workflow_dispatch:
+    inputs:
+      publish-target:
+        description: 'Package publish target'
+        required: true
+        default: 'none'
+        type: 'choice'
+        options:
+          - 'none'
+          - 'testpypi'
+          - 'pypi'
+      create-github-release:
+        description: 'Create the GitHub release after publishing'
+        required: true
+        default: false
+        type: 'boolean'
+      deploy-docs:
+        description: 'Deploy versioned docs after creating the GitHub release'
+        required: true
+        default: false
+        type: 'boolean'
 
 permissions:
-  contents: 'write'
+  contents: 'read'
 
 jobs:
-  release:
-    name: 'release'
+  validate:
+    name: 'validate release'
     runs-on: 'ubuntu-latest'
-    strategy:
-      matrix:
-        python-version:
-          - '3.12'
     steps:
       - name: 'checkout repository'
         uses: 'actions/checkout@v6'
         with:
           fetch-depth: 0
-      - name: 'check release'
-        id: 'check-release'
-        shell: 'bash'
-        run: |
-          set -euo pipefail
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            echo "proceed=true" >> "${GITHUB_OUTPUT}"
-            echo "Workflow dispatch detected; bypassing commit message gate."
-            exit 0
-          fi
-          msg="$(git log -1 --pretty=%s)"
-          echo "Commit message: ${msg}"
-          if [[ "${msg}" =~ ^v([0-9]+)\.([0-9]+)\.([0-9]+)([[:space:]]|$) ]]; then
-            echo "proceed=true" >> "${GITHUB_OUTPUT}"
-            echo "Commit message matches release prefix vX.Y.Z."
-          else
-            echo "proceed=false" >> "${GITHUB_OUTPUT}"
-            echo "Commit message does not start with vX.Y.Z; skipping release."
-          fi
       - name: 'setup just and uv'
-        if: "${{ steps.check-release.outputs.proceed == 'true' }}"
         uses: './.github/actions/setup-just-and-uv'
         with:
-          python-version: '${{ matrix.python-version }}'
-      - name: 'run release'
-        if: "${{ steps.check-release.outputs.proceed == 'true' }}"
+          python-version: '3.12'
+      - name: 'sync dev environment'
+        run: 'uv sync --python 3.12 --group dev'
+      - name: 'run release preflight'
+        run: 'just release-validate'
+        env:
+          GH_TOKEN: '${{ secrets.GITHUB_TOKEN }}'
+          UV_PYTHON_VERSION: '3.12'
+      - name: 'upload package artifacts'
+        uses: 'actions/upload-artifact@v6'
+        with:
+          name: 'dist'
+          path: 'dist/*'
+          if-no-files-found: 'error'
+  publish-pypi:
+    name: 'publish to PyPI'
+    needs:
+      - 'validate'
+    runs-on: 'ubuntu-latest'
+    if: "${{ github.event.inputs.publish-target != 'none' }}"
+    permissions:
+      id-token: 'write'
+    steps:
+      - name: 'download package artifacts'
+        uses: 'actions/download-artifact@v8'
+        with:
+          name: 'dist'
+          path: 'dist'
+      - name: 'publish package to TestPyPI'
+        if: "${{ github.event.inputs.publish-target == 'testpypi' }}"
+        uses: 'pypa/gh-action-pypi-publish@release/v1'
+        with:
+          repository-url: 'https://test.pypi.org/legacy/'
+      - name: 'publish package to PyPI'
+        if: "${{ github.event.inputs.publish-target == 'pypi' }}"
+        uses: 'pypa/gh-action-pypi-publish@release/v1'
+  create-github-release:
+    name: 'create GitHub release'
+    needs:
+      - 'validate'
+      - 'publish-pypi'
+    if: >-
+      ${{
+        github.event.inputs.create-github-release == 'true' &&
+        (github.event.inputs.publish-target == 'none' ||
+        needs.publish-pypi.result == 'success')
+      }}
+    runs-on: 'ubuntu-latest'
+    permissions:
+      contents: 'write'
+    steps:
+      - name: 'checkout repository'
+        uses: 'actions/checkout@v6'
+        with:
+          fetch-depth: 0
+      - name: 'setup just and uv'
+        uses: './.github/actions/setup-just-and-uv'
+        with:
+          python-version: '3.12'
+      - name: 'sync dev environment'
+        run: 'uv sync --python 3.12 --group dev'
+      - name: 'create release'
         run: 'just --yes release --create'
         env:
           GH_TOKEN: '${{ secrets.GITHUB_TOKEN }}'
-          UV_PYTHON_VERSION: '${{ matrix.python-version }}'
+          UV_PYTHON_VERSION: '3.12'
+  deploy-docs:
+    name: 'deploy release docs'
+    needs:
+      - 'create-github-release'
+    if: >-
+      ${{
+        github.event.inputs.deploy-docs == 'true' &&
+        needs.create-github-release.result == 'success'
+      }}
+    permissions:
+      contents: 'write'
+    uses: './.github/workflows/gh-pages.yaml'
+    with:
+      deploy-mode: 'release'
+    secrets: 'inherit'
