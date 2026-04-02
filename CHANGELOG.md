@@ -30,6 +30,8 @@ Changed:
   to provide supplemental coordinates for latent variables.
 - Updated the `pandas` dependency to be at least 3.0.0 and limit `mkdocs`
   dependency to less than 2.0.0.
+- Added explanatory details to demo notebooks, see
+  [#175](https://github.com/ACCIDDA/vaxflux/issues/175).
 
 Deprecated:
 
