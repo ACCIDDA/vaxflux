@@ -14,7 +14,7 @@
         <link rel="prev" href="../api/data/">
       
       
-        <link rel="next" href="../changelog/">
+        <link rel="next" href="../development/creating-a-release/">
       
       
       <link rel="icon" href="../assets/images/favicon.png">
@@ -665,6 +665,21 @@ version.
   
 </li>
         
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#packaging" class="md-nav__link">
+    <span class="md-ellipsis">
+      Packaging
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Packaging">
+      <ul class="md-nav__list">
+        
           <li class="md-nav__item">
   <a href="#writing-tests" class="md-nav__link">
     <span class="md-ellipsis">
@@ -819,6 +834,69 @@ version.
   
   
   
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_9" >
+        
+          
+          <label class="md-nav__link" for="__nav_9" id="__nav_9_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Development
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_9">
+            <span class="md-nav__icon md-icon"></span>
+            Development
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../development/creating-a-release/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Creating A Release
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
     <li class="md-nav__item">
       <a href="../changelog/" class="md-nav__link">
         
@@ -952,6 +1030,21 @@ version.
   </a>
   
 </li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#packaging" class="md-nav__link">
+    <span class="md-ellipsis">
+      Packaging
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Packaging">
+      <ul class="md-nav__list">
         
           <li class="md-nav__item">
   <a href="#writing-tests" class="md-nav__link">
@@ -1204,6 +1297,18 @@ For more advanced invocations, please use <code>pytest</code> directly:</p>
 <p>For more information on how to invoke pytest please refer to the
 <a href="https://docs.pytest.org/en/stable/how-to/usage.html">How to invoke pytest</a>
 documentation.</p>
+<h2 id="packaging">Packaging<a class="headerlink" href="#packaging" title="Permanent link">&para;</a></h2>
+<p>Packaging checks are available through the <code>build</code> recipe group:</p>
+<ul>
+<li><code>just build-check</code> - Build the source distribution and wheel, then run
+  <code>twine check --strict</code> on the generated artifacts.</li>
+<li><code>just build-test</code> - Build the wheel, install it into a clean-room virtual
+  environment, install the pinned development test dependencies exported from
+  <code>uv.lock</code>, and run the test suite against the installed wheel.</li>
+<li><code>just build</code> - Run both <code>build-check</code> and <code>build-test</code>.</li>
+</ul>
+<p>These commands are useful when preparing a release or when making changes that
+could affect packaging metadata, installability, or build artifacts.</p>
 <h3 id="writing-tests">Writing Tests<a class="headerlink" href="#writing-tests" title="Permanent link">&para;</a></h3>
 <ul>
 <li>Any public API should have unit tests that reaffirm the documentation's
@@ -1284,6 +1389,7 @@ build the documentation and start a local server at
 <li>PR CI runs:</li>
 <li><code>docs</code> on Python 3.12.</li>
 <li><code>quality</code> on Python 3.12.</li>
+<li><code>package</code> on Python 3.12, which runs <code>just build-check</code>.</li>
 <li><code>tests</code> on Python 3.11 and 3.12 with both <code>highest</code> and <code>lowest-direct</code>
   dependency resolution.</li>
 <li><code>changelog</code> on pull requests.</li>

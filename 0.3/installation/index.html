@@ -323,6 +323,15 @@ version.
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#install-from-pypi" class="md-nav__link">
+    <span class="md-ellipsis">
+      Install From PyPI
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#using-pip" class="md-nav__link">
     <span class="md-ellipsis">
       Using pip
@@ -332,18 +341,18 @@ version.
 </li>
       
         <li class="md-nav__item">
-  <a href="#using-conda" class="md-nav__link">
+  <a href="#using-uv" class="md-nav__link">
     <span class="md-ellipsis">
-      Using conda
+      Using uv
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#using-uv" class="md-nav__link">
+  <a href="#install-the-development-version-from-github" class="md-nav__link">
     <span class="md-ellipsis">
-      Using uv
+      Install The Development Version From GitHub
     </span>
   </a>
   
@@ -621,6 +630,69 @@ version.
   
   
   
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_9" >
+        
+          
+          <label class="md-nav__link" for="__nav_9" id="__nav_9_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Development
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_9">
+            <span class="md-nav__icon md-icon"></span>
+            Development
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../development/creating-a-release/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Creating A Release
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
     <li class="md-nav__item">
       <a href="../changelog/" class="md-nav__link">
         
@@ -662,6 +734,15 @@ version.
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#install-from-pypi" class="md-nav__link">
+    <span class="md-ellipsis">
+      Install From PyPI
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#using-pip" class="md-nav__link">
     <span class="md-ellipsis">
       Using pip
@@ -671,18 +752,18 @@ version.
 </li>
       
         <li class="md-nav__item">
-  <a href="#using-conda" class="md-nav__link">
+  <a href="#using-uv" class="md-nav__link">
     <span class="md-ellipsis">
-      Using conda
+      Using uv
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#using-uv" class="md-nav__link">
+  <a href="#install-the-development-version-from-github" class="md-nav__link">
     <span class="md-ellipsis">
-      Using uv
+      Install The Development Version From GitHub
     </span>
   </a>
   
@@ -714,23 +795,24 @@ version.
 
 <h1 id="installation">Installation<a class="headerlink" href="#installation" title="Permanent link">&para;</a></h1>
 <p>Vaxflux is a Python package and can be installed using pip, conda, or any other
-standard package managers. It is compatible with Python 3.10, 3.11, and 3.12.
-However, vaxflux is currently in development and not available on PyPI or
-conda-forge, so it must be installed directly from GitHub.</p>
+standard package managers. It is compatible with Python 3.11 and 3.12.</p>
+<h2 id="install-from-pypi">Install From PyPI<a class="headerlink" href="#install-from-pypi" title="Permanent link">&para;</a></h2>
+<p>For most users, the recommended installation method is from PyPI:</p>
 <h2 id="using-pip">Using <code>pip</code><a class="headerlink" href="#using-pip" title="Permanent link">&para;</a></h2>
 <p>To install vaxflux using pip, run the following command in your terminal:</p>
-<div class="language-shell highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>pip<span class="w"> </span>install<span class="w"> </span>git+https://github.com/ACCIDDA/vaxflux.git
-</span></code></pre></div>
-<h2 id="using-conda">Using <code>conda</code><a class="headerlink" href="#using-conda" title="Permanent link">&para;</a></h2>
-<p>To install vaxflux using conda, you can create a new environment and install it
-from GitHub. Run the following commands in your terminal:</p>
-<div class="language-shell highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>conda<span class="w"> </span>install<span class="w"> </span>pip
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>pip<span class="w"> </span>install<span class="w"> </span>git+https://github.com/ACCIDDA/vaxflux.git
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>pip<span class="w"> </span>install<span class="w"> </span>vaxflux
 </span></code></pre></div>
 <h2 id="using-uv">Using <code>uv</code><a class="headerlink" href="#using-uv" title="Permanent link">&para;</a></h2>
 <p>To add vaxflux to your uv environment, you can use the following command:</p>
-<div class="language-shell highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>uv<span class="w"> </span>add<span class="w"> </span>git+https://github.com/ACCIDDA/vaxflux.git
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>uv<span class="w"> </span>add<span class="w"> </span>vaxflux
 </span></code></pre></div>
+<h2 id="install-the-development-version-from-github">Install The Development Version From GitHub<a class="headerlink" href="#install-the-development-version-from-github" title="Permanent link">&para;</a></h2>
+<p>If you install directly from GitHub, you will get the development version of
+<code>vaxflux</code> rather than the latest PyPI release.</p>
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>pip<span class="w"> </span>install<span class="w"> </span>git+https://github.com/ACCIDDA/vaxflux.git
+</span></code></pre></div>
+<p>For the development version, refer to the
+<a href="https://accidda.github.io/vaxflux/dev/">development documentation</a>.</p>
 <h2 id="optional-dependencies">Optional Dependencies<a class="headerlink" href="#optional-dependencies" title="Permanent link">&para;</a></h2>
 <p>The vaxflux package also provides two optional dependency groups:</p>
 <ul>
@@ -744,9 +826,14 @@ from GitHub. Run the following commands in your terminal:</p>
   generally not needed unless you are learning the package and want to run those
   demos locally yourself.</li>
 </ul>
-<p>To install these optional dependency groups you can change the installation urls
-above to <code>git+https://github.com/ACCIDDA/vaxflux.git[plot]</code> or
-<code>git+https://github.com/ACCIDDA/vaxflux.git[demo]</code>.</p>
+<p>To install these optional dependency groups from PyPI:</p>
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;vaxflux[plot]&quot;</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;vaxflux[demo]&quot;</span>
+</span></code></pre></div>
+<p>To install them from the GitHub development version:</p>
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;vaxflux[plot] @ git+https://github.com/ACCIDDA/vaxflux.git&quot;</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;vaxflux[demo] @ git+https://github.com/ACCIDDA/vaxflux.git&quot;</span>
+</span></code></pre></div>
 
 
 
