@@ -3,8 +3,37 @@ name = "vaxflux"
 version = "0.4.0dev"
 description = "Flexible bayesian models for seasonal vaccine uptake."
 readme = "README.md"
-license = { text = "MIT" }
+authors = [
+    { name = "Carl Pearson", email = "cap1024@unc.edu" },
+    { name = "Joshua Macdonald", email = "jmacdo16@jh.edu" },
+    { name = "Timothy Willard", email = "twillard@unc.edu" },
+]
+license = "MIT"
+license-files = ["LICENSE"]
 requires-python = ">=3.11,<3.13"
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering",
+    "Typing :: Typed",
+]
+keywords = [
+    "bayesian",
+    "epidemiology",
+    "forecasting",
+    "modeling",
+    "public-health",
+    "seasonal",
+    "time-series",
+    "vaccine",
+]
 dependencies = [
     "numpy>=1.17.0,<2",
     "scipy>=1.14.1",
@@ -54,6 +83,10 @@ demo = [
     "nbconvert>=7.16.6",
     "seaborn>=0.13.2",
 ]
+
+[project.urls]
+Homepage = "https://github.com/ACCIDDA/vaxflux"
+Issues = "https://github.com/ACCIDDA/vaxflux/issues"
 
 [build-system]
 requires = ["hatchling"]
