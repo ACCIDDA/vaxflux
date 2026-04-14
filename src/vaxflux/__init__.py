@@ -18,7 +18,7 @@ __all__ = (
     "daily_date_ranges",
     "data",
 )
-__version__ = "0.3.0"
+__version__ = "0.4.0dev"
 
 
 from vaxflux import (
