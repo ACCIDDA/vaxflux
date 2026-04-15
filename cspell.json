@@ -52,6 +52,7 @@
     "ndays",
     "newaxis",
     "nowcasting",
+    "numpy",
     "numpyro",
     "presample",
     "pymc",

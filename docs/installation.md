@@ -1,7 +1,7 @@
 # Installation
 
 Vaxflux is a Python package and can be installed using pip, conda, or any other
-standard package managers. It is compatible with Python 3.11 and 3.12.
+standard package managers. It is compatible with Python 3.11, 3.12, and 3.13.
 
 ## Install From PyPI
 

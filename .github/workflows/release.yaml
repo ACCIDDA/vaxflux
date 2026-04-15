@@ -41,11 +41,12 @@ jobs:
         with:
           python-version: '3.12'
       - name: 'sync dev environment'
-        run: 'uv sync --python 3.12 --group dev'
+        run: 'uv sync --locked --python 3.12 --group dev'
       - name: 'run release preflight'
         run: 'just release-validate'
         env:
           GH_TOKEN: '${{ secrets.GITHUB_TOKEN }}'
+          UV_LOCKED: 'true'
           UV_PYTHON_VERSION: '3.12'
       - name: 'upload package artifacts'
         uses: 'actions/upload-artifact@v6'
@@ -99,11 +100,12 @@ jobs:
         with:
           python-version: '3.12'
       - name: 'sync dev environment'
-        run: 'uv sync --python 3.12 --group dev'
+        run: 'uv sync --locked --python 3.12 --group dev'
       - name: 'create release'
         run: 'just --yes release --create'
         env:
           GH_TOKEN: '${{ secrets.GITHUB_TOKEN }}'
+          UV_LOCKED: 'true'
           UV_PYTHON_VERSION: '3.12'
   deploy-docs:
     name: 'deploy release docs'

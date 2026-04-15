@@ -4,7 +4,7 @@ from functools import cached_property
 from itertools import product
 from typing import Any, Literal, cast
 
-import arviz as az
+import arviz as az  # type: ignore[import-untyped,unused-ignore]
 import pandas as pd
 import xarray as xr
 from matplotlib.figure import Figure
@@ -24,7 +24,7 @@ from vaxflux._plot import (
 from vaxflux._util import _compute_quantiles_and_max, _coord_name
 
 
-class VaxfluxInferenceData(az.InferenceData):
+class VaxfluxInferenceData(az.InferenceData):  # type: ignore[misc,unused-ignore]
     """
     Container for inference data specific to vaxflux.
 
@@ -57,10 +57,10 @@ class VaxfluxInferenceData(az.InferenceData):
         observations = cast("pd.DataFrame | None", kwargs.pop("observations", None))
         idata = cast(
             "az.InferenceData",
-            az.from_numpyro(*args, **kwargs),  # type: ignore[no-untyped-call]
+            az.from_numpyro(*args, **kwargs),  # type: ignore[no-untyped-call,unused-ignore]
         )
         idata.__class__ = cls
-        idata.observations = observations.copy() if observations is not None else None  # type: ignore[attr-defined]
+        idata.observations = observations.copy() if observations is not None else None  # type: ignore[attr-defined,unused-ignore]
         return cast("VaxfluxInferenceData", idata)
 
     @cached_property
@@ -85,6 +85,10 @@ class VaxfluxInferenceData(az.InferenceData):
         """
         Return a merged posterior dataset combining posterior and posterior predictive.
 
+        When the same variable exists in both groups, prefer the posterior predictive
+        values. This keeps observation reconstructions based on the predictive draws
+        while still preserving posterior-only variables from the sampler output.
+
         Returns:
             An xarray Dataset with posterior and posterior predictive variables.
 
@@ -94,8 +98,8 @@ class VaxfluxInferenceData(az.InferenceData):
         if posterior is None and posterior_predictive is None:
             msg = "Posterior predictive data not available in this inference object."
             raise ValueError(msg)
-        datasets = [ds for ds in (posterior, posterior_predictive) if ds is not None]
-        return cast("xr.Dataset", xr.merge(datasets, compat="no_conflicts"))
+        datasets = [ds for ds in (posterior_predictive, posterior) if ds is not None]
+        return cast("xr.Dataset", xr.merge(datasets, compat="override"))
 
     @cached_property
     def coords(self) -> dict[str, list[str]]:

@@ -14,7 +14,9 @@ inputs:
   cache-dependency-glob:
     description: 'Dependency files used for uv cache keying'
     required: false
-    default: 'pyproject.toml'
+    default: |
+      pyproject.toml
+      uv.lock
 
 runs:
   using: 'composite'

@@ -18,7 +18,7 @@ or from source:
 ```bash
 git clone git@github.com:ACCIDDA/vaxflux.git
 cd vaxflux
-uv sync
+uv sync --locked
 ```
 
 # Funding Acknowledgement
