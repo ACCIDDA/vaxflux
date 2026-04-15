@@ -49,7 +49,6 @@ def _collect_args(
         Traceback (most recent call last):
             ...
         TypeError: Arguments must be int objects or sequences of int objects, got str.
-
     """
     items: list[T] = []
     for arg in args:
@@ -310,7 +309,6 @@ def _coord_index_dim(
 
     Raises:
         NotImplementedError: If the `dim` given is unknown.
-
     """
     if dim == "season":
         return coords[dim].index(season)
@@ -350,6 +348,54 @@ def _coord_index(
     Returns:
         Either a tuple of integers corresponding to the index of the RV to select or
         `None` if the index could not be determined.
+
+    Examples:
+        >>> from vaxflux._util import _coord_index
+        >>> coords = {
+        ...     "season": ["2022/2023", "2023/2024"],
+        ...     "covariate_names": ["sex", "age"],
+        ...     "covariate_sex_categories": ["female", "male"],
+        ...     "covariate_age_categories": ["youth", "adult", "senior"],
+        ...     "covariate_age_categories_limited": ["adult", "senior"],
+        ... }
+        >>> _coord_index((), "2023/2024", None, None, coords)
+        ()
+        >>> _coord_index(("season",), "2023/2024", None, None, coords)
+        (1,)
+        >>> _coord_index(("covariate_names",), "2023/2024", "age", None, coords)
+        (1,)
+        >>> _coord_index(
+        ...     ("covariate_age_categories",),
+        ...     "2023/2024",
+        ...     "age",
+        ...     "senior",
+        ...     coords,
+        ... )
+        (2,)
+        >>> _coord_index(
+        ...     ("covariate_age_categories_limited",),
+        ...     "2023/2024",
+        ...     "age",
+        ...     "adult",
+        ...     coords,
+        ... )
+        (0,)
+        >>> _coord_index(
+        ...     ("season", "covariate_names", "covariate_sex_categories"),
+        ...     "2023/2024",
+        ...     "sex",
+        ...     "male",
+        ...     coords,
+        ... )
+        (1, 0, 1)
+        >>> _coord_index(
+        ...     ("season", "covariate_names", "covariate_sex_categories"),
+        ...     "2023/2024",
+        ...     "sex",
+        ...     "missing",
+        ...     coords,
+        ... ) is None
+        True
     """
     try:
         return tuple(
@@ -377,6 +423,57 @@ def _compute_quantiles_and_max(
 
     Returns:
         A tuple of the quantiles DataFrame and the updated maximum value.
+
+    Examples:
+        >>> import pandas as pd
+        >>> from vaxflux._util import _compute_quantiles_and_max
+        >>> data = pd.DataFrame(
+        ...     {
+        ...         "mid_date": pd.to_datetime(
+        ...             [
+        ...                 "2024-01-01",
+        ...                 "2024-01-01",
+        ...                 "2024-01-01",
+        ...                 "2024-01-08",
+        ...                 "2024-01-08",
+        ...                 "2024-01-08",
+        ...                 "2024-01-15",
+        ...                 "2024-01-15",
+        ...                 "2024-01-15",
+        ...             ]
+        ...         ),
+        ...         "value": [8.0, 10.0, 16.0, 6.0, 12.0, 18.0, 9.0, 15.0, 21.0],
+        ...     }
+        ... )
+        >>> quantiles, current_max = _compute_quantiles_and_max(
+        ...     data, "value", [0.25, 0.5, 0.75], 14.0
+        ... )
+        >>> print(quantiles)  # doctest: +NORMALIZE_WHITESPACE
+        level_1     0.25  0.50  0.75
+        mid_date
+        2024-01-01   9.0  10.0  13.0
+        2024-01-08   9.0  12.0  15.0
+        2024-01-15  12.0  15.0  18.0
+        >>> current_max
+        18.0
+        >>> empty_quantiles, unchanged_max = _compute_quantiles_and_max(
+        ...     data.iloc[0:0], "value", [0.5], 7.0
+        ... )
+        >>> print(empty_quantiles)
+        Empty DataFrame
+        Columns: []
+        Index: []
+        >>> unchanged_max
+        7.0
+        >>> no_quantiles, unchanged_max = _compute_quantiles_and_max(
+        ...     data, "value", [], 20.0
+        ... )
+        >>> print(no_quantiles)
+        Empty DataFrame
+        Columns: []
+        Index: []
+        >>> unchanged_max
+        20.0
     """
     if data.empty:
         return pd.DataFrame(), current_max
