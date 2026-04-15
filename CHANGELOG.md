@@ -26,7 +26,9 @@ Removed:
 
 Fixed:
 
-- ...
+- Reduced the run time of the `demos/` notebooks by reducing the number of
+  samples drawn in the `nis-frvm-survey.ipynb` notebook. See
+  [#119](https://github.com/ACCIDDA/vaxflux/issues/119).
 
 Security:
 
