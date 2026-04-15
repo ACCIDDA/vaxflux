@@ -1,0 +1,34 @@
+---
+version: 2
+updates:
+  - package-ecosystem: 'uv'
+    directory: '/'
+    schedule:
+      interval: 'weekly'
+    cooldown:
+      default-days: 14
+    commit-message:
+      include: 'scope'
+    labels:
+      - 'dependency'
+  - package-ecosystem: 'npm'
+    directory: '/'
+    schedule:
+      interval: 'weekly'
+    cooldown:
+      default-days: 14
+    commit-message:
+      include: 'scope'
+    labels:
+      - 'dependency'
+  - package-ecosystem: 'github-actions'
+    directory: '/'
+    schedule:
+      interval: 'weekly'
+    cooldown:
+      default-days: 14
+    commit-message:
+      include: 'scope'
+    labels:
+      - 'dependency'
+      - 'ci/cd'

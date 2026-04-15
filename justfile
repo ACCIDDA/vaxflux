@@ -33,7 +33,6 @@ clean: clean-docs
     {{rmdir}} node_modules/
     {{rmdir}} src/vaxflux/__pycache__/
     {{rmdir}} src/vaxflux.egg-info/
-    {{rm}} uv.lock
 
 # Generate API reference documentation
 [unix]
@@ -89,7 +88,7 @@ demo-test:
     echo "Setting up demo tests"
     {{rmdir}} demos/scripts/
     {{mkdir}} demos/scripts/
-    uv run jupyter nbconvert --to script demos/*.ipynb
+    uv run --group dev --extra demo jupyter nbconvert --to script demos/*.ipynb
     {{mv}} demos/*.py demos/scripts/
     echo "Running demo test scripts"
     TMP=$(mktemp)
@@ -97,13 +96,13 @@ demo-test:
     for file in demos/scripts/*.py; do
         awk 'NR==4{print "import matplotlib; matplotlib.use(\"Agg\")"}1' ${file} > ${TMP} && mv ${TMP} ${file}
         echo "Running $file"
-        time uv run python "$file"
+        time uv run --group dev --extra demo python "$file"
     done
     echo "All demo scripts passed."
 
 # Run CI checks (non-interactive)
 [group('ci')]
-ci: quality ci-pytest
+ci: quality ci-pytest changelog-check
 
 # Run CI quality checks
 [group('ci')]
@@ -112,18 +111,52 @@ quality: ci-ruff ci-mypy
 # Run CI ruff formatting and linting checks
 [group('ci')]
 ci-ruff:
-    uv run ruff format --check
-    uv run ruff check --no-fix
+    uv run --locked ruff format --check
+    uv run --locked ruff check --no-fix
 
 # Run CI mypy type checking
 [group('ci')]
 ci-mypy:
-    uv run mypy --strict .
+    uv run --locked --extra plot mypy --strict .
 
-# Run CI pytest checks using the resolution from `UV_RESOLUTION`
+# Run CI pytest checks against the committed lockfile
 [group('ci')]
 ci-pytest:
-    uv run --isolated --group dev --extra plot pytest --doctest-modules --exitfirst
+    uv run --locked --isolated --group dev --extra plot pytest --doctest-modules --exitfirst
+
+# Run CI minimum-version pytest checks without the committed lockfile
+[unix]
+[group('ci')]
+ci-pytest-lowest-direct:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if [ -f uv.lock ]; then
+        trap 'if [ -f uv.lock.bak ]; then mv uv.lock.bak uv.lock; fi' EXIT
+        mv uv.lock uv.lock.bak
+    fi
+    env -u UV_LOCKED -u UV_FROZEN UV_RESOLUTION=lowest-direct \
+        uv run --isolated --group dev --extra plot pytest --doctest-modules --exitfirst
+
+# Check that CHANGELOG.md has been updated relative to origin/main
+[unix]
+[group('ci')]
+changelog-check:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    BASE_BRANCH="${CHANGELOG_BASE_BRANCH:-main}"
+    BASE_REF="origin/${BASE_BRANCH}"
+    git fetch origin "${BASE_BRANCH}" --depth=1
+    GIT_LOG="$(git log "${BASE_REF}"..HEAD --pretty=format:"%s %b")"
+    SKIP_REGEX="no[[:space:]]+major[[:space:]]+changes"
+    if echo "${GIT_LOG}" | tr '\n' ' ' | grep -Eiq "${SKIP_REGEX}"; then
+        echo "Bypassing changelog check: 'no major changes' found in commit history"
+        exit 0
+    fi
+    MERGE_BASE="$(git merge-base "${BASE_REF}" HEAD)"
+    if ! git diff --name-only "${MERGE_BASE}" | grep -q "^CHANGELOG.md$"; then
+        echo "Error: Please update CHANGELOG.md"
+        exit 1
+    fi
 
 # Build sdist and wheel, then validate package metadata
 [unix]
@@ -141,7 +174,7 @@ build-test:
     set -euo pipefail
     CLEANROOM="$(mktemp -d)"
     trap 'rm -rf "${CLEANROOM}"' EXIT
-    uv export --frozen --only-group dev --no-emit-project --format requirements.txt --no-hashes --output-file "${CLEANROOM}/dev-requirements.txt" >/dev/null
+    uv export --locked --group dev --extra plot --no-emit-project --format requirements.txt --no-hashes --output-file "${CLEANROOM}/dev-requirements.txt" >/dev/null
     uv run python -m build --wheel --outdir "${CLEANROOM}/dist"
     uv venv --python "${UV_PYTHON_VERSION:-3.12}" "${CLEANROOM}/venv"
     uv pip install --python "${CLEANROOM}/venv/bin/python" "${CLEANROOM}"/dist/*.whl

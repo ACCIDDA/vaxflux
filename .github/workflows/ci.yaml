@@ -28,6 +28,7 @@ jobs:
       - name: 'build docs'
         run: 'just docs'
         env:
+          UV_LOCKED: 'true'
           UV_PYTHON_VERSION: '${{ matrix.python-version }}'
   quality:
     name: 'quality'
@@ -42,6 +43,7 @@ jobs:
       - name: 'run quality checks'
         run: 'just quality'
         env:
+          UV_LOCKED: 'true'
           UV_PYTHON_VERSION: '3.12'
   package:
     name: 'package'
@@ -54,13 +56,14 @@ jobs:
         with:
           python-version: '3.12'
       - name: 'sync dev environment'
-        run: 'uv sync --python 3.12 --group dev'
+        run: 'uv sync --locked --python 3.12 --group dev'
       - name: 'build package artifacts'
         run: 'just build-check'
         env:
+          UV_LOCKED: 'true'
           UV_PYTHON_VERSION: '3.12'
   tests:
-    name: 'tests (${{ matrix.python-version }}, ${{ matrix.resolution }})'
+    name: 'tests (${{ matrix.python-version }}, ${{ matrix.dependency-set }})'
     needs:
       - 'docs'
       - 'package'
@@ -72,8 +75,9 @@ jobs:
         python-version:
           - '3.11'
           - '3.12'
-        resolution:
-          - 'highest'
+          - '3.13'
+        dependency-set:
+          - 'locked'
           - 'lowest-direct'
     steps:
       - name: 'checkout repository'
@@ -82,11 +86,17 @@ jobs:
         uses: './.github/actions/setup-just-and-uv'
         with:
           python-version: '${{ matrix.python-version }}'
-      - name: 'run tests'
+      - name: 'run locked tests'
+        if: ${{ matrix.dependency-set == 'locked' }}
         run: 'just ci-pytest'
         env:
+          UV_LOCKED: 'true'
           UV_PYTHON_VERSION: '${{ matrix.python-version }}'
-          UV_RESOLUTION: '${{ matrix.resolution }}'
+      - name: 'run minimum-version tests'
+        if: ${{ matrix.dependency-set == 'lowest-direct' }}
+        run: 'just ci-pytest-lowest-direct'
+        env:
+          UV_PYTHON_VERSION: '${{ matrix.python-version }}'
   changelog:
     name: 'changelog'
     runs-on: 'ubuntu-latest'
@@ -95,16 +105,12 @@ jobs:
         uses: 'actions/checkout@v6'
         with:
           fetch-depth: 0
+      - name: 'setup just and uv'
+        uses: './.github/actions/setup-just-and-uv'
+        with:
+          python-version: '3.12'
       - name: 'check changelog updated'
-        run: |
-          git fetch origin main:main
-          GIT_LOG=$(git log main..HEAD --pretty=format:"%s %b")
-          SKIP_REGEX="no[[:space:]]+major[[:space:]]+changes"
-          if echo "$GIT_LOG" | tr '\n' ' ' | grep -Eiq "$SKIP_REGEX"; then
-            echo "Bypassing changelog check: 'no major changes' found in commit history"
-            exit 0
-          fi
-          if ! git diff --name-only main...HEAD | grep -q "^CHANGELOG.md$"; then
-            echo "Error: Please update CHANGELOG.md"
-            exit 1
-          fi
+        run: 'just changelog-check'
+        env:
+          UV_LOCKED: 'true'
+          UV_PYTHON_VERSION: '3.12'

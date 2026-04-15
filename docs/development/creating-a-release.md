@@ -11,7 +11,7 @@ changelog to running the manual GitHub Actions release workflow.
   `src/vaxflux/__init__.py`.
 - The release notes for that version have already been added to `CHANGELOG.md`.
 - Your local environment is synced with a supported Python version via
-  `uv sync --python 3.12 --group dev`.
+  `uv sync --locked --python 3.12 --group dev`.
 
 ## 1. Format The Changelog
 

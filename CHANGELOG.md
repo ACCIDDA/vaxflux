@@ -10,11 +10,12 @@ and this project adheres to
 
 Added:
 
-- ...
+- Support for python 3.13. See
+  [#103](https://github.com/ACCIDDA/vaxflux/issues/103).
 
 Changed:
 
-- ...
+- Update the minimum required version for `numpy` from 1.17.0 to 2.1.0.
 
 Deprecated:
 
