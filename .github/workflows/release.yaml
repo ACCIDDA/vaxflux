@@ -49,7 +49,7 @@ jobs:
           UV_LOCKED: 'true'
           UV_PYTHON_VERSION: '3.12'
       - name: 'upload package artifacts'
-        uses: 'actions/upload-artifact@v6'
+        uses: 'actions/upload-artifact@v7'
         with:
           name: 'dist'
           path: 'dist/*'
