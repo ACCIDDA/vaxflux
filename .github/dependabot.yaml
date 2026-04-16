@@ -8,6 +8,7 @@ updates:
     cooldown:
       default-days: 14
     commit-message:
+      prefix: 'deps'
       include: 'scope'
     labels:
       - 'dependency'
@@ -18,6 +19,7 @@ updates:
     cooldown:
       default-days: 14
     commit-message:
+      prefix: 'deps'
       include: 'scope'
     labels:
       - 'dependency'
@@ -28,6 +30,7 @@ updates:
     cooldown:
       default-days: 14
     commit-message:
+      prefix: 'deps'
       include: 'scope'
     labels:
       - 'dependency'
