@@ -872,7 +872,7 @@ changelog to running the manual GitHub Actions release workflow.</p>
   <code>src/vaxflux/__init__.py</code>.</li>
 <li>The release notes for that version have already been added to <code>CHANGELOG.md</code>.</li>
 <li>Your local environment is synced with a supported Python version via
-  <code>uv sync --python 3.12 --group dev</code>.</li>
+  <code>uv sync --locked --python 3.12 --group dev</code>.</li>
 </ul>
 <h2 id="1-format-the-changelog">1. Format The Changelog<a class="headerlink" href="#1-format-the-changelog" title="Permanent link">&para;</a></h2>
 <p>The release workflow validates <code>CHANGELOG.md</code> using <code>scripts/release.py</code>, so the
