@@ -295,17 +295,16 @@ def _coord_index_dim(
         0
         >>> _coord_index_dim("covariate_names", "2023/2024", "sex", "male", coords)
         0
-        >>> try:
-        ...     _coord_index_dim(
-        ...         "covariate_sex_categories_limited",
-        ...         "2023/2024",
-        ...         "sex",
-        ...         "female",
-        ...         coords,
-        ...     )
-        ... except Exception as e:
-        ...     print(e)
-        'female' is not in list
+        >>> _coord_index_dim(
+        ...     "covariate_sex_categories_limited",
+        ...     "2023/2024",
+        ...     "sex",
+        ...     "female",
+        ...     coords,
+        ... )
+        Traceback (most recent call last):
+            ...
+        ValueError: ... not in list
 
     Raises:
         NotImplementedError: If the `dim` given is unknown.

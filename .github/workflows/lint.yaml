@@ -47,7 +47,7 @@ jobs:
     strategy:
       matrix:
         python-version:
-          - '3.12'
+          - '3.14'
     steps:
       - name: 'checkout repository'
         uses: 'actions/checkout@v6'

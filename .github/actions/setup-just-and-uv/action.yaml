@@ -6,7 +6,7 @@ inputs:
   python-version:
     description: 'Python version to install/configure via uv'
     required: false
-    default: '3.12'
+    default: '3.14'
   enable-cache:
     description: 'Whether to enable uv caching'
     required: false
