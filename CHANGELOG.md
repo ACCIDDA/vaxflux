@@ -16,6 +16,8 @@ Added:
 Changed:
 
 - Update the minimum required version for `numpy` from 1.17.0 to 2.1.0.
+- Added `LogisticCurve._repr_latex_` to pretty print the equation for the curve
+  in jupyter notebooks. See [#76](https://github.com/ACCIDDA/vaxflux/issues/76).
 
 Deprecated:
 
