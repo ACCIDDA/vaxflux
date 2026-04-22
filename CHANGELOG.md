@@ -10,12 +10,15 @@ and this project adheres to
 
 Added:
 
-- Support for python 3.13. See
+- Support for python 3.13 and 3.14. See
+  [#102](https://github.com/ACCIDDA/vaxflux/issues/102),
   [#103](https://github.com/ACCIDDA/vaxflux/issues/103).
 
 Changed:
 
-- Update the minimum required version for `numpy` from 1.17.0 to 2.1.0.
+- Update the minimum required version for `numpy` from 1.17.0 to 2.1.0, `scipy`
+  from 1.14.1 to 1.17.1, `pydantic` from 2.10.6 to 2.12.5, `jax` from 0.6.2 to
+  0.9.2, and `numpyro` from 0.19.0 to 0.20.1.
 - Added `LogisticCurve._repr_latex_` to pretty print the equation for the curve
   in jupyter notebooks. See [#76](https://github.com/ACCIDDA/vaxflux/issues/76).
 
