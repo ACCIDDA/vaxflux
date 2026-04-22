@@ -280,7 +280,7 @@ class LogisticCurve(Curve):
     This class implements a logistic curve with parameters $m$, $r$, and $s$ which is
     given by:
 
-    $$ f(t\vert m,r,s)=\mathrm{invlogit}\left(m\right)\mathrm{logit}\left(e^r\left(t-s\right)\right) $$
+    $$ f(t \mid m, r, s) = \operatorname{expit}(m)\operatorname{expit}\left(e^r(t-s)\right) $$
 
     Examples:
         >>> import jax.numpy as jnp
@@ -293,7 +293,6 @@ class LogisticCurve(Curve):
         >>> incidence = curve.incidence(t, m=0.0, r=1.0, s=1.0)
         >>> incidence
         Array([0.0789269 , 0.33978522, 0.07892691, 0.00586712], dtype=float32)
-
     """  # noqa: E501
 
     def prevalence(  # type: ignore[override]
@@ -316,3 +315,15 @@ class LogisticCurve(Curve):
             The logistic prevalence curve evaluated at time `t`.
         """
         return jsp.expit(m) * jsp.expit(jnp.exp(r) * (t - s))
+
+    def _repr_latex_(self) -> str:
+        r"""
+        Return a LaTeX representation of the prevalence equation.
+
+        Returns:
+            The logistic prevalence equation formatted for Jupyter display.
+        """
+        return (
+            r"$$f(t \mid m, r, s) = "
+            r"\operatorname{expit}(m)\operatorname{expit}\left(e^r(t-s)\right)$$"
+        )
