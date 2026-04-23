@@ -13,6 +13,9 @@ Added:
 - Support for python 3.13 and 3.14. See
   [#102](https://github.com/ACCIDDA/vaxflux/issues/102),
   [#103](https://github.com/ACCIDDA/vaxflux/issues/103).
+- Added `VaxfluxObservations.to_date_ranges/to_season_ranges` to easily extract
+  date/season ranges from observations. See
+  [#198](https://github.com/ACCIDDA/vaxflux/issues/198).
 
 Changed:
 
