@@ -7,6 +7,22 @@ updates:
       interval: 'weekly'
     cooldown:
       default-days: 14
+    groups:
+      patch:
+        patterns:
+          - '*'
+        update-types:
+          - 'patch'
+      minor:
+        patterns:
+          - '*'
+        update-types:
+          - 'minor'
+      major:
+        patterns:
+          - '*'
+        update-types:
+          - 'major'
     commit-message:
       prefix: 'deps'
       include: 'scope'
@@ -18,6 +34,22 @@ updates:
       interval: 'weekly'
     cooldown:
       default-days: 14
+    groups:
+      patch:
+        patterns:
+          - '*'
+        update-types:
+          - 'patch'
+      minor:
+        patterns:
+          - '*'
+        update-types:
+          - 'minor'
+      major:
+        patterns:
+          - '*'
+        update-types:
+          - 'major'
     commit-message:
       prefix: 'deps'
       include: 'scope'
@@ -29,6 +61,22 @@ updates:
       interval: 'weekly'
     cooldown:
       default-days: 14
+    groups:
+      patch:
+        patterns:
+          - '*'
+        update-types:
+          - 'patch'
+      minor:
+        patterns:
+          - '*'
+        update-types:
+          - 'minor'
+      major:
+        patterns:
+          - '*'
+        update-types:
+          - 'major'
     commit-message:
       prefix: 'deps'
       include: 'scope'
