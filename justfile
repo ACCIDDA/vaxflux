@@ -19,6 +19,7 @@ lint: cspell prettier yamllint
 [group('clean')]
 clean-docs:
     {{rmdir}} docs/demos
+    {{rmdir}} docs/images
     {{rmdir}} site
     {{rm}} docs/changelog.md
     {{rm}} docs/contributing.md
@@ -37,10 +38,16 @@ clean: clean-docs
 # Generate API reference documentation
 [unix]
 [group('docs')]
-reference:
+reference: images
     {{cp}} CHANGELOG.md docs/changelog.md
     {{cp}} CONTRIBUTING.md docs/contributing.md
     {{cp}} README.md docs/index.md
+
+# Generate static images for documentation
+[unix]
+[group('docs')]
+images:
+    uv run --extra plot python scripts/generate_docs_images.py
 
 # Generate demo documentation
 [unix]
