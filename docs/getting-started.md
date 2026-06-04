@@ -28,6 +28,29 @@ modeling. For details on how the logistic curve is defined in `vaxflux`, refer
 to the [`vaxflux.LogisticCurve`](api/vaxflux.md#vaxflux.LogisticCurve) class
 documentation.
 
+The curve's `plot` method provides a quick way to visualize how different
+parameter values affect the shape of the prevalence and incidence curves:
+
+```python
+import jax.numpy as jnp
+
+t = jnp.linspace(-10.0, 110.0, num=200)
+
+logistic_curve.plot(
+    t,
+    parameter_sets=[
+        {"m":  0.5, "r": -3.2, "s": 40.0},
+        {"m":  1.2, "r": -3.2, "s": 40.0},
+        {"m":  0.5, "r": -2.5, "s": 40.0},
+        {"m":  0.5, "r": -3.2, "s": 20.0},
+    ],
+    labels=["base", "high m", "high r", "low s"],
+    title="LogisticCurve",
+)
+```
+
+![LogisticCurve plot](images/getting-started-curve-plot.png)
+
 ## Season And Date Ranges
 
 In `vaxflux`, a season is defined as a period of time during which vaccine

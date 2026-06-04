@@ -8,7 +8,7 @@ import matplotlib as mpl
 
 mpl.use("Agg")
 
-from vaxflux import Curve
+from vaxflux import Curve, LogisticCurve
 from vaxflux._types import NumericalArrayLike
 
 OUTPUT_DIR = Path(__file__).parent.parent / "docs" / "images"
@@ -40,6 +40,26 @@ class AlgebraicSigmoidCurve(Curve):
         return jnp.exp(m) / 2.0 * jnp.exp(a) / (1.0 + u**2) ** 1.5
 
 
+def getting_started_curve_plot(output_dir: Path) -> None:
+    """Generate and save the LogisticCurve plot for the getting started guide."""
+    curve = LogisticCurve()
+    t = jnp.linspace(-10.0, 110.0, num=200)
+    fig = curve.plot(
+        t,
+        parameter_sets=[
+            {"m": 0.5, "r": -3.2, "s": 40.0},
+            {"m": 1.2, "r": -3.2, "s": 40.0},
+            {"m": 0.5, "r": -2.5, "s": 40.0},
+            {"m": 0.5, "r": -3.2, "s": 20.0},
+        ],
+        labels=["base", "high m", "high r", "low s"],
+        title="LogisticCurve",
+    )
+    fig.savefig(
+        output_dir / "getting-started-curve-plot.png", dpi=150, bbox_inches="tight"
+    )
+
+
 def custom_curve_plot(output_dir: Path) -> None:
     """Generate and save the AlgebraicSigmoidCurve plot for the custom curve guide."""
     curve = AlgebraicSigmoidCurve()
@@ -60,6 +80,7 @@ def custom_curve_plot(output_dir: Path) -> None:
 def main() -> None:
     """Generate all static images for the documentation."""
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    getting_started_curve_plot(OUTPUT_DIR)
     custom_curve_plot(OUTPUT_DIR)
 
 

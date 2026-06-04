@@ -16,8 +16,10 @@ Added:
 - Added `VaxfluxObservations.to_date_ranges/to_season_ranges` to easily extract
   date/season ranges from observations. See
   [#198](https://github.com/ACCIDDA/vaxflux/issues/198).
-- Added documentation on how to implement a custom `vaxflux.Curve` class. See
-  [#182](https://github.com/ACCIDDA/vaxflux/issues/182).
+- Added documentation on how to implement a custom `vaxflux.Curve` class,
+  included a curve plot in the getting started guide. See
+  [#182](https://github.com/ACCIDDA/vaxflux/issues/182),
+  [#74](https://github.com/ACCIDDA/vaxflux/issues/74).
 
 Changed:
 
