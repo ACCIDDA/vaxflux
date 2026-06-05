@@ -71,6 +71,7 @@ nav:
   - Getting Started: getting-started.md
   - Model Details: model-details.md
   - Custom Curve: custom-curve.md
+  - Custom Covariate: custom-covariate.md
   - Demos:
       - Season Only Vaxflux Model: demos/season-only-vaxflux-model.ipynb
       - Vaxflux Model: demos/vaxflux-model.ipynb
