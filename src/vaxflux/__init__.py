@@ -8,6 +8,7 @@ __all__ = (
     "Implementation",
     "Intervention",
     "LogisticCurve",
+    "NumericalArrayLike",
     "PartiallyPooledGaussianCovariate",
     "PooledGaussianCovariate",
     "SeasonRange",
@@ -34,6 +35,7 @@ from vaxflux._covariates import (
 from vaxflux._curves import Curve, LogisticCurve
 from vaxflux._dates import DateRange, SeasonRange, daily_date_ranges
 from vaxflux._interventions import Implementation, Intervention
+from vaxflux._types import NumericalArrayLike
 from vaxflux._vaxflux_inference_data import VaxfluxInferenceData
 from vaxflux._vaxflux_model import VaxfluxModel
 from vaxflux._vaxflux_observations import VaxfluxObservations
