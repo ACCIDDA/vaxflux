@@ -70,6 +70,7 @@ nav:
   - Installation: installation.md
   - Getting Started: getting-started.md
   - Model Details: model-details.md
+  - Interventions & Implementations: interventions.md
   - Custom Curve: custom-curve.md
   - Custom Covariate: custom-covariate.md
   - Demos:
