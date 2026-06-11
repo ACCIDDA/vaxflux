@@ -17,10 +17,11 @@ Added:
   date/season ranges from observations. See
   [#198](https://github.com/ACCIDDA/vaxflux/issues/198).
 - Added documentation on how to implement a custom `vaxflux.Covariate` class,
-  how to implement a custom `vaxflux.Curve` class, included a curve plot in the
-  getting started guide. See
+  how to implement a custom `vaxflux.Curve` class, usage and implementation of
+  interventions, and included a curve plot in the getting started guide. See
   [#183](https://github.com/ACCIDDA/vaxflux/issues/183),
   [#182](https://github.com/ACCIDDA/vaxflux/issues/182),
+  [#81](https://github.com/ACCIDDA/vaxflux/issues/81),
   [#74](https://github.com/ACCIDDA/vaxflux/issues/74).
 
 Changed:
