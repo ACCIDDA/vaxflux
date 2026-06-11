@@ -57,6 +57,7 @@
     "numpy",
     "numpyro",
     "operatorname",
+    "orcid",
     "presample",
     "pydantic",
     "pymc",
@@ -75,6 +76,7 @@
     "xlabel",
     "xticklabels",
     "ylabel",
-    "ylim"
+    "ylim",
+    "zenodo"
   ]
 }

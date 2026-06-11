@@ -1,5 +1,7 @@
 # `vaxflux` - Seasonal Vaccine Uptake Modeling
 
+[![DOI](https://zenodo.org/badge/853330826.svg)](https://zenodo.org/badge/latestdoi/853330826)
+
 `vaxflux` is a python package for modeling seasonal vaccine uptake like
 influenza vaccines. It is capable of incorporating arbitrary covariates and
 geographic regions, observations at multiple time scales, modeling the effects
