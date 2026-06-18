@@ -38,7 +38,7 @@ jobs:
       contents: 'write' # Needed to push to gh-pages
     steps:
       - name: 'checkout repository'
-        uses: 'actions/checkout@v6.0.2'
+        uses: 'actions/checkout@v6.0.3'
         with:
           ref: 'main'
       - name: 'setup just and uv'
